@@ -5,7 +5,8 @@ import {
   MenuItem, 
   ListItemIcon, 
   ListItemText, 
-  Tooltip 
+  Tooltip, 
+  Divider
 } from '@mui/material';
 import { 
   MoreVert as MoreVertIcon,
@@ -21,7 +22,7 @@ interface ActionMenuProps {
     settings: AgentSettings,
     handleOpenModal: (agent: Agent) => void;
     handleOpenSettings: (agentId: string, settings: AgentSettings) => void;
-    handleOpenChannels: (agentId: string) => void;
+    handleOpenChannels: (agentId: string, agentIsActive: boolean) => void;
     handleDelete: (agentId: string) => void;
     theme: any
 }
@@ -85,18 +86,20 @@ export default function ActionMenu({
           </ListItemIcon>
           <ListItemText>Edit</ListItemText>
         </MenuItem>
+        <Divider />
         <MenuItem onClick={() => handleMenuItemClick(() => handleOpenSettings(agent.id, settings))}>
           <ListItemIcon>
             <SettingsIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Settings</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleMenuItemClick(() => handleOpenChannels(agent.id))}>
+        <MenuItem onClick={() => handleMenuItemClick(() => handleOpenChannels(agent.id, agent.isActive))}>
           <ListItemIcon>
             <HubIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Channels</ListItemText>
         </MenuItem>
+        <Divider />
         <MenuItem onClick={() => handleMenuItemClick(() => handleDelete(agent.id))}>
           <ListItemIcon>
             <DeleteIcon sx={{ color: theme.palette.error.main }} fontSize="small" />

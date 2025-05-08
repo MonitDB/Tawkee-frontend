@@ -5,7 +5,8 @@ import AutoFixHighRoundedIcon from '@mui/icons-material/AutoFixHighRounded';
 import ConstructionRoundedIcon from '@mui/icons-material/ConstructionRounded';
 import SettingsSuggestRoundedIcon from '@mui/icons-material/SettingsSuggestRounded';
 import ThumbUpAltRoundedIcon from '@mui/icons-material/ThumbUpAltRounded';
-import { TawkeeIcon } from './CustomIcons';
+import TawkeeLogo from '../../../components/TawkeeLogo';
+
 
 const items = [
   {
@@ -40,7 +41,7 @@ export default function Content() {
       sx={{ flexDirection: 'column', alignSelf: 'center', gap: 4, maxWidth: 450 }}
     >
       <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-        <TawkeeIcon />
+        <TawkeeLogo />
       </Box>
       {items.map((item, index) => (
         <Stack key={index} direction="row" sx={{ gap: 2 }}>

@@ -31,29 +31,29 @@ const defaultTheme = createTheme();
 const customShadows: Shadows = [...defaultTheme.shadows];
 
 export const brand = {
-  50: 'hsl(210, 100%, 95%)',
-  100: 'hsl(210, 100%, 92%)',
-  200: 'hsl(210, 100%, 80%)',
-  300: 'hsl(210, 100%, 65%)',
-  400: 'hsl(210, 98%, 48%)',
-  500: 'hsl(210, 98%, 42%)',
-  600: 'hsl(210, 98%, 55%)',
-  700: 'hsl(210, 100%, 35%)',
-  800: 'hsl(210, 100%, 16%)',
-  900: 'hsl(210, 100%, 21%)',
+  50:  'hsl(206, 100%, 50%)',  // bright cyan
+  100: 'hsl(213, 100%, 56%)',
+  200: 'hsl(222, 100%, 61%)',
+  300: 'hsl(234, 100%, 67%)',
+  400: 'hsl(250, 100%, 68%)',
+  500: 'hsl(262, 95%, 65%)',   // violet
+  600: 'hsl(272, 85%, 64%)',
+  700: 'hsl(285, 77%, 63%)',
+  800: 'hsl(299, 68%, 61%)',
+  900: 'hsl(312, 91%, 66%)',   // bright pink
 };
 
 export const gray = {
-  50: 'hsl(220, 35%, 97%)',
-  100: 'hsl(220, 30%, 94%)',
-  200: 'hsl(220, 20%, 88%)',
-  300: 'hsl(220, 20%, 80%)',
-  400: 'hsl(220, 20%, 65%)',
-  500: 'hsl(220, 20%, 42%)',
-  600: 'hsl(220, 20%, 35%)',
-  700: 'hsl(220, 20%, 25%)',
-  800: 'hsl(220, 30%, 6%)',
-  900: 'hsl(220, 35%, 3%)',
+  50: 'hsl(220, 20%, 98%)',
+  100: 'hsl(220, 15%, 94%)',
+  200: 'hsl(220, 10%, 88%)',
+  300: 'hsl(220, 10%, 80%)',
+  400: 'hsl(220, 10%, 65%)',
+  500: 'hsl(220, 10%, 42%)',
+  600: 'hsl(220, 10%, 35%)',
+  700: 'hsl(220, 10%, 25%)',
+  800: 'hsl(220, 10%, 10%)',
+  900: 'hsl(220, 10%, 5%)',
 };
 
 export const green = {
@@ -163,15 +163,13 @@ export const getDesignTokens = (mode: PaletteMode) => {
       },
       divider: mode === 'dark' ? alpha(gray[700], 0.6) : alpha(gray[300], 0.4),
       background: {
-        default: 'hsl(0, 0%, 99%)',
-        paper: 'hsl(220, 35%, 97%)',
-        ...(mode === 'dark' && { default: gray[900], paper: 'hsl(220, 30%, 7%)' }),
+        default: mode === 'dark' ? gray[900] : gray[50],
+        paper: mode === 'dark' ? 'hsl(220, 10%, 7%)' : gray[100],
       },
       text: {
-        primary: gray[800],
-        secondary: gray[600],
+        primary: mode === 'dark' ? 'hsl(0, 0%, 100%)' : gray[800],
+        secondary: mode === 'dark' ? gray[400] : gray[600],
         warning: orange[400],
-        ...(mode === 'dark' && { primary: 'hsl(0, 0%, 100%)', secondary: gray[400] }),
       },
       action: {
         hover: alpha(gray[200], 0.2),

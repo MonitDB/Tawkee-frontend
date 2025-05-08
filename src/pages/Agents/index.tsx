@@ -145,6 +145,7 @@ export default function Agents() {
 
   const [channelsOpen, setChannelsOpen] = useState(false);
   const [channelsAgentId, setChannelsAgentId] = useState<string | null>(null);
+  const [channelsAgentActive, setChannelsAgentActive] = useState<boolean | null>(null);
 
 
   const [typeOfModalOpened, setTypeOfModalOpened] = useState<string | null>(null);
@@ -211,8 +212,9 @@ export default function Agents() {
 
   };
 
-  const handleOpenChannels = (agentId: string) => {
+  const handleOpenChannels = (agentId: string, agentIsActive: boolean) => {
     setChannelsAgentId(agentId);
+    setChannelsAgentActive(agentIsActive);
     setChannelsOpen(true);  
   }
 
@@ -262,14 +264,18 @@ export default function Agents() {
                   key={agent.id}
                   sx={{
                     '&:last-child td, &:last-child th': { border: 0 },
-                    backgroundColor: agent.isActive 
-                      ? 'transparent' // Active rows can remain with default or transparent background
-                      : theme.palette.grey[800], // Inactive rows have a light grey background
                     transition: 'background-color 0.3s',
+                    border: '2px solid transparent',
                     '&:hover': {
                       backgroundColor: agent.isActive 
-                        ? theme.palette.grey[700] 
-                        : 'transparent'
+                        ? theme.palette.action.hover 
+                        : 'transparent',
+                      borderLeft: agent.isActive
+                        ? `2px solid ${theme.palette.info.dark}`
+                        : `2px solid ${theme.palette.action.selected}`,
+                      borderRight: agent.isActive
+                        ? `2px solid ${theme.palette.info.dark}`
+                        : `2px solid ${theme.palette.action.selected}`
                     },
                   }}
                 >
@@ -542,6 +548,7 @@ export default function Agents() {
               
             </Grid>
           </Grid>
+          <Divider />
           {settingsOptions.map(({ key, label, description }) => (
             <Tooltip title={description} placement="right">
               <div key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
@@ -557,6 +564,7 @@ export default function Agents() {
               </div>
             </Tooltip>
           ))}
+          <Divider />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseSettings}>Cancel</Button>
@@ -566,6 +574,7 @@ export default function Agents() {
 
       <ChannelsDialog
         agentId={channelsAgentId as string}
+        agentIsActive={channelsAgentActive as boolean}
         open={channelsOpen}
         onClose={handleCloseChannels}
         fullWidth
@@ -579,12 +588,14 @@ export default function Agents() {
 
 interface ChannelsDialogProps extends DialogProps {
   agentId: string;
+  agentIsActive: boolean;
   open: boolean;
   onClose: () => void;
 }
 
-const ChannelsDialog = ({ agentId, open, onClose }: ChannelsDialogProps) => {
+const ChannelsDialog = ({ agentId, agentIsActive, open, onClose }: ChannelsDialogProps) => {
   const { notify } = useHttpResponse();
+  const theme = useTheme();
 
   const { token } = useAuth();
   const { 
@@ -682,7 +693,11 @@ const ChannelsDialog = ({ agentId, open, onClose }: ChannelsDialogProps) => {
             mb: 2,
             p: 1.5,
             boxShadow: 3,
-            borderLeft: `6px solid ${channel.connected ? 'green' : 'red'}`,
+            borderLeft: `6px solid ${
+              channel.connected
+                ? agentIsActive ? theme.palette.success.main : theme.palette.warning.main
+                : theme.palette.error.main
+              }`,
           }}
         >
           <CardContent sx={{ flexGrow: 1 }}>
@@ -692,7 +707,9 @@ const ChannelsDialog = ({ agentId, open, onClose }: ChannelsDialogProps) => {
                   width: 10,
                   height: 10,
                   borderRadius: '50%',
-                  bgcolor: channel.connected ? 'green' : 'red',
+                  bgcolor: channel.connected
+                    ? agentIsActive ? theme.palette.success.main : theme.palette.warning.main
+                    : theme.palette.error.main,
                   mr: 1,
                 }}
               />
@@ -703,7 +720,18 @@ const ChannelsDialog = ({ agentId, open, onClose }: ChannelsDialogProps) => {
             <Typography variant="body2" color="text.secondary" sx={{ display: "flex", gap: '8px'}} >
               <Chip label={channel.type} />
               <Divider orientation='vertical' flexItem/>
-              <Chip color={channel.connected ? "success" : "error"} label={channel.connected ? "Connected" : "Disconnected"} />
+              <Chip
+                color={
+                  channel.connected
+                    ? agentIsActive ? 'success' : 'warning'
+                    : "error"
+                }
+                label={
+                  channel.connected
+                    ? agentIsActive ? 'Connected' : 'Connected but inactive'
+                    : "Disconnected"
+                }
+              />
             </Typography>
           </CardContent>
           <CardActions>
