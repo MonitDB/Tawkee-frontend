@@ -2,14 +2,15 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import env from '../config/env';
 import { useHttpResponse } from './ResponseNotifier';
 
-// Types
 interface AuthContextType {
   token: string | null;
   user: User | null;
+  latestProvider: string | null;
   isAuthenticated: boolean;
   loading: boolean;
   login: (credentials: LoginCredentials) => Promise<LoginResult>;
   register: (credentials: RegisterCredentials) => Promise<LoginResult>;
+  profile: (token: string) => Promise<LoginResult>;
 
   logout: () => void;
 }
@@ -26,10 +27,10 @@ interface LoginResult {
 
 interface RegisterCredentials extends LoginCredentials {
   name: string;
-  workspaceName: string;
+  workspaceName?: string;
 }
 
-export type User = Omit<RegisterCredentials, 'password'> & { id: string, workspaceId: string };
+export type User = Omit<RegisterCredentials, 'password'> & { id: string, workspaceId: string, provider: 'google' | 'facebook' | 'password' };
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -50,24 +51,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   // Optional loading state for initial auth check
   const [loading, setLoading] = useState<boolean>(true);
+  // State to track latest provider
+  const [latestProvider, setLatestProvider] = useState<string | null>(null);
 
   // On component mount, check if token exists in localStorage
   useEffect(() => {
     const storedToken = localStorage.getItem('app:auth-token');
     const storedUser = JSON.parse(localStorage.getItem('app:user') as string) as User;
+    const latestProvider = localStorage.getItem('app:latest-provider') || null;
+
     if (storedToken || storedUser) {
       setToken(storedToken);
       setUser(storedUser);
       setIsAuthenticated(true);
     }
+
+    setLatestProvider(latestProvider);
     setLoading(false);
   }, []);
 
-  // Login function - stores token and updates state
   const login = async (credentials: LoginCredentials): Promise<LoginResult> => {
     try {
       setLoading(true);
-      // Example API call to authenticate user
       const response = await fetch(`${env.API_URL}/auth/login`, {
         method: 'POST',
         headers: {
@@ -91,10 +96,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('app:auth-token', newToken);
       // Store user in localStorage
       localStorage.setItem('app:user', JSON.stringify(userData));
+      // Store latest provider in localStorage
+      localStorage.setItem('app:latest-provider', userData.provider);
 
       // Update state
       setToken(newToken);
       setUser(userData);
+      setLatestProvider(userData.provider);
       setIsAuthenticated(true);
       
       return { success: true };
@@ -110,11 +118,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Register function - stores token and updates state
   const register = async (credentials: RegisterCredentials): Promise<LoginResult> => {
     try {
       setLoading(true);
-      // Example API call to authenticate user
       const response = await fetch(`${env.API_URL}/auth/register`, {
         method: 'POST',
         headers: {
@@ -130,17 +136,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       notify('Succesful registration!', 'success');
-      const { token: newToken } = data;
+      const { token: newToken } = data.data;
       const userData: User = data.data.user;
 
       // Store token in localStorage
       localStorage.setItem('app:auth-token', newToken);
       // Store user in localStorage
       localStorage.setItem('app:user', JSON.stringify(userData));
+      // Store latest provider in localStorage
+      localStorage.setItem('app:latest-provider', userData.provider);
 
       // Update state
       setToken(newToken);
       setUser(userData);
+      setLatestProvider(userData.provider);
       setIsAuthenticated(true);
       
       return { success: true };
@@ -155,9 +164,53 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const profile = async (token: string): Promise<LoginResult> => {
+    try {
+      setLoading(true);
+      let response = await fetch(`${env.API_URL}/auth/profile`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      const userData: User = data.data;
+
+      // Store token in localStorage
+      localStorage.setItem('app:auth-token', token);
+      // Store user in localStorage
+      localStorage.setItem('app:user', JSON.stringify(userData));
+      // Store latest provider in localStorage
+      localStorage.setItem('app:latest-provider', userData.provider);
+
+      // Update state
+      setToken(token);
+      setUser(userData);
+      setLatestProvider(userData.provider);
+      setIsAuthenticated(true);
+
+      return { success: true };
+
+    } catch (error) {
+      notify(error instanceof Error ? error.message : '', 'error');
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      };
+    } finally {
+      setLoading(false);
+    }
+  } 
+
   // Logout function - clears token and resets state
   const logout = async (): Promise<LoginResult> => {
-
     if (!token) {
       return { 
         success: false, 
@@ -176,13 +229,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       const data = await response.json();
-      notify('Succesful logout!', 'success');
-
+      
       if (data.error) {
         throw new Error(data.error);
       }
-
-      // Remove token from localStorage
+      
+      notify('Succesful logout!', 'success');
+      // Remove token and user from localStorage
       localStorage.removeItem('app:auth-token');
       localStorage.removeItem('app:user');
       
@@ -190,9 +243,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setToken(null);
       setUser(null);
       setIsAuthenticated(false);
-      
-      return { success: true };
 
+      return { success: true };
+    
     } catch(error) {
       notify(error instanceof Error ? error.message : '', 'error');
       return { 
@@ -208,10 +261,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const authContextValue: AuthContextType = {
     token,
     user,
+    latestProvider,
     isAuthenticated,
     loading,
     login,
     register,
+    profile,
     logout
   };
 

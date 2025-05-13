@@ -20,6 +20,7 @@ import ColorModeSelect from '../../components/shared-theme/ColorModeSelect';
 import { GoogleIcon, FacebookIcon } from './components/CustomIcons';
 import { useAuth } from '../../context/AuthContext';
 import TawkeeLogo from '../../components/TawkeeLogo';
+import env from '../../config/env';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -144,12 +145,20 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
     navigate('/sign-in');
   }
 
+  const handleGoogleLogin = () => {
+    window.location.href = `${env.API_URL}/auth/google`;
+  }
+
+  const handleFacebookLogin = () => {
+    window.location.href = `${env.API_URL}/auth/facebook`;
+  }
+
   return (
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
       <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem' }} />
       <SignUpContainer direction="column" justifyContent="space-between">
-        <Card variant="outlined">
+        <Card variant="outlined" sx={{ overflowY: 'auto' }} >
           <TawkeeLogo />
           <Typography
             component="h1"
@@ -243,7 +252,7 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
             <Button
               fullWidth
               variant="outlined"
-              onClick={() => alert('Sign up with Google')}
+              onClick={handleGoogleLogin}
               startIcon={<GoogleIcon />}
             >
               Sign up with Google
@@ -251,7 +260,7 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
             <Button
               fullWidth
               variant="outlined"
-              onClick={() => alert('Sign up with Facebook')}
+              onClick={handleFacebookLogin}
               startIcon={<FacebookIcon />}
             >
               Sign up with Facebook

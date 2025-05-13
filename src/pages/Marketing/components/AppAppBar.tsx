@@ -134,12 +134,12 @@ export default function AppAppBar() {
                 <MenuItem>Blog</MenuItem>
                 <Divider sx={{ my: 3 }} />
                 <MenuItem>
-                  <Button color="primary" variant="contained" fullWidth>
+                  <Button color="primary" variant="contained" fullWidth onClick={handleSignUp}>
                     Sign up
                   </Button>
                 </MenuItem>
                 <MenuItem>
-                  <Button color="primary" variant="outlined" fullWidth>
+                  <Button color="primary" variant="outlined" fullWidth onClick={handleSignIn}>
                     Sign in
                   </Button>
                 </MenuItem>

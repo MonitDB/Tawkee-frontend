@@ -17,6 +17,8 @@ import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
 import ForgotPassword from './ForgotPassword';
 import { GoogleIcon, FacebookIcon, TawkeeIcon } from './CustomIcons';
+import env from '../../../config/env';
+import { Badge } from '@mui/material';
 
 
 const Card = styled(MuiCard)(({ theme }) => ({
@@ -38,88 +40,96 @@ const Card = styled(MuiCard)(({ theme }) => ({
 }));
 
 export default function SignInCard() {
-    const { login, loading } = useAuth();
-    const navigate = useNavigate();
+  const { login, latestProvider, loading } = useAuth();
+  const navigate = useNavigate();
 
-    const [emailError, setEmailError] = useState(false);
-    const [emailErrorMessage, setEmailErrorMessage] = useState('');
-    const [passwordError, setPasswordError] = useState(false);
-    const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
+  const [emailError, setEmailError] = useState(false);
+  const [emailErrorMessage, setEmailErrorMessage] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
 
-    const currentEmail: string | null = localStorage.getItem('app:email');
+  const currentEmail: string | null = localStorage.getItem('app:email');
 
-    const [shouldRememberEmail, setShouldRememberEmail] = useState(currentEmail ? true : false);
+  const [shouldRememberEmail, setShouldRememberEmail] = useState(currentEmail ? true : false);
 
-    const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false);
 
-    const handleClickOpen = () => {
-        setOpen(true);
-    };
+  const handleClickOpen = () => {
+      setOpen(true);
+  };
 
-    const handleClose = () => {
-        setOpen(false);
-    };
+  const handleClose = () => {
+      setOpen(false);
+  };
 
-    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
 
-        if (emailError || passwordError) {
-            return;
-        }
-        const data = new FormData(event.currentTarget);
-
-        if (shouldRememberEmail) {
-          localStorage.setItem('app:email', data.get('email') as string);
-        } else {
-          localStorage.removeItem('app:email');
-        }
-        
-        try {
-          login({
-              email: data.get('email') as string,
-              password: data.get('password') as string,
-          });
-
-          navigate('/');
-        } catch(error) {
+      if (emailError || passwordError) {
           return;
-        }
-    };
+      }
+      const data = new FormData(event.currentTarget);
 
-    const validateInputs = () => {
-        const email = document.getElementById('email') as HTMLInputElement;
-        const password = document.getElementById('password') as HTMLInputElement;
+      if (shouldRememberEmail) {
+        localStorage.setItem('app:email', data.get('email') as string);
+      } else {
+        localStorage.removeItem('app:email');
+      }
+      
+      try {
+        login({
+            email: data.get('email') as string,
+            password: data.get('password') as string,
+        });
 
-        let isValid = true;
+        navigate('/');
+      } catch(error) {
+        return;
+      }
+  };
 
-        if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
-        setEmailError(true);
-        setEmailErrorMessage('Please enter a valid email address.');
-        isValid = false;
-        } else {
-        setEmailError(false);
-        setEmailErrorMessage('');
-        }
+  const validateInputs = () => {
+      const email = document.getElementById('email') as HTMLInputElement;
+      const password = document.getElementById('password') as HTMLInputElement;
 
-        if (!password.value || password.value.length < 6) {
-        setPasswordError(true);
-        setPasswordErrorMessage('Password must be at least 6 characters long.');
-        isValid = false;
-        } else {
-        setPasswordError(false);
-        setPasswordErrorMessage('');
-        }
+      let isValid = true;
 
-        return isValid;
-    };
+      if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
+      setEmailError(true);
+      setEmailErrorMessage('Please enter a valid email address.');
+      isValid = false;
+      } else {
+      setEmailError(false);
+      setEmailErrorMessage('');
+      }
 
-    const handleNavigationToSignUp = () => {
-      navigate('/sign-up');
-    }
+      if (!password.value || password.value.length < 6) {
+      setPasswordError(true);
+      setPasswordErrorMessage('Password must be at least 6 characters long.');
+      isValid = false;
+      } else {
+      setPasswordError(false);
+      setPasswordErrorMessage('');
+      }
 
-    const handleRememberMe = (event: ChangeEvent<HTMLInputElement>) => {
-      setShouldRememberEmail(event.target.checked);
-    }
+      return isValid;
+  };
+
+  const handleNavigationToSignUp = () => {
+    navigate('/sign-up');
+  }
+
+  const handleRememberMe = (event: ChangeEvent<HTMLInputElement>) => {
+    setShouldRememberEmail(event.target.checked);
+  }
+
+  const handleGoogleLogin = () => {
+    window.location.href = `${env.API_URL}/auth/google`;
+  }
+
+  const handleFacebookLogin = () => {
+    window.location.href = `${env.API_URL}/auth/facebook`;
+  }
 
   return (
     <Card variant="outlined">
@@ -228,22 +238,34 @@ export default function SignInCard() {
       </Box>
       <Divider>or</Divider>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <Button
-          fullWidth
-          variant="outlined"
-          onClick={() => alert('Sign in with Google')}
-          startIcon={<GoogleIcon />}
+        <Badge
+          color="secondary"
+          badgeContent="Last used"
+          invisible={latestProvider !== "google"}
         >
-          Sign in with Google
-        </Button>
-        <Button
-          fullWidth
-          variant="outlined"
-          onClick={() => alert('Sign in with Facebook')}
-          startIcon={<FacebookIcon />}
+          <Button
+            fullWidth
+            variant="outlined"
+            onClick={handleGoogleLogin}
+            startIcon={<GoogleIcon />}
+          >
+            Sign in with Google
+          </Button>
+        </Badge>
+        <Badge
+          color="secondary"
+          badgeContent="Last used"
+          invisible={latestProvider !== "facebook"}
         >
-          Sign in with Facebook
-        </Button>
+          <Button
+            fullWidth
+            variant="outlined"
+            onClick={handleFacebookLogin}
+            startIcon={<FacebookIcon />}
+          >
+            Sign in with Facebook
+          </Button>
+        </Badge>
       </Box>
     </Card>
   );
