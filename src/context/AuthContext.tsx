@@ -8,11 +8,11 @@ interface AuthContextType {
   latestProvider: string | null;
   isAuthenticated: boolean;
   loading: boolean;
-  login: (credentials: LoginCredentials) => Promise<LoginResult>;
-  register: (credentials: RegisterCredentials) => Promise<LoginResult>;
-  profile: (token: string) => Promise<LoginResult>;
-
+  login: (credentials: LoginCredentials) => Promise<Result>;
+  register: (credentials: RegisterCredentials) => Promise<Result>;
+  profile: (token: string) => Promise<Result>;
   logout: () => void;
+  resetPassword: (input: PasswordResetInput) => Promise<Result>;
 }
 
 interface LoginCredentials {
@@ -20,17 +20,30 @@ interface LoginCredentials {
   password: string;
 }
 
-interface LoginResult {
+interface Result {
   success: boolean;
   error?: string;
 }
 
 interface RegisterCredentials extends LoginCredentials {
   name: string;
-  workspaceName?: string;
+  workspaceName: string;
 }
 
-export type User = Omit<RegisterCredentials, 'password'> & { id: string, workspaceId: string, provider: 'google' | 'facebook' | 'password' };
+interface PasswordResetInput {
+  password: string;
+  resetToken: string;
+}
+
+// export type User = Omit<RegisterCredentials, 'password'> & { id: string, workspaceId: string, provider: 'google' | 'facebook' | 'password' };
+export interface User {
+  id: string;
+  workspaceId: string;
+  name: string;
+  email: string;
+  provider: 'google' | 'facebook' | 'password';
+  emailVerified: boolean;
+}
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -65,12 +78,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(storedUser);
       setIsAuthenticated(true);
     }
-
+    
     setLatestProvider(latestProvider);
     setLoading(false);
   }, []);
 
-  const login = async (credentials: LoginCredentials): Promise<LoginResult> => {
+  const login = async (credentials: LoginCredentials): Promise<Result> => {
     try {
       setLoading(true);
       const response = await fetch(`${env.API_URL}/auth/login`, {
@@ -118,7 +131,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const register = async (credentials: RegisterCredentials): Promise<LoginResult> => {
+  const register = async (credentials: RegisterCredentials): Promise<Result> => {
     try {
       setLoading(true);
       const response = await fetch(`${env.API_URL}/auth/register`, {
@@ -135,7 +148,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error(data.error);
       }
 
-      notify('Succesful registration!', 'success');
+      notify('Successful registration! We sent a verification email to your address. Please check it to enable all functionalities!', 'success');
       const { token: newToken } = data.data;
       const userData: User = data.data.user;
 
@@ -164,7 +177,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const profile = async (token: string): Promise<LoginResult> => {
+  const profile = async (token: string): Promise<Result> => {
     try {
       setLoading(true);
       let response = await fetch(`${env.API_URL}/auth/profile`, {
@@ -210,8 +223,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   } 
 
   // Logout function - clears token and resets state
-  const logout = async (): Promise<LoginResult> => {
+  const logout = async (): Promise<Result> => {
     if (!token) {
+      notify('You are not logged in!', 'error');
       return { 
         success: false, 
         error: 'You are not logged in!' 
@@ -234,7 +248,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error(data.error);
       }
       
-      notify('Succesful logout!', 'success');
+      notify('Successful logout!', 'success');
       // Remove token and user from localStorage
       localStorage.removeItem('app:auth-token');
       localStorage.removeItem('app:user');
@@ -257,6 +271,49 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const resetPassword = async ({password, resetToken}: PasswordResetInput): Promise<Result> => {
+    if (!password || !resetToken) {
+      notify('You must provide a password and token!', 'error');
+      return { 
+        success: false, 
+        error: 'You must provide a password and token!' 
+      };
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(`${env.API_URL}/auth/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ newPassword: password, token: resetToken })
+      });
+
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (!data.success) {
+        throw new Error(data.message);
+      }
+      
+      notify(data.message, 'success');
+      return { success: true };
+    
+    } catch(error) {
+      notify(error instanceof Error ? error.message : '', 'error');
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      };
+    } finally {
+      setLoading(false);
+    }
+  }
+
   // The context value object that will be provided
   const authContextValue: AuthContextType = {
     token,
@@ -267,7 +324,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     register,
     profile,
-    logout
+    logout,
+    resetPassword
   };
 
   return (

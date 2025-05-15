@@ -17,10 +17,11 @@ import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 import AppTheme from '../../components/shared-theme/AppTheme';
 import ColorModeSelect from '../../components/shared-theme/ColorModeSelect';
-import { GoogleIcon, FacebookIcon } from './components/CustomIcons';
+import { GoogleIcon, FacebookIcon } from '../../components/CustomIcons';
 import { useAuth } from '../../context/AuthContext';
 import TawkeeLogo from '../../components/TawkeeLogo';
 import env from '../../config/env';
+import LoadingBackdrop from '../../components/LoadingBackdrop';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -66,7 +67,7 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
 
 export default function SignUp(props: { disableCustomTheme?: boolean }) {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { register, loading } = useAuth();
 
   const [emailError, setEmailError] = useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = useState('');
@@ -95,13 +96,22 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
       setEmailErrorMessage('');
     }
 
-    if (!password.value || password.value.length < 6) {
-      setPasswordError(true);
-      setPasswordErrorMessage('Password must be at least 6 characters long.');
-      isValid = false;
+    const passwordValue = password.value;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/;
+
+    if (!passwordValue || passwordValue.length < 6) {
+        setPasswordError(true);
+        setPasswordErrorMessage('Password must be at least 6 characters long.');
+        isValid = false;
+    } else if (!passwordRegex.test(passwordValue)) {
+        setPasswordError(true);
+        setPasswordErrorMessage(
+        'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.'
+        );
+        isValid = false;
     } else {
-      setPasswordError(false);
-      setPasswordErrorMessage('');
+        setPasswordError(false);
+        setPasswordErrorMessage('');
     }
 
     if (!name.value || name.value.length < 1) {
@@ -287,6 +297,7 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
           </Box>
         </Card>
       </SignUpContainer>
+      <LoadingBackdrop open={loading} />     
     </AppTheme>
   );
 }

@@ -16,9 +16,10 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
 import ForgotPassword from './ForgotPassword';
-import { GoogleIcon, FacebookIcon, TawkeeIcon } from './CustomIcons';
+import { GoogleIcon, FacebookIcon } from '../../../components/CustomIcons';
 import env from '../../../config/env';
 import { Badge } from '@mui/material';
+import TawkeeLogo from '../../../components/TawkeeLogo';
 
 
 const Card = styled(MuiCard)(({ theme }) => ({
@@ -103,13 +104,22 @@ export default function SignInCard() {
       setEmailErrorMessage('');
       }
 
-      if (!password.value || password.value.length < 6) {
-      setPasswordError(true);
-      setPasswordErrorMessage('Password must be at least 6 characters long.');
-      isValid = false;
+      const passwordValue = password.value;
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/;
+
+      if (!passwordValue || passwordValue.length < 6) {
+          setPasswordError(true);
+          setPasswordErrorMessage('Password must be at least 6 characters long.');
+          isValid = false;
+      } else if (!passwordRegex.test(passwordValue)) {
+          setPasswordError(true);
+          setPasswordErrorMessage(
+          'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.'
+          );
+          isValid = false;
       } else {
-      setPasswordError(false);
-      setPasswordErrorMessage('');
+          setPasswordError(false);
+          setPasswordErrorMessage('');
       }
 
       return isValid;
@@ -134,7 +144,7 @@ export default function SignInCard() {
   return (
     <Card variant="outlined">
       <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
-        <TawkeeIcon />
+        <TawkeeLogo />
       </Box>
       <Typography
         component="h1"

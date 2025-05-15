@@ -13,8 +13,31 @@ export default function OAuthCallbackPage() {
   const { profile } = useAuth();
   const navigate = useNavigate();
   
-  
   useEffect(() => {
+    // Remove the Facebook #_=_ hash if present
+    if (window.location.hash === '#_=_') {
+      // Try to extract token from URL before the hash
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      
+      if (token) {
+        // Clear the URL hash without refreshing the page
+        if (history.replaceState) {
+          const cleanUrl = window.location.href.split('#')[0];
+          history.replaceState(null, 'null', cleanUrl);
+        } else {
+          // Fallback for older browsers
+          window.location.hash = '';
+        }
+        
+        // Store the token and continue with authentication
+        localStorage.setItem('authToken', token);
+        
+        // If you're using a state management library like Redux or Context:
+        // setAuthToken(token);
+      }
+    }
+
     // Get the token from URL query parameters
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
