@@ -1,7 +1,4 @@
-import { Fragment } from 'react';
 import { PieChart } from '@mui/x-charts/PieChart';
-import { useDrawingArea } from '@mui/x-charts/hooks';
-import { styled } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -52,70 +49,6 @@ const countries = [
   },
 ];
 
-interface StyledTextProps {
-  variant: 'primary' | 'secondary';
-}
-
-const StyledText = styled('text', {
-  shouldForwardProp: (prop) => prop !== 'variant',
-})<StyledTextProps>(({ theme }) => ({
-  textAnchor: 'middle',
-  dominantBaseline: 'central',
-  fill: (theme.vars || theme).palette.text.secondary,
-  variants: [
-    {
-      props: {
-        variant: 'primary',
-      },
-      style: {
-        fontSize: theme.typography.h5.fontSize,
-      },
-    },
-    {
-      props: ({ variant }) => variant !== 'primary',
-      style: {
-        fontSize: theme.typography.body2.fontSize,
-      },
-    },
-    {
-      props: {
-        variant: 'primary',
-      },
-      style: {
-        fontWeight: theme.typography.h5.fontWeight,
-      },
-    },
-    {
-      props: ({ variant }) => variant !== 'primary',
-      style: {
-        fontWeight: theme.typography.body2.fontWeight,
-      },
-    },
-  ],
-}));
-
-interface PieCenterLabelProps {
-  primaryText: string;
-  secondaryText: string;
-}
-
-function PieCenterLabel({ primaryText, secondaryText }: PieCenterLabelProps) {
-  const { width, height, left, top } = useDrawingArea();
-  const primaryY = top + height / 2 - 10;
-  const secondaryY = primaryY + 24;
-
-  return (
-    <Fragment>
-      <StyledText variant="primary" x={left + width / 2} y={primaryY}>
-        {primaryText}
-      </StyledText>
-      <StyledText variant="secondary" x={left + width / 2} y={secondaryY}>
-        {secondaryText}
-      </StyledText>
-    </Fragment>
-  );
-}
-
 const colors = [
   'hsl(220, 20%, 65%)',
   'hsl(220, 20%, 42%)',
@@ -134,31 +67,36 @@ export default function ChartUserByCountry() {
           Users by country
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <PieChart
-            colors={colors}
-            margin={{
-              left: 80,
-              right: 80,
-              top: 80,
-              bottom: 80,
-            }}
-            series={[
-              {
-                data,
-                innerRadius: 75,
-                outerRadius: 100,
-                paddingAngle: 0,
-                highlightScope: { fade: 'global', highlight: 'item' },
-              },
-            ]}
-            height={260}
-            width={260}
-            // slotProps={{
-            //   legend: { hidden: true },
-            // }}
-          >
-            <PieCenterLabel primaryText="98.5K" secondaryText="Total" />
-          </PieChart>
+          <Box sx={{ position: 'relative', width: 260, height: 260 }}>
+            <PieChart
+              series={[
+                {
+                  innerRadius: 75,
+                  outerRadius: 100,
+                  paddingAngle: 0,
+                  highlightScope: { fade: 'global', highlight: 'item' },
+                  data: data.map((item, index) => ({
+                    ...item,
+                    color: colors[index],
+                  })),
+                },
+              ]}
+            />
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                textAlign: 'center',
+              }}
+            >
+              <Typography variant="h5">98.5K</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Total
+              </Typography>
+            </Box>
+          </Box>
         </Box>
         {countries.map((country, index) => (
           <Stack

@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  frontend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5002:5002"
+    volumes:
+      - ./src:/app/src # Monta a pasta src para hot-reloading
+      - ./public:/app/public # Monta a pasta public
+      # Adicione outros volumes se necessário, por exemplo, para arquivos de configuração específicos
+    env_file:
+      - .env.development
+    # O container_name é opcional, mas pode ajudar a identificar o container
+    container_name: meuapp-frontend-dev
+
+  frontend-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    ports:
+      # A porta interna do Nginx é 80, mapeamos para a porta 5002 do host conforme o domínio informado
+      # Se o domínio final não incluir a porta (ex: app.seudominio.com), você mapearia para a porta 80 do host: "80:80"
+      - "5002:80"
+    # Em produção, geralmente não montamos volumes de código, pois o build já está na imagem.
+    # As variáveis de ambiente para produção podem ser injetadas no build do frontend
+    # ou, se forem apenas para o Nginx (raro para frontend puro), podem ser passadas aqui.
+    # Para este exemplo, as VITE_ vars são usadas no build, então o .env.production é mais para referência
+    # ou se você tiver um script que o utilize antes do build no Dockerfile.prod.
+    # env_file:
+    #   - .env.production 
+    # Opcional: Se o Nginx precisar de variáveis de ambiente, você pode passá-las aqui.
+    # environment:
+    #   NGINX_HOST: ${NGINX_HOST} # Exemplo
+    container_name: meuapp-frontend-prod
+    # Adicione a cópia do nginx.conf no Dockerfile.prod se você quiser usar a configuração personalizada
+    # volumes:
+    #   - ./nginx.conf:/etc/nginx/conf.d/default.conf # Se você descomentou no Dockerfile.prod
+
+# Para rodar em desenvolvimento: docker-compose up frontend-dev --build
+# Para rodar em produção: docker-compose up frontend-prod --build
+# Para parar: docker-compose down

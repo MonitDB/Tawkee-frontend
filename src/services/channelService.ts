@@ -4,7 +4,9 @@ export type Channel = {
   name: string;
   type: string;
   connected: boolean;
-  config: object;
+  config: {
+    evolutionApi?: object;
+  };
 };
 
 interface ChannelServiceConfig {

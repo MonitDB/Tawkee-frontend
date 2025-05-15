@@ -5,8 +5,14 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: '0.0.0.0',
+    port: 5002,
     allowedHosts: [
-      '781b-2804-29b8-50a6-1487-690d-4342-21e2-bce9.ngrok-free.app'
-    ]
+      'http://monitdb-dev.ddns.net:5002'
+    ],
+    strictPort: true,
+    hmr: {
+      clientPort: 5002
+    }
   }
 });
