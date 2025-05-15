@@ -8,7 +8,7 @@ import {
   AIModel,
   GroupingTime,
   AgentCommunicationType,
-  AgentType
+  AgentType,
 } from '../../context/AgentsContext';
 
 import LoadingBackdrop from '../../components/LoadingBackdrop';
@@ -40,9 +40,14 @@ import {
   Card,
   CardContent,
   CardActions,
-  Divider
+  Divider,
 } from '@mui/material';
-import { DeleteForever, Refresh, MapsUgcOutlined, LinkOff } from '@mui/icons-material';
+import {
+  DeleteForever,
+  Refresh,
+  MapsUgcOutlined,
+  LinkOff,
+} from '@mui/icons-material';
 import { useHttpResponse } from '../../context/ResponseNotifier';
 import QRCodeBackdrop from '../../components/QRCodeBackdrop';
 import { useChannelService } from '../../hooks/useChannelService';
@@ -51,7 +56,7 @@ import ActionMenu from './components/ActionMenu';
 
 type AgentWrapper = {
   agent: Agent;
-  settings: AgentSettings
+  settings: AgentSettings;
 };
 
 const modelDescriptions: Record<AIModel, string> = {
@@ -66,48 +71,58 @@ const groupingDescriptions: Record<GroupingTime, string> = {
   [GroupingTime.NO_GROUP]: 'No grouping applied — raw data points.',
   [GroupingTime.FIVE_SEC]: 'Group data by 5-second intervals.',
   [GroupingTime.TEN_SEC]: 'Group data by 10-second intervals.',
-  [GroupingTime.THIRD_SEC]: 'Group data by 1/3 second intervals — high frequency.',
-  [GroupingTime.ONE_MINUTE]: 'Group data by 1-minute intervals — good for summaries.',
+  [GroupingTime.THIRD_SEC]:
+    'Group data by 1/3 second intervals — high frequency.',
+  [GroupingTime.ONE_MINUTE]:
+    'Group data by 1-minute intervals — good for summaries.',
 };
 
 const settingsOptions = [
   {
     key: 'enabledHumanTransfer',
     label: 'Enable Human Transfer',
-    description: 'Allows the AI to transfer the conversation to a human agent when needed.'
+    description:
+      'Allows the AI to transfer the conversation to a human agent when needed.',
   },
   {
     key: 'enabledReminder',
     label: 'Enable Reminder',
-    description: 'Sends automated reminder messages after a period of user inactivity.'
+    description:
+      'Sends automated reminder messages after a period of user inactivity.',
   },
   {
     key: 'splitMessages',
     label: 'Split Messages',
-    description: 'Breaks long messages into smaller parts to improve readability.'
+    description:
+      'Breaks long messages into smaller parts to improve readability.',
   },
   {
     key: 'enabledEmoji',
     label: 'Enable Emoji',
-    description: 'Allows the use of emojis in the conversation.'
+    description: 'Allows the use of emojis in the conversation.',
   },
   {
     key: 'limitSubjects',
     label: 'Limit Subjects',
-    description: 'Restricts user input to a predefined set of topics.'
-  }
+    description: 'Restricts user input to a predefined set of topics.',
+  },
 ];
 
 const agentCommunicationDescriptions: Record<AgentCommunicationType, string> = {
-  [AgentCommunicationType.FORMAL]: 'Uses polite and professional language at all times.',
+  [AgentCommunicationType.FORMAL]:
+    'Uses polite and professional language at all times.',
   [AgentCommunicationType.NORMAL]: 'Maintains a balanced and neutral tone.',
-  [AgentCommunicationType.RELAXED]: 'Communicates in a casual and friendly way.',
+  [AgentCommunicationType.RELAXED]:
+    'Communicates in a casual and friendly way.',
 };
 
 export const agentTypeDescriptions: Record<AgentType, string> = {
-  [AgentType.SUPPORT]: 'Technical or customer support with a formal and helpful tone.',
-  [AgentType.SALE]: 'Sales-oriented communication with a persuasive and clear tone.',
-  [AgentType.PERSONAL]: 'Casual and friendly interaction with an informal tone.',
+  [AgentType.SUPPORT]:
+    'Technical or customer support with a formal and helpful tone.',
+  [AgentType.SALE]:
+    'Sales-oriented communication with a persuasive and clear tone.',
+  [AgentType.PERSONAL]:
+    'Casual and friendly interaction with an informal tone.',
 };
 
 export default function Agents() {
@@ -121,7 +136,7 @@ export default function Agents() {
     activateAgent,
     deactivateAgent,
     updateAgentSettings,
-    loading
+    loading,
   } = useAgents();
 
   const [open, setOpen] = useState(false);
@@ -135,21 +150,27 @@ export default function Agents() {
     jobName: '',
     jobSite: '',
     jobDescription: '',
-  }
+  };
 
-  const [selectedAgent, setSelectedAgent] = useState<Agent | AgentInput>(blankAgentInput);
+  const [selectedAgent, setSelectedAgent] = useState<Agent | AgentInput>(
+    blankAgentInput
+  );
 
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [selectedSettings, setSelectedSettings] = useState<AgentSettings | null>(null);
+  const [selectedSettings, setSelectedSettings] =
+    useState<AgentSettings | null>(null);
   const [settingsAgentId, setSettingsAgentId] = useState<string | null>(null);
 
   const [channelsOpen, setChannelsOpen] = useState(false);
   const [channelsAgentId, setChannelsAgentId] = useState<string | null>(null);
-  const [channelsAgentActive, setChannelsAgentActive] = useState<boolean | null>(null);
+  const [channelsAgentActive, setChannelsAgentActive] = useState<
+    boolean | null
+  >(null);
 
+  const [typeOfModalOpened, setTypeOfModalOpened] = useState<string | null>(
+    null
+  );
 
-  const [typeOfModalOpened, setTypeOfModalOpened] = useState<string | null>(null);
-  
   const handleOpenModal = (agent?: Agent) => {
     if (agent == undefined) {
       setTypeOfModalOpened('Create');
@@ -168,16 +189,15 @@ export default function Agents() {
 
   const handleSave = async (selectedAgent: Agent | AgentInput) => {
     try {
-      const { id, workspaceId, isActive, ...agentInput } = selectedAgent as Agent;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id, workspaceId, isActive, ...agentInput } =
+        selectedAgent as Agent;
 
       if (typeOfModalOpened === 'Create') {
-        // property id should not exist, property workspaceId should not exist
         await createAgent(agentInput as AgentInput);
       } else {
         await updateAgent(id, agentInput);
       }
-    } catch(_error) {
-
     } finally {
       handleCloseModal();
     }
@@ -188,7 +208,7 @@ export default function Agents() {
   };
 
   const handleToggleActive = (agent: Agent) => {
-    agent.isActive ? deactivateAgent(agent.id) : activateAgent(agent.id)
+    agent.isActive ? deactivateAgent(agent.id) : activateAgent(agent.id);
   };
 
   const handleOpenSettings = (agentId: string, settings: AgentSettings) => {
@@ -196,42 +216,47 @@ export default function Agents() {
     setSelectedSettings(settings);
     setSettingsOpen(true);
   };
-  
+
   const handleCloseSettings = () => {
     setSettingsOpen(false);
     setSelectedSettings(null);
     setSettingsAgentId(null);
   };
-  
+
   const handleSaveSettings = () => {
     if (!selectedSettings || settingsAgentId === null) return;
-    
+
     updateAgentSettings(settingsAgentId, selectedSettings);
 
     handleCloseSettings();
-
   };
 
   const handleOpenChannels = (agentId: string, agentIsActive: boolean) => {
     setChannelsAgentId(agentId);
     setChannelsAgentActive(agentIsActive);
-    setChannelsOpen(true);  
-  }
+    setChannelsOpen(true);
+  };
 
   const handleCloseChannels = () => {
     setChannelsOpen(false);
   };
 
-  const TruncatedText = ({ text, maxChars = 40 }: { text: string; maxChars?: number }) => {
-    const truncated = text.length > maxChars ? text.slice(0, maxChars) + '…' : text;
-  
+  function TruncatedText({
+    text,
+    maxChars = 40,
+  }: {
+    text: string;
+    maxChars?: number;
+  }) {
+    const truncated =
+      text.length > maxChars ? text.slice(0, maxChars) + '…' : text;
+
     return (
       <Tooltip title={text}>
         <Typography noWrap>{truncated}</Typography>
       </Tooltip>
     );
-  };
-
+  }
 
   return (
     <>
@@ -267,39 +292,67 @@ export default function Agents() {
                     transition: 'background-color 0.3s',
                     border: '2px solid transparent',
                     '&:hover': {
-                      backgroundColor: agent.isActive 
-                        ? theme.palette.action.hover 
+                      backgroundColor: agent.isActive
+                        ? theme.palette.action.hover
                         : 'transparent',
                       borderLeft: agent.isActive
                         ? `2px solid ${theme.palette.info.dark}`
                         : `2px solid ${theme.palette.action.selected}`,
                       borderRight: agent.isActive
                         ? `2px solid ${theme.palette.info.dark}`
-                        : `2px solid ${theme.palette.action.selected}`
+                        : `2px solid ${theme.palette.action.selected}`,
                     },
                   }}
                 >
-                  <TableCell sx={{ color: agent.isActive ? 'text.primary' : 'text.secondary' }}>
+                  <TableCell
+                    sx={{
+                      color: agent.isActive ? 'text.primary' : 'text.secondary',
+                    }}
+                  >
                     <TruncatedText text={agent.name} maxChars={20} />
                   </TableCell>
-                  <TableCell sx={{ color: agent.isActive ? 'text.primary' : 'text.secondary' }}>
+                  <TableCell
+                    sx={{
+                      color: agent.isActive ? 'text.primary' : 'text.secondary',
+                    }}
+                  >
                     <TruncatedText text={agent.jobName} maxChars={10} />
                   </TableCell>
-                  <TableCell sx={{ color: agent.isActive ? 'text.primary' : 'text.secondary' }}>
-                    <Tooltip title={agentCommunicationDescriptions[agent.communicationType]}>
-                      <Chip label={agent.type}/>
+                  <TableCell
+                    sx={{
+                      color: agent.isActive ? 'text.primary' : 'text.secondary',
+                    }}
+                  >
+                    <Tooltip
+                      title={
+                        agentCommunicationDescriptions[agent.communicationType]
+                      }
+                    >
+                      <Chip label={agent.type} />
                     </Tooltip>
                   </TableCell>
-                  <TableCell sx={{ color: agent.isActive ? 'text.primary' : 'text.secondary' }}>
+                  <TableCell
+                    sx={{
+                      color: agent.isActive ? 'text.primary' : 'text.secondary',
+                    }}
+                  >
                     <Tooltip title={agentTypeDescriptions[agent.type]}>
-                      <Chip label={agent.communicationType}/>
+                      <Chip label={agent.communicationType} />
                     </Tooltip>
                   </TableCell>
-                  <TableCell sx={{ color: agent.isActive ? 'text.primary' : 'text.secondary' }}>
+                  <TableCell
+                    sx={{
+                      color: agent.isActive ? 'text.primary' : 'text.secondary',
+                    }}
+                  >
                     <TruncatedText text={agent.behavior} />
                   </TableCell>
 
-                  <TableCell sx={{ color: agent.isActive ? 'text.primary' : 'text.secondary' }}>
+                  <TableCell
+                    sx={{
+                      color: agent.isActive ? 'text.primary' : 'text.secondary',
+                    }}
+                  >
                     <ActionMenu
                       agent={agent}
                       settings={settings}
@@ -311,26 +364,34 @@ export default function Agents() {
                     />
                   </TableCell>
 
-                  <TableCell sx={{ color: agent.isActive ? 'text.primary' : 'text.secondary' }}>
+                  <TableCell
+                    sx={{
+                      color: agent.isActive ? 'text.primary' : 'text.secondary',
+                    }}
+                  >
                     <Tooltip
-                      placement='left'
-                      title='When inactive, the Agent will not respond to messages'
+                      placement="left"
+                      title="When inactive, the Agent will not respond to messages"
                     >
                       <Switch
                         checked={agent.isActive}
                         onChange={() => handleToggleActive(agent)}
-                      />                      
+                      />
                     </Tooltip>
                   </TableCell>
                 </TableRow>
-              )
+              );
             })}
           </TableBody>
         </Table>
       </TableContainer>
 
       {agents.length == 0 && (
-        <Typography variant="h4" component="h1" sx={{ color: 'text.primary', padding: '20px' }}>
+        <Typography
+          variant="h4"
+          component="h1"
+          sx={{ color: 'text.primary', padding: '20px' }}
+        >
           No agent yet
         </Typography>
       )}
@@ -378,41 +439,57 @@ export default function Agents() {
                 value={selectedAgent?.communicationType || ''}
                 onChange={(e) =>
                   setSelectedAgent((prev) =>
-                    prev ? { ...prev, communicationType: e.target.value as AgentCommunicationType } : prev
+                    prev
+                      ? {
+                          ...prev,
+                          communicationType: e.target
+                            .value as AgentCommunicationType,
+                        }
+                      : prev
                   )
                 }
               >
-                {Object.values(AgentCommunicationType).map((communicationType) => (
-                  <MenuItem key={communicationType} value={communicationType}>
-                    <Tooltip title={agentCommunicationDescriptions[communicationType]} placement="right">
-                      <span>{communicationType}</span>
-                    </Tooltip>
-                  </MenuItem>
-                ))}
+                {Object.values(AgentCommunicationType).map(
+                  (communicationType) => (
+                    <MenuItem key={communicationType} value={communicationType}>
+                      <Tooltip
+                        title={
+                          agentCommunicationDescriptions[communicationType]
+                        }
+                        placement="right"
+                      >
+                        <span>{communicationType}</span>
+                      </Tooltip>
+                    </MenuItem>
+                  )
+                )}
               </TextField>
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
-                  variant="standard"
-                  select
-                  margin="dense"
-                  fullWidth
-                  label="Type"
-                  value={selectedAgent?.type || ''}
-                  onChange={(e) =>
-                    setSelectedAgent((prev) =>
-                      prev ? { ...prev, type: e.target.value as AgentType } : prev
-                    )
-                  }
-                >
-                  {Object.values(AgentType).map((type) => (
-                    <MenuItem key={type} value={type}>
-                      <Tooltip title={agentTypeDescriptions[type]} placement="right">
-                        <span>{type}</span>
-                      </Tooltip>
-                    </MenuItem>
-                  ))}
-                </TextField>
+                variant="standard"
+                select
+                margin="dense"
+                fullWidth
+                label="Type"
+                value={selectedAgent?.type || ''}
+                onChange={(e) =>
+                  setSelectedAgent((prev) =>
+                    prev ? { ...prev, type: e.target.value as AgentType } : prev
+                  )
+                }
+              >
+                {Object.values(AgentType).map((type) => (
+                  <MenuItem key={type} value={type}>
+                    <Tooltip
+                      title={agentTypeDescriptions[type]}
+                      placement="right"
+                    >
+                      <span>{type}</span>
+                    </Tooltip>
+                  </MenuItem>
+                ))}
+              </TextField>
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
@@ -466,9 +543,14 @@ export default function Agents() {
             Save
           </Button>
         </DialogActions>
-      </Dialog>    
+      </Dialog>
 
-      <Dialog open={settingsOpen} onClose={handleCloseSettings} fullWidth maxWidth="sm">
+      <Dialog
+        open={settingsOpen}
+        onClose={handleCloseSettings}
+        fullWidth
+        maxWidth="sm"
+      >
         <DialogTitle>Agent Settings</DialogTitle>
         <DialogContent>
           <Grid container spacing={2}>
@@ -496,7 +578,9 @@ export default function Agents() {
                 value={selectedSettings?.preferredModel || ''}
                 onChange={(e) =>
                   setSelectedSettings((prev) =>
-                    prev ? { ...prev, preferredModel: e.target.value as AIModel } : prev
+                    prev
+                      ? { ...prev, preferredModel: e.target.value as AIModel }
+                      : prev
                   )
                 }
               >
@@ -519,48 +603,57 @@ export default function Agents() {
                 value={selectedSettings?.messageGroupingTime || ''}
                 onChange={(e) =>
                   setSelectedSettings((prev) =>
-                    prev ? { ...prev, messageGroupingTime: e.target.value as GroupingTime } : prev
+                    prev
+                      ? {
+                          ...prev,
+                          messageGroupingTime: e.target.value as GroupingTime,
+                        }
+                      : prev
                   )
                 }
               >
                 {Object.values(GroupingTime).map((group) => (
                   <MenuItem key={group} value={group}>
-                    <Tooltip title={groupingDescriptions[group]} placement="right">
+                    <Tooltip
+                      title={groupingDescriptions[group]}
+                      placement="right"
+                    >
                       <span>{group}</span>
                     </Tooltip>
                   </MenuItem>
                 ))}
               </TextField>
             </Grid>
-            <Grid size={{ xs: 12, md: 3 }}>
-              
-            </Grid>
-            <Grid size={{ xs: 12, md: 3 }}>
-              
-            </Grid>
-            <Grid size={{ xs: 12, md: 3 }}>
-              
-            </Grid>
-            <Grid size={{ xs: 12, md: 3 }}>
-              
-            </Grid>
-            <Grid size={{ xs: 12, md: 3 }}>
-              
-            </Grid>
+            <Grid size={{ xs: 12, md: 3 }}></Grid>
+            <Grid size={{ xs: 12, md: 3 }}></Grid>
+            <Grid size={{ xs: 12, md: 3 }}></Grid>
+            <Grid size={{ xs: 12, md: 3 }}></Grid>
+            <Grid size={{ xs: 12, md: 3 }}></Grid>
           </Grid>
           <Divider />
           {settingsOptions.map(({ key, label, description }) => (
-            <Tooltip title={description} placement="right">
-              <div key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+            <Tooltip key={key} title={description} placement="right">
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginTop: 8,
+                }}
+              >
                 <Typography>{label}</Typography>
                 <Switch
-                  checked={selectedSettings?.[key as keyof AgentSettings] as boolean || false}
+                  checked={
+                    (selectedSettings?.[
+                      key as keyof AgentSettings
+                    ] as boolean) || false
+                  }
                   onChange={(e) =>
                     setSelectedSettings((prev) =>
                       prev ? { ...prev, [key]: e.target.checked } : prev
-                )
-              }
-              />
+                    )
+                  }
+                />
               </div>
             </Tooltip>
           ))}
@@ -568,7 +661,9 @@ export default function Agents() {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseSettings}>Cancel</Button>
-          <Button variant="contained" onClick={handleSaveSettings}>Save</Button>
+          <Button variant="contained" onClick={handleSaveSettings}>
+            Save
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -584,7 +679,7 @@ export default function Agents() {
       <LoadingBackdrop open={loading} />
     </>
   );
-};
+}
 
 interface ChannelsDialogProps extends DialogProps {
   agentId: string;
@@ -593,19 +688,24 @@ interface ChannelsDialogProps extends DialogProps {
   onClose: () => void;
 }
 
-const ChannelsDialog = ({ agentId, agentIsActive, open, onClose }: ChannelsDialogProps) => {
+function ChannelsDialog({
+  agentId,
+  agentIsActive,
+  open,
+  onClose,
+}: ChannelsDialogProps) {
   const { notify } = useHttpResponse();
   const theme = useTheme();
 
   const { token } = useAuth();
-  const { 
+  const {
     channels,
     getChannelsForAgent,
     createChannel,
     getQRCode,
     disconnectChannel,
     deleteChannel,
-    loading
+    loading,
   } = useChannelService(token as string);
 
   const [newChannelName, setNewChannelName] = useState('');
@@ -636,130 +736,152 @@ const ChannelsDialog = ({ agentId, agentIsActive, open, onClose }: ChannelsDialo
 
   const handleCloseQRCodeBackdrop = () => {
     setQRCode(null);
-  }
+  };
 
   useEffect(() => {
     const handleGetChannelsForAgent = async (agentId: string) => {
       await getChannelsForAgent(agentId);
-    }
+    };
 
     if (agentId) {
       handleGetChannelsForAgent(agentId);
     }
-
   }, [agentId, getChannelsForAgent]);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Agent Channels</DialogTitle>
       <DialogContent>
-      <Grid container spacing={2} sx={{ display: 'flex', alignItems: 'center', margin: 2}} >
-        <Grid size={{ xs: 12, md: 8 }}>
-          <TextField
-            variant="standard"
-            label="New Channel Name"
-            margin="dense"
-            fullWidth
-            value={newChannelName}
-            onChange={(e) => setNewChannelName(e.target.value)}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <TextField
-            variant="standard"
-            label="Channel Type"
-            margin="dense"
-            disabled
-            fullWidth
-            value="WHATSAPP"
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 1 }}>
-          <IconButton onClick={handleCreateChannel}>
-            <Tooltip title="Create Channel">
-              <MapsUgcOutlined />
-            </Tooltip>
-          </IconButton>
-        </Grid>
-      </Grid>
-      <Grid>
-      {channels.map((channel) => (
-        <Card
-          key={channel.id}
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            mb: 2,
-            p: 1.5,
-            boxShadow: 3,
-            borderLeft: `6px solid ${
-              channel.connected
-                ? agentIsActive ? theme.palette.success.main : theme.palette.warning.main
-                : theme.palette.error.main
-              }`,
-          }}
+        <Grid
+          container
+          spacing={2}
+          sx={{ display: 'flex', alignItems: 'center', margin: 2 }}
         >
-          <CardContent sx={{ flexGrow: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-              <Box
-                sx={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: '50%',
-                  bgcolor: channel.connected
-                    ? agentIsActive ? theme.palette.success.main : theme.palette.warning.main
-                    : theme.palette.error.main,
-                  mr: 1,
-                }}
-              />
-              <Typography variant="h6" component="div">
-                {channel.name}
-              </Typography>
-            </Box>
-            <Typography variant="body2" color="text.secondary" sx={{ display: "flex", gap: '8px'}} >
-              <Chip label={channel.type} />
-              <Divider orientation='vertical' flexItem/>
-              <Chip
-                color={
-                  channel.connected
-                    ? agentIsActive ? 'success' : 'warning'
-                    : "error"
-                }
-                label={
-                  channel.connected
-                    ? agentIsActive ? 'Connected' : 'Connected but inactive'
-                    : "Disconnected"
-                }
-              />
-            </Typography>
-          </CardContent>
-          <CardActions>
-            { channel.connected ? (
-              <IconButton onClick={() => handleDisconnect(channel.id)} color="primary">
-                <Tooltip title="Disconnect">
-                  <LinkOff />
-                </Tooltip>
-              </IconButton>
-            ) : (
-              <IconButton onClick={() => handleRefreshQrCode(channel.id)} color="primary">
-                <Tooltip title="Refresh QR Code To Connect">
-                  <Refresh />
-                </Tooltip>
-              </IconButton>
-            )}
-            <IconButton
-              disabled={channel.connected}
-              onClick={() => handleDeleteChannel(channel.id)} color="error"
-            >
-              <Tooltip title="Delete Channel">
-                <DeleteForever />
+          <Grid size={{ xs: 12, md: 8 }}>
+            <TextField
+              variant="standard"
+              label="New Channel Name"
+              margin="dense"
+              fullWidth
+              value={newChannelName}
+              onChange={(e) => setNewChannelName(e.target.value)}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 3 }}>
+            <TextField
+              variant="standard"
+              label="Channel Type"
+              margin="dense"
+              disabled
+              fullWidth
+              value="WHATSAPP"
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 1 }}>
+            <IconButton onClick={handleCreateChannel}>
+              <Tooltip title="Create Channel">
+                <MapsUgcOutlined />
               </Tooltip>
             </IconButton>
-          </CardActions>
-        </Card>
-      ))}        
-      </Grid>
+          </Grid>
+        </Grid>
+        <Grid>
+          {channels.map((channel) => (
+            <Card
+              key={channel.id}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                mb: 2,
+                p: 1.5,
+                boxShadow: 3,
+                borderLeft: `6px solid ${
+                  channel.connected
+                    ? agentIsActive
+                      ? theme.palette.success.main
+                      : theme.palette.warning.main
+                    : theme.palette.error.main
+                }`,
+              }}
+            >
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                  <Box
+                    sx={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      bgcolor: channel.connected
+                        ? agentIsActive
+                          ? theme.palette.success.main
+                          : theme.palette.warning.main
+                        : theme.palette.error.main,
+                      mr: 1,
+                    }}
+                  />
+                  <Typography variant="h6" component="div">
+                    {channel.name}
+                  </Typography>
+                </Box>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ display: 'flex', gap: '8px' }}
+                >
+                  <Chip label={channel.type} />
+                  <Divider orientation="vertical" flexItem />
+                  <Chip
+                    color={
+                      channel.connected
+                        ? agentIsActive
+                          ? 'success'
+                          : 'warning'
+                        : 'error'
+                    }
+                    label={
+                      channel.connected
+                        ? agentIsActive
+                          ? 'Connected'
+                          : 'Connected but inactive'
+                        : 'Disconnected'
+                    }
+                  />
+                </Typography>
+              </CardContent>
+              <CardActions>
+                {channel.connected ? (
+                  <IconButton
+                    onClick={() => handleDisconnect(channel.id)}
+                    color="primary"
+                  >
+                    <Tooltip title="Disconnect">
+                      <LinkOff />
+                    </Tooltip>
+                  </IconButton>
+                ) : (
+                  <IconButton
+                    onClick={() => handleRefreshQrCode(channel.id)}
+                    color="primary"
+                  >
+                    <Tooltip title="Refresh QR Code To Connect">
+                      <Refresh />
+                    </Tooltip>
+                  </IconButton>
+                )}
+                <IconButton
+                  disabled={channel.connected}
+                  onClick={() => handleDeleteChannel(channel.id)}
+                  color="error"
+                >
+                  <Tooltip title="Delete Channel">
+                    <DeleteForever />
+                  </Tooltip>
+                </IconButton>
+              </CardActions>
+            </Card>
+          ))}
+        </Grid>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} variant="contained" color="primary">
@@ -775,4 +897,4 @@ const ChannelsDialog = ({ agentId, agentIsActive, open, onClose }: ChannelsDialo
       />
     </Dialog>
   );
-};
+}

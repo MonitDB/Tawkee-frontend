@@ -10,8 +10,8 @@ import { gridClasses } from '@mui/x-data-grid';
 import { tablePaginationClasses } from '@mui/material/TablePagination';
 import { gray } from '../../../../components/shared-theme/themePrimitives';
 
-/* eslint-disable import/prefer-default-export */
-export const dataGridCustomizations: DataGridProComponents<Theme> & DataGridProComponents<Theme> = {
+export const dataGridCustomizations: DataGridProComponents<Theme> &
+  DataGridProComponents<Theme> = {
   MuiDataGrid: {
     styleOverrides: {
       root: ({ theme }) => ({
@@ -42,7 +42,9 @@ export const dataGridCustomizations: DataGridProComponents<Theme> & DataGridProC
           },
         },
       }),
-      cell: ({ theme }) => ({ borderTopColor: (theme.vars || theme).palette.divider }),
+      cell: ({ theme }) => ({
+        borderTopColor: (theme.vars || theme).palette.divider,
+      }),
       menu: ({ theme }) => ({
         borderRadius: theme.shape.borderRadius,
         backgroundImage: 'none',
@@ -63,7 +65,9 @@ export const dataGridCustomizations: DataGridProComponents<Theme> & DataGridProC
       }),
 
       row: ({ theme }) => ({
-        '&:last-of-type': { borderBottom: `1px solid ${(theme.vars || theme).palette.divider}` },
+        '&:last-of-type': {
+          borderBottom: `1px solid ${(theme.vars || theme).palette.divider}`,
+        },
         '&:hover': {
           backgroundColor: (theme.vars || theme).palette.action.hover,
         },

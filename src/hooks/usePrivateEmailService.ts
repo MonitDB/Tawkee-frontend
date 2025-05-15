@@ -9,15 +9,15 @@ export const usePrivateEmailService = (token: string) => {
   const [loading, setLoading] = useState(false);
 
   const privateService = useMemo(
-    () => new PrivateEmailService({ token, apiUrl: env.API_URL }), [token, env.API_URL]
+    () => new PrivateEmailService({ token, apiUrl: env.API_URL }),
+    [token, env.API_URL]
   );
 
   const resendVerificationEmail = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await privateService.resendVerification()
+      const response = await privateService.resendVerification();
       notify(response.message, response.success ? 'success' : 'error');
-
     } catch (error) {
       notify(error instanceof Error ? error.message : 'Unknown error', 'error');
       return [];
@@ -28,6 +28,6 @@ export const usePrivateEmailService = (token: string) => {
 
   return {
     loading,
-    resendVerificationEmail
+    resendVerificationEmail,
   };
 };

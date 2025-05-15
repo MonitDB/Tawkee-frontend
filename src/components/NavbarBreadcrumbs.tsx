@@ -21,7 +21,7 @@ export default function NavbarBreadcrumbs() {
 
   function formatRouteName(path: string): string {
     if (path === '/' || path.trim() === '') return 'Home';
-  
+
     const segment = path.replace(/^\/+/, '').split('/')[0]; // remove leading slashes and get first segment
     return segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase();
   }
@@ -32,8 +32,11 @@ export default function NavbarBreadcrumbs() {
       separator={<NavigateNextRoundedIcon fontSize="small" />}
     >
       <Typography variant="body1">Dashboard</Typography>
-      <Typography variant="body1" sx={{ color: 'text.primary', fontWeight: 600 }}>
-        { formatRouteName(location.pathname) }
+      <Typography
+        variant="body1"
+        sx={{ color: 'text.primary', fontWeight: 600 }}
+      >
+        {formatRouteName(location.pathname)}
       </Typography>
     </StyledBreadcrumbs>
   );

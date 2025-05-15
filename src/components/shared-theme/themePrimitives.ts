@@ -31,16 +31,16 @@ const defaultTheme = createTheme();
 const customShadows: Shadows = [...defaultTheme.shadows];
 
 export const brand = {
-  50:  'hsl(206, 100%, 50%)',  // bright cyan
+  50: 'hsl(206, 100%, 50%)', // bright cyan
   100: 'hsl(213, 100%, 56%)',
   200: 'hsl(222, 100%, 61%)',
   300: 'hsl(234, 100%, 67%)',
   400: 'hsl(250, 100%, 68%)',
-  500: 'hsl(262, 95%, 65%)',   // violet
+  500: 'hsl(262, 95%, 65%)', // violet
   600: 'hsl(272, 85%, 64%)',
   700: 'hsl(285, 77%, 63%)',
   800: 'hsl(299, 68%, 61%)',
-  900: 'hsl(312, 91%, 66%)',   // bright pink
+  900: 'hsl(312, 91%, 66%)', // bright pink
 };
 
 export const gray = {
@@ -392,7 +392,7 @@ export const shape = {
   borderRadius: 8,
 };
 
-// @ts-ignore
+// @ts-expect-error No idea what to write here.
 const defaultShadows: Shadows = [
   'none',
   'var(--template-palette-baseShadow)',

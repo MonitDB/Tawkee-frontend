@@ -14,7 +14,6 @@ import FAQ from './components/FAQ';
 import Footer from './components/Footer';
 import LoadingBackdrop from '../../components/LoadingBackdrop';
 
-
 export default function MarketingPage(props: { disableCustomTheme?: boolean }) {
   const { loading } = useAuth();
 

@@ -21,7 +21,7 @@ export default function OptionsMenu() {
   const { logout } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-  
+
   const handleClick = (event: MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -32,7 +32,7 @@ export default function OptionsMenu() {
 
   const handleLogout = () => {
     logout();
-  }
+  };
 
   return (
     <Fragment>

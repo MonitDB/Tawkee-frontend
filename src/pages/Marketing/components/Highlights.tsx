@@ -1,4 +1,3 @@
-import * as React from 'react';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Container from '@mui/material/Container';
@@ -82,8 +81,8 @@ export default function Highlights() {
           </Typography>
           <Typography variant="body1" sx={{ color: 'grey.400' }}>
             Explore why our product stands out: adaptability, durability,
-            user-friendly design, and innovation. Enjoy reliable customer support and
-            precision in every detail.
+            user-friendly design, and innovation. Enjoy reliable customer
+            support and precision in every detail.
           </Typography>
         </Box>
         <Grid container spacing={2}>

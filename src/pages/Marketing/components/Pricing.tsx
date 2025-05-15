@@ -1,4 +1,3 @@
-import * as React from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
@@ -86,8 +85,8 @@ export default function Pricing() {
           Pricing
         </Typography>
         <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-          Quickly build an effective pricing table for your potential customers with
-          this layout. <br />
+          Quickly build an effective pricing table for your potential customers
+          with this layout. <br />
           It&apos;s built with default Material UI components with little
           customization.
         </Typography>
@@ -168,7 +167,12 @@ export default function Pricing() {
                 {tier.description.map((line) => (
                   <Box
                     key={line}
-                    sx={{ py: 1, display: 'flex', gap: 1.5, alignItems: 'center' }}
+                    sx={{
+                      py: 1,
+                      display: 'flex',
+                      gap: 1.5,
+                      alignItems: 'center',
+                    }}
                   >
                     <CheckCircleRoundedIcon
                       sx={[

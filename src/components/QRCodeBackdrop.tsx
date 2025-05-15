@@ -5,7 +5,6 @@ import Backdrop from '@mui/material/Backdrop';
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
 
-
 export default function QRCodeBackdrop({
   open,
   base64,
@@ -28,7 +27,7 @@ export default function QRCodeBackdrop({
 
       return () => {
         clearTimeout(timer);
-      } // Cleanup the timer if the component unmounts or open changes
+      }; // Cleanup the timer if the component unmounts or open changes
     }
   }, [open, onClose]); // Dependency array ensures effect runs only when 'open' changes
 

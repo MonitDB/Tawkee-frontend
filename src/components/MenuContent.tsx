@@ -32,9 +32,9 @@ export default function MenuContent() {
   const navigate = useNavigate();
 
   const routeKeyMap: Record<number, string> = {
-     0: '/',
-     1: '/agents',
-     2: '/chats'
+    0: '/',
+    1: '/agents',
+    2: '/chats',
   };
 
   return (

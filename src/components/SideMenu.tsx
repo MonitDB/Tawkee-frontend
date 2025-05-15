@@ -36,7 +36,7 @@ interface User {
 }
 
 export default function SideMenu() {
-  const { user, token } = useAuth() as { user: User | null, token: string };
+  const { user, token } = useAuth() as { user: User | null; token: string };
   const { resendVerificationEmail, loading } = usePrivateEmailService(token);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -71,16 +71,18 @@ export default function SideMenu() {
 
   // Atualizada para lidar com nome indefinido, como no componente anterior
   function stringAvatar(name: string | undefined) {
-    if (!name || typeof name !== 'string' || name.trim() === "") return {
-      sx: {
-        bgcolor: stringToColor('undefined'),
-      },
-      children: 'UN' // Ou alguma outra inicial padrão
-    };
+    if (!name || typeof name !== 'string' || name.trim() === '')
+      return {
+        sx: {
+          bgcolor: stringToColor('undefined'),
+        },
+        children: 'UN', // Ou alguma outra inicial padrão
+      };
 
     const parts = name.trim().split(/\s+/);
     const firstInitial = parts[0]?.[0]?.toUpperCase() || '';
-    const lastInitial = parts.length > 1 ? parts[parts.length - 1][0]?.toUpperCase() : '';
+    const lastInitial =
+      parts.length > 1 ? parts[parts.length - 1][0]?.toUpperCase() : '';
 
     return {
       sx: {
@@ -94,17 +96,32 @@ export default function SideMenu() {
   if (user) {
     if (user.emailVerified) {
       verificationBadge = (
-        <Typography component="span" variant="caption" sx={{ color: 'green', fontWeight: 'medium', lineHeight: 'normal', display: 'block' }}>
+        <Typography
+          component="span"
+          variant="caption"
+          sx={{
+            color: 'green',
+            fontWeight: 'medium',
+            lineHeight: 'normal',
+            display: 'block',
+          }}
+        >
           (verified)
         </Typography>
       );
     } else {
       verificationBadge = (
         <>
-          <Typography 
-            component="span" 
-            variant="caption" 
-            sx={{ color: 'warning.main', cursor: 'pointer', fontWeight: 'medium', lineHeight: 'normal', display: 'block' }}
+          <Typography
+            component="span"
+            variant="caption"
+            sx={{
+              color: 'warning.main',
+              cursor: 'pointer',
+              fontWeight: 'medium',
+              lineHeight: 'normal',
+              display: 'block',
+            }}
             onClick={handleMenuClick}
             aria-controls={openMenu ? 'verification-menu-sidemenu' : undefined}
             aria-haspopup="true"
@@ -129,7 +146,10 @@ export default function SideMenu() {
               horizontal: 'left',
             }}
           >
-            <MenuItem onClick={handleResendVerificationEmail} sx={{fontSize: '0.875rem'}}>
+            <MenuItem
+              onClick={handleResendVerificationEmail}
+              sx={{ fontSize: '0.875rem' }}
+            >
               Resend verification email
             </MenuItem>
           </Menu>
@@ -154,10 +174,10 @@ export default function SideMenu() {
           display: 'flex',
           // mt: 'calc(var(--template-frame-height, 0px) + 4px)', // Movido para o paper do Drawer
           p: 1.5,
-          alignItems: 'center' // Para alinhar o logo se houver outros elementos
+          alignItems: 'center', // Para alinhar o logo se houver outros elementos
         }}
       >
-        <TawkeeLogo />       
+        <TawkeeLogo />
       </Box>
       <Divider />
       <Box
@@ -183,18 +203,38 @@ export default function SideMenu() {
       >
         <Avatar
           // sizes="small" // Prop não padrão, usar sx para tamanho
-          alt={user?.name || "User Avatar"}
+          alt={user?.name || 'User Avatar'}
           {...stringAvatar(user?.name)} // Removido 'as string' pois stringAvatar agora lida com undefined
           sx={{ width: 36, height: 36 }}
         />
-        <Box sx={{ mr: 'auto', overflow: 'hidden' }}> {/* Adicionado overflow: hidden para nomes longos */} 
-          <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: '16px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} id="user-name-sidemenu">
-            { user?.name || "User Name" }
+        <Box sx={{ mr: 'auto', overflow: 'hidden' }}>
+          {' '}
+          {/* Adicionado overflow: hidden para nomes longos */}
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 500,
+              lineHeight: '16px',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+            id="user-name-sidemenu"
+          >
+            {user?.name || 'User Name'}
           </Typography>
-          {/* Badge de verificação adicionado abaixo do nome e acima do email */} 
+          {/* Badge de verificação adicionado abaixo do nome e acima do email */}
           {verificationBadge}
-          <Typography variant="caption" sx={{ color: 'text.secondary', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            { user?.email || "user.email@example.com" }
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'text.secondary',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {user?.email || 'user.email@example.com'}
           </Typography>
         </Box>
         <OptionsMenu />

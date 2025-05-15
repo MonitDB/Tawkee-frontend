@@ -42,11 +42,11 @@ export default function AppAppBar() {
 
   const handleSignIn = () => {
     navigate('/sign-in');
-  }
+  };
 
   const handleSignUp = () => {
     navigate('/sign-up');
-  }
+  };
 
   return (
     <AppBar
@@ -61,7 +61,15 @@ export default function AppAppBar() {
     >
       <Container maxWidth="lg">
         <StyledToolbar variant="dense" disableGutters>
-          <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', px: 0, gap: 2 }}>
+          <Box
+            sx={{
+              flexGrow: 1,
+              display: 'flex',
+              alignItems: 'center',
+              px: 0,
+              gap: 2,
+            }}
+          >
             <TawkeeLogo />
             <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
               <Button variant="text" color="info" size="small">
@@ -76,10 +84,20 @@ export default function AppAppBar() {
               <Button variant="text" color="info" size="small">
                 Pricing
               </Button>
-              <Button variant="text" color="info" size="small" sx={{ minWidth: 0 }}>
+              <Button
+                variant="text"
+                color="info"
+                size="small"
+                sx={{ minWidth: 0 }}
+              >
                 FAQ
               </Button>
-              <Button variant="text" color="info" size="small" sx={{ minWidth: 0 }}>
+              <Button
+                variant="text"
+                color="info"
+                size="small"
+                sx={{ minWidth: 0 }}
+              >
                 Blog
               </Button>
             </Box>
@@ -91,10 +109,20 @@ export default function AppAppBar() {
               alignItems: 'center',
             }}
           >
-            <Button color="primary" variant="text" size="small" onClick={handleSignIn}>
+            <Button
+              color="primary"
+              variant="text"
+              size="small"
+              onClick={handleSignIn}
+            >
               Sign in
             </Button>
-            <Button color="primary" variant="contained" size="small" onClick={handleSignUp}>
+            <Button
+              color="primary"
+              variant="contained"
+              size="small"
+              onClick={handleSignUp}
+            >
               Sign up
             </Button>
             <ColorModeIconDropdown />
@@ -134,12 +162,22 @@ export default function AppAppBar() {
                 <MenuItem>Blog</MenuItem>
                 <Divider sx={{ my: 3 }} />
                 <MenuItem>
-                  <Button color="primary" variant="contained" fullWidth onClick={handleSignUp}>
+                  <Button
+                    color="primary"
+                    variant="contained"
+                    fullWidth
+                    onClick={handleSignUp}
+                  >
                     Sign up
                   </Button>
                 </MenuItem>
                 <MenuItem>
-                  <Button color="primary" variant="outlined" fullWidth onClick={handleSignIn}>
+                  <Button
+                    color="primary"
+                    variant="outlined"
+                    fullWidth
+                    onClick={handleSignIn}
+                  >
                     Sign in
                   </Button>
                 </MenuItem>

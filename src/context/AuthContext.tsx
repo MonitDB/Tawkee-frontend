@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 import env from '../config/env';
 import { useHttpResponse } from './ResponseNotifier';
 
@@ -53,9 +59,9 @@ interface AuthProviderProps {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 // Auth Provider Component
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export function AuthProvider({ children }: AuthProviderProps) {
   const { notify } = useHttpResponse();
- 
+
   // State to hold JWT token
   const [token, setToken] = useState<string | null>(null);
   // State to hold User non-sensitive data
@@ -70,7 +76,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // On component mount, check if token exists in localStorage
   useEffect(() => {
     const storedToken = localStorage.getItem('app:auth-token');
-    const storedUser = JSON.parse(localStorage.getItem('app:user') as string) as User;
+    const storedUser = JSON.parse(
+      localStorage.getItem('app:user') as string
+    ) as User;
     const latestProvider = localStorage.getItem('app:latest-provider') || null;
 
     if (storedToken || storedUser) {
@@ -78,7 +86,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(storedUser);
       setIsAuthenticated(true);
     }
-    
+
     setLatestProvider(latestProvider);
     setLoading(false);
   }, []);
@@ -89,8 +97,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await fetch(`${env.API_URL}/auth/login`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
-        },
+          'Content-Type': 'application/json',
+        } as const,
         body: JSON.stringify(credentials),
       });
 
@@ -117,28 +125,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(userData);
       setLatestProvider(userData.provider);
       setIsAuthenticated(true);
-      
+
       return { success: true };
     } catch (error) {
-      notify(error instanceof Error ? error.message : "", 'error');
+      notify(error instanceof Error ? error.message : '', 'error');
 
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : 'An unknown error occurred',
       };
     } finally {
       setLoading(false);
     }
   };
 
-  const register = async (credentials: RegisterCredentials): Promise<Result> => {
+  const register = async (
+    credentials: RegisterCredentials
+  ): Promise<Result> => {
     try {
       setLoading(true);
       const response = await fetch(`${env.API_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        },
+        } as const,
         body: JSON.stringify(credentials),
       });
 
@@ -148,7 +159,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error(data.error);
       }
 
-      notify('Successful registration! We sent a verification email to your address. Please check it to enable all functionalities!', 'success');
+      notify(
+        'Successful registration! We sent a verification email to your address. Please check it to enable all functionalities!',
+        'success'
+      );
       const { token: newToken } = data.data;
       const userData: User = data.data.user;
 
@@ -164,13 +178,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(userData);
       setLatestProvider(userData.provider);
       setIsAuthenticated(true);
-      
+
       return { success: true };
     } catch (error) {
       notify(error instanceof Error ? error.message : '', 'error');
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : 'An unknown error occurred',
       };
     } finally {
       setLoading(false);
@@ -180,12 +195,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const profile = async (token: string): Promise<Result> => {
     try {
       setLoading(true);
-      let response = await fetch(`${env.API_URL}/auth/profile`, {
+      const response = await fetch(`${env.API_URL}/auth/profile`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        } as const,
       });
 
       const data = await response.json();
@@ -210,25 +225,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsAuthenticated(true);
 
       return { success: true };
-
     } catch (error) {
       notify(error instanceof Error ? error.message : '', 'error');
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : 'An unknown error occurred',
       };
     } finally {
       setLoading(false);
     }
-  } 
+  };
 
   // Logout function - clears token and resets state
   const logout = async (): Promise<Result> => {
     if (!token) {
       notify('You are not logged in!', 'error');
-      return { 
-        success: false, 
-        error: 'You are not logged in!' 
+      return {
+        success: false,
+        error: 'You are not logged in!',
       };
     }
 
@@ -238,45 +253,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+          Authorization: `Bearer ${token}`,
+        } as const,
       });
 
       const data = await response.json();
-      
+
       if (data.error) {
         throw new Error(data.error);
       }
-      
+
       notify('Successful logout!', 'success');
       // Remove token and user from localStorage
       localStorage.removeItem('app:auth-token');
       localStorage.removeItem('app:user');
-      
+
       // Reset state
       setToken(null);
       setUser(null);
       setIsAuthenticated(false);
 
       return { success: true };
-    
-    } catch(error) {
+    } catch (error) {
       notify(error instanceof Error ? error.message : '', 'error');
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : 'An unknown error occurred',
       };
     } finally {
       setLoading(false);
     }
   };
 
-  const resetPassword = async ({password, resetToken}: PasswordResetInput): Promise<Result> => {
+  const resetPassword = async ({
+    password,
+    resetToken,
+  }: PasswordResetInput): Promise<Result> => {
     if (!password || !resetToken) {
       notify('You must provide a password and token!', 'error');
-      return { 
-        success: false, 
-        error: 'You must provide a password and token!' 
+      return {
+        success: false,
+        error: 'You must provide a password and token!',
       };
     }
 
@@ -286,12 +304,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ newPassword: password, token: resetToken })
+        } as const,
+        body: JSON.stringify({ newPassword: password, token: resetToken }),
       });
 
       const data = await response.json();
-      
+
       if (data.error) {
         throw new Error(data.error);
       }
@@ -299,20 +317,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (!data.success) {
         throw new Error(data.message);
       }
-      
+
       notify(data.message, 'success');
       return { success: true };
-    
-    } catch(error) {
+    } catch (error) {
       notify(error instanceof Error ? error.message : '', 'error');
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : 'An unknown error occurred',
       };
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   // The context value object that will be provided
   const authContextValue: AuthContextType = {
@@ -325,7 +343,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     profile,
     logout,
-    resetPassword
+    resetPassword,
   };
 
   return (
@@ -333,16 +351,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
 // Custom hook for using auth context
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  
+
   if (context === null) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  
+
   return context;
 };
 

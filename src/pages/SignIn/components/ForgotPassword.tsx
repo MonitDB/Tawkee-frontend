@@ -20,14 +20,16 @@ interface ForgotPasswordProps {
   handleClose: () => void;
 }
 
-export default function ForgotPassword({ open, handleClose }: ForgotPasswordProps) {
+export default function ForgotPassword({
+  open,
+  handleClose,
+}: ForgotPasswordProps) {
   const { notify } = useHttpResponse();
   const { sendForgotPasswordEmail, loading } = usePublicEmailService();
   const theme = useTheme();
 
   const [countdown, setCountdown] = useState(5);
   const [requestSucceeded, setRequestSucceeded] = useState(false);
-
 
   const handleSubmitForgotPasswordRequest = async () => {
     const email = document.getElementById('email-forget') as HTMLInputElement;
@@ -38,12 +40,11 @@ export default function ForgotPassword({ open, handleClose }: ForgotPasswordProp
     }
 
     const succeeded: boolean = await sendForgotPasswordEmail(email.value);
-    email.value = ""
+    email.value = '';
     setRequestSucceeded(succeeded);
-  }
+  };
 
   useEffect(() => {
-
     if (requestSucceeded && countdown > 0) {
       const timerId = setTimeout(() => {
         setCountdown(countdown - 1);
@@ -55,7 +56,6 @@ export default function ForgotPassword({ open, handleClose }: ForgotPasswordProp
       setRequestSucceeded(false);
       setCountdown(5);
     }
-
   }, [requestSucceeded, countdown]);
 
   return (
@@ -78,8 +78,8 @@ export default function ForgotPassword({ open, handleClose }: ForgotPasswordProp
         sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}
       >
         <DialogContentText>
-          Enter your account&apos;s email address, and we&apos;ll send you a link to
-          reset your password.
+          Enter your account&apos;s email address, and we&apos;ll send you a
+          link to reset your password.
         </DialogContentText>
         <OutlinedInput
           autoFocus
@@ -88,7 +88,11 @@ export default function ForgotPassword({ open, handleClose }: ForgotPasswordProp
           id="email-forget"
           name="email"
           label="Email address"
-          placeholder={requestSucceeded ? `You can try again in ${countdown} seconds...` : "Email address"}
+          placeholder={
+            requestSucceeded
+              ? `You can try again in ${countdown} seconds...`
+              : 'Email address'
+          }
           type="email"
           fullWidth
         />
@@ -102,8 +106,8 @@ export default function ForgotPassword({ open, handleClose }: ForgotPasswordProp
           disabled={requestSucceeded}
           sx={{
             '&.Mui-disabled': {
-              color: theme.palette.action.disabled
-            }
+              color: theme.palette.action.disabled,
+            },
           }}
         >
           Continue

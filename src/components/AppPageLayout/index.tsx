@@ -30,13 +30,19 @@ const xThemeComponents = {
 type AppPageLayoutProps = {
   disableCustomTheme?: boolean;
   children: ReactNode;
-}
+};
 
-export default function AppPageLayout({ disableCustomTheme, children }: AppPageLayoutProps) {
+export default function AppPageLayout({
+  disableCustomTheme,
+  children,
+}: AppPageLayoutProps) {
   const { loading: authLoading } = useAuth();
 
   return (
-    <AppTheme disableCustomTheme={disableCustomTheme}  themeComponents={xThemeComponents}>
+    <AppTheme
+      disableCustomTheme={disableCustomTheme}
+      themeComponents={xThemeComponents}
+    >
       <CssBaseline enableColorScheme />
       <Box sx={{ display: 'flex' }}>
         <SideMenu />

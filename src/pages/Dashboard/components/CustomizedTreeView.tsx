@@ -99,10 +99,9 @@ function TransitionComponent(props: TransitionProps) {
 interface CustomLabelProps {
   children: React.ReactNode;
   color?: Color;
-  expandable?: boolean;
 }
 
-function CustomLabel({ color, expandable, children, ...other }: CustomLabelProps) {
+function CustomLabel({ color, children, ...other }: CustomLabelProps) {
   const theme = useTheme();
   const colors = {
     blue: (theme.vars || theme).palette.primary.main,
@@ -130,7 +129,7 @@ interface CustomTreeItemProps
 
 const CustomTreeItem = React.forwardRef(function CustomTreeItem(
   props: CustomTreeItemProps,
-  ref: React.Ref<HTMLLIElement>,
+  ref: React.Ref<HTMLLIElement>
 ) {
   const { id, itemId, label, disabled, children, ...other } = props;
 

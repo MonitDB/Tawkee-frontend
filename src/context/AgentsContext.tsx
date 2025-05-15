@@ -1,8 +1,13 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from 'react';
 import env from '../config/env';
 import { useHttpResponse } from './ResponseNotifier';
 import { useAuth } from './AuthContext';
-
 
 export enum AIModel {
   GPT_4 = 'GPT_4',
@@ -17,7 +22,7 @@ export enum GroupingTime {
   FIVE_SEC = 'FIVE_SEC',
   TEN_SEC = 'TEN_SEC',
   THIRD_SEC = 'THIRD_SEC',
-  ONE_MINUTE = 'ONE_MINUTE'
+  ONE_MINUTE = 'ONE_MINUTE',
 }
 
 export interface AgentSettings {
@@ -32,10 +37,10 @@ export interface AgentSettings {
 }
 
 export interface AgentWebhooks {
-  onNewMessage: string | null,
-  onLackKnowLedge: string | null,
-  onTransfer: string | null,
-  onFinishAttendance: string | null
+  onNewMessage: string | null;
+  onLackKnowLedge: string | null;
+  onTransfer: string | null;
+  onFinishAttendance: string | null;
 }
 
 export enum AgentCommunicationType {
@@ -58,20 +63,20 @@ export interface Agent {
   behavior: string;
   communicationType: AgentCommunicationType;
   type: AgentType;
-  jobName: string,
-  jobSite: string,
-  jobDescription: string,
+  jobName: string;
+  jobSite: string;
+  jobDescription: string;
   isActive: boolean;
 }
 
 export interface AgentWrapper {
-  agent: Agent;  
+  agent: Agent;
   settings: AgentSettings;
   webhooks: AgentWebhooks;
-
 }
 
-export interface AgentInput extends Omit<Agent, 'id' | 'workspaceId' | 'isActive'> {}
+export interface AgentInput
+  extends Omit<Agent, 'id' | 'workspaceId' | 'isActive'> {}
 
 interface AgentsContextType {
   agents: AgentWrapper[];
@@ -83,7 +88,10 @@ interface AgentsContextType {
   activateAgent: (id: string) => Promise<boolean>;
   deactivateAgent: (id: string) => Promise<boolean>;
   getAgentSettings: (id: string) => Promise<AgentSettings | null>;
-  updateAgentSettings: (id: string, settings: AgentSettings) => Promise<boolean>;
+  updateAgentSettings: (
+    id: string,
+    settings: AgentSettings
+  ) => Promise<boolean>;
   refreshAgents: () => Promise<void>;
 }
 
@@ -93,7 +101,7 @@ interface AgentsProviderProps {
 
 const AgentsContext = createContext<AgentsContextType | null>(null);
 
-export const AgentsProvider: React.FC<AgentsProviderProps> = ({ children }) => {
+export function AgentsProvider({ children }: AgentsProviderProps) {
   const { user, token } = useAuth();
   const { notify } = useHttpResponse();
 
@@ -103,12 +111,15 @@ export const AgentsProvider: React.FC<AgentsProviderProps> = ({ children }) => {
   const fetchAgents = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${env.API_URL}/workspace/${user?.workspaceId}/agents`, {
-        method: 'GET',
-        headers: { 
-          'Authorization': `Bearer ${token}`
-        },        
-      });
+      const response = await fetch(
+        `${env.API_URL}/workspace/${user?.workspaceId}/agents`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          } as const,
+        }
+      );
       const data = await response.json();
       if (data.error) throw new Error(data.error);
       setAgents(data.data || []);
@@ -128,9 +139,9 @@ export const AgentsProvider: React.FC<AgentsProviderProps> = ({ children }) => {
       setLoading(true);
       const response = await fetch(`${env.API_URL}/agent/${id}`, {
         method: 'GET',
-        headers: { 
-          'Authorization': `Bearer ${token}`
-        },        
+        headers: {
+          Authorization: `Bearer ${token}`,
+        } as const,
       });
       const data = await response.json();
       if (data.error) throw new Error(data.error);
@@ -146,14 +157,17 @@ export const AgentsProvider: React.FC<AgentsProviderProps> = ({ children }) => {
   const createAgent = async (input: AgentInput): Promise<boolean> => {
     try {
       setLoading(true);
-      const response = await fetch(`${env.API_URL}/workspace/${user?.workspaceId}/agents`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(input),
-      });
+      const response = await fetch(
+        `${env.API_URL}/workspace/${user?.workspaceId}/agents`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          } as const,
+          body: JSON.stringify(input),
+        }
+      );
 
       const data = await response.json();
       if (data.error) throw new Error(data.error);
@@ -161,7 +175,7 @@ export const AgentsProvider: React.FC<AgentsProviderProps> = ({ children }) => {
       notify('Agent created successfully!', 'success');
 
       if (data.data) {
-        setAgents(prev => [...prev, data.data]);
+        setAgents((prev) => [...prev, data.data]);
       }
 
       return true;
@@ -173,15 +187,18 @@ export const AgentsProvider: React.FC<AgentsProviderProps> = ({ children }) => {
     }
   };
 
-  const updateAgent = async (id: string, input: AgentInput): Promise<boolean> => {
+  const updateAgent = async (
+    id: string,
+    input: AgentInput
+  ): Promise<boolean> => {
     try {
       setLoading(true);
       const response = await fetch(`${env.API_URL}/agent/${id}`, {
         method: 'PUT',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-         },
+          Authorization: `Bearer ${token}`,
+        } as const,
         body: JSON.stringify(input),
       });
 
@@ -191,8 +208,10 @@ export const AgentsProvider: React.FC<AgentsProviderProps> = ({ children }) => {
       notify('Agent updated successfully!', 'success');
 
       if (data.data) {
-        setAgents(prev =>
-          prev.map(agent => (agent.agent.id === id ? { ...agent, ...data.data } : agent))
+        setAgents((prev) =>
+          prev.map((agent) =>
+            agent.agent.id === id ? { ...agent, ...data.data } : agent
+          )
         );
       }
 
@@ -210,14 +229,14 @@ export const AgentsProvider: React.FC<AgentsProviderProps> = ({ children }) => {
       setLoading(true);
       const response = await fetch(`${env.API_URL}/agent/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` } as const,
       });
 
       const data = await response.json();
       if (data.error) throw new Error(data.error);
 
       notify('Agent deleted successfully!', 'success');
-      setAgents(prev => prev.filter(agent => agent.agent.id !== id));
+      setAgents((prev) => prev.filter((agent) => agent.agent.id !== id));
       return true;
     } catch (error) {
       notify(error instanceof Error ? error.message : '', 'error');
@@ -232,15 +251,15 @@ export const AgentsProvider: React.FC<AgentsProviderProps> = ({ children }) => {
       setLoading(true);
       const response = await fetch(`${env.API_URL}/agent/${id}/active`, {
         method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` } as const,
       });
 
       const data = await response.json();
       if (data.error) throw new Error(data.error);
 
       notify('Agent activated!', 'success');
-      setAgents(prev =>
-        prev.map(wrapper =>
+      setAgents((prev) =>
+        prev.map((wrapper) =>
           wrapper.agent.id === id
             ? { ...wrapper, agent: { ...wrapper.agent, isActive: true } }
             : wrapper
@@ -261,15 +280,15 @@ export const AgentsProvider: React.FC<AgentsProviderProps> = ({ children }) => {
       setLoading(true);
       const response = await fetch(`${env.API_URL}/agent/${id}/inactive`, {
         method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` } as const,
       });
 
       const data = await response.json();
       if (data.error) throw new Error(data.error);
 
       notify('Agent deactivated!', 'success');
-      setAgents(prev =>
-        prev.map(wrapper =>
+      setAgents((prev) =>
+        prev.map((wrapper) =>
           wrapper.agent.id === id
             ? { ...wrapper, agent: { ...wrapper.agent, isActive: false } }
             : wrapper
@@ -285,11 +304,13 @@ export const AgentsProvider: React.FC<AgentsProviderProps> = ({ children }) => {
     }
   };
 
-  const getAgentSettings = async (id: string): Promise<AgentSettings | null> => {
+  const getAgentSettings = async (
+    id: string
+  ): Promise<AgentSettings | null> => {
     try {
       setLoading(true);
       const response = await fetch(`${env.API_URL}/agent/${id}/settings`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` } as const,
       });
       const data = await response.json();
       if (data.error) throw new Error(data.error);
@@ -301,30 +322,33 @@ export const AgentsProvider: React.FC<AgentsProviderProps> = ({ children }) => {
       setLoading(false);
     }
   };
-  
-  const updateAgentSettings = async (id: string, settings: AgentSettings): Promise<boolean> => {
+
+  const updateAgentSettings = async (
+    id: string,
+    settings: AgentSettings
+  ): Promise<boolean> => {
     try {
       setLoading(true);
       const response = await fetch(`${env.API_URL}/agent/${id}/settings`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+          Authorization: `Bearer ${token}`,
+        } as const,
         body: JSON.stringify(settings),
       });
       const data = await response.json();
       if (data.error) throw new Error(data.error);
-  
+
       notify('Settings updated successfully!', 'success');
-  
+
       // Atualiza o agente no estado
-      setAgents(prev =>
-        prev.map(wrapper =>
+      setAgents((prev) =>
+        prev.map((wrapper) =>
           wrapper.agent.id === id ? { ...wrapper, settings } : wrapper
         )
       );
-  
+
       return true;
     } catch (error) {
       notify(error instanceof Error ? error.message : '', 'error');
@@ -357,7 +381,7 @@ export const AgentsProvider: React.FC<AgentsProviderProps> = ({ children }) => {
       {children}
     </AgentsContext.Provider>
   );
-};
+}
 
 // Hook
 export const useAgents = (): AgentsContextType => {

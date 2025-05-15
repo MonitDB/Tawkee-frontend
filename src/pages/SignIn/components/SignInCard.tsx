@@ -21,7 +21,6 @@ import env from '../../../config/env';
 import { Badge } from '@mui/material';
 import TawkeeLogo from '../../../components/TawkeeLogo';
 
-
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
@@ -51,95 +50,97 @@ export default function SignInCard() {
 
   const currentEmail: string | null = localStorage.getItem('app:email');
 
-  const [shouldRememberEmail, setShouldRememberEmail] = useState(currentEmail ? true : false);
+  const [shouldRememberEmail, setShouldRememberEmail] = useState(
+    currentEmail ? true : false
+  );
 
   const [open, setOpen] = useState(false);
 
   const handleClickOpen = () => {
-      setOpen(true);
+    setOpen(true);
   };
 
   const handleClose = () => {
-      setOpen(false);
+    setOpen(false);
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
+    event.preventDefault();
 
-      if (emailError || passwordError) {
-          return;
-      }
-      const data = new FormData(event.currentTarget);
+    if (emailError || passwordError) {
+      return;
+    }
+    const data = new FormData(event.currentTarget);
 
-      if (shouldRememberEmail) {
-        localStorage.setItem('app:email', data.get('email') as string);
-      } else {
-        localStorage.removeItem('app:email');
-      }
-      
-      try {
-        login({
-            email: data.get('email') as string,
-            password: data.get('password') as string,
-        });
+    if (shouldRememberEmail) {
+      localStorage.setItem('app:email', data.get('email') as string);
+    } else {
+      localStorage.removeItem('app:email');
+    }
 
-        navigate('/');
-      } catch(error) {
-        return;
-      }
+    try {
+      login({
+        email: data.get('email') as string,
+        password: data.get('password') as string,
+      });
+
+      navigate('/');
+    } catch (error) {
+      return;
+    }
   };
 
   const validateInputs = () => {
-      const email = document.getElementById('email') as HTMLInputElement;
-      const password = document.getElementById('password') as HTMLInputElement;
+    const email = document.getElementById('email') as HTMLInputElement;
+    const password = document.getElementById('password') as HTMLInputElement;
 
-      let isValid = true;
+    let isValid = true;
 
-      if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
+    if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
       setEmailError(true);
       setEmailErrorMessage('Please enter a valid email address.');
       isValid = false;
-      } else {
+    } else {
       setEmailError(false);
       setEmailErrorMessage('');
-      }
+    }
 
-      const passwordValue = password.value;
-      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/;
+    const passwordValue = password.value;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/;
 
-      if (!passwordValue || passwordValue.length < 6) {
-          setPasswordError(true);
-          setPasswordErrorMessage('Password must be at least 6 characters long.');
-          isValid = false;
-      } else if (!passwordRegex.test(passwordValue)) {
-          setPasswordError(true);
-          setPasswordErrorMessage(
-          'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.'
-          );
-          isValid = false;
-      } else {
-          setPasswordError(false);
-          setPasswordErrorMessage('');
-      }
+    if (!passwordValue || passwordValue.length < 6) {
+      setPasswordError(true);
+      setPasswordErrorMessage('Password must be at least 6 characters long.');
+      isValid = false;
+    } else if (!passwordRegex.test(passwordValue)) {
+      setPasswordError(true);
+      setPasswordErrorMessage(
+        'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.'
+      );
+      isValid = false;
+    } else {
+      setPasswordError(false);
+      setPasswordErrorMessage('');
+    }
 
-      return isValid;
+    return isValid;
   };
 
   const handleNavigationToSignUp = () => {
     navigate('/sign-up');
-  }
+  };
 
   const handleRememberMe = (event: ChangeEvent<HTMLInputElement>) => {
     setShouldRememberEmail(event.target.checked);
-  }
+  };
 
   const handleGoogleLogin = () => {
     window.location.href = `${env.API_URL}/auth/google`;
-  }
+  };
 
   const handleFacebookLogin = () => {
     window.location.href = `${env.API_URL}/auth/facebook`;
-  }
+  };
 
   return (
     <Card variant="outlined">
@@ -207,7 +208,10 @@ export default function SignInCard() {
         </FormControl>
         <FormControlLabel
           control={
-            <Checkbox value="remember" color="primary" defaultChecked={shouldRememberEmail}
+            <Checkbox
+              value="remember"
+              color="primary"
+              defaultChecked={shouldRememberEmail}
             />
           }
           label="Remember me"
@@ -215,34 +219,30 @@ export default function SignInCard() {
         />
         <ForgotPassword open={open} handleClose={handleClose} />
         <Button
-            type="submit"
-            fullWidth
-            variant={loading ? "outlined" : "contained"}
-            onClick={validateInputs}
-            disabled={loading}
+          type="submit"
+          fullWidth
+          variant={loading ? 'outlined' : 'contained'}
+          onClick={validateInputs}
+          disabled={loading}
         >
           Sign in
         </Button>
         <Typography sx={{ textAlign: 'center' }}>
           Don&apos;t have an account?{' '}
           <span>
-          <button
-            type='button'
-            onClick={handleNavigationToSignUp}
-            style={{
-              backgroundColor: '#fff0',
-              border: '1px solid transparent',
-              cursor: 'pointer'
-            }
-          }>
-            <Link
-              variant="body2"
-              sx={{ alignSelf: 'center' }}
+            <button
+              type="button"
+              onClick={handleNavigationToSignUp}
+              style={{
+                backgroundColor: '#fff0',
+                border: '1px solid transparent',
+                cursor: 'pointer',
+              }}
             >
-              Sign up
-            </Link>
-          </button>
-
+              <Link variant="body2" sx={{ alignSelf: 'center' }}>
+                Sign up
+              </Link>
+            </button>
           </span>
         </Typography>
       </Box>
@@ -251,7 +251,7 @@ export default function SignInCard() {
         <Badge
           color="secondary"
           badgeContent="Last used"
-          invisible={latestProvider !== "google"}
+          invisible={latestProvider !== 'google'}
         >
           <Button
             fullWidth
@@ -265,7 +265,7 @@ export default function SignInCard() {
         <Badge
           color="secondary"
           badgeContent="Last used"
-          invisible={latestProvider !== "facebook"}
+          invisible={latestProvider !== 'facebook'}
         >
           <Button
             fullWidth

@@ -9,27 +9,33 @@ export const usePublicEmailService = () => {
   const [loading, setLoading] = useState(false);
 
   const publicService = useMemo(
-    () => new PublicEmailService({ apiUrl: env.API_URL }), [env.API_URL]
+    () => new PublicEmailService({ apiUrl: env.API_URL }),
+    [env.API_URL]
   );
 
-  const sendForgotPasswordEmail = useCallback(async (email: string) => {
-    try {
-      setLoading(true);
-      const response = await publicService.sendForgotPassword(email)
-      notify(response.message, response.success ? 'success' : 'error');
+  const sendForgotPasswordEmail = useCallback(
+    async (email: string) => {
+      try {
+        setLoading(true);
+        const response = await publicService.sendForgotPassword(email);
+        notify(response.message, response.success ? 'success' : 'error');
 
-      return true;
-
-    } catch (error) {
-      notify(error instanceof Error ? error.message : 'Unknown error', 'error');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [publicService]);
+        return true;
+      } catch (error) {
+        notify(
+          error instanceof Error ? error.message : 'Unknown error',
+          'error'
+        );
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [publicService]
+  );
 
   return {
     loading,
-    sendForgotPasswordEmail
+    sendForgotPasswordEmail,
   };
 };

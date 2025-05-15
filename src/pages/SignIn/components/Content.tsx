@@ -7,7 +7,6 @@ import SettingsSuggestRoundedIcon from '@mui/icons-material/SettingsSuggestRound
 import ThumbUpAltRoundedIcon from '@mui/icons-material/ThumbUpAltRounded';
 import TawkeeLogo from '../../../components/TawkeeLogo';
 
-
 const items = [
   {
     icon: <SettingsSuggestRoundedIcon sx={{ color: 'text.secondary' }} />,
@@ -38,7 +37,12 @@ const items = [
 export default function Content() {
   return (
     <Stack
-      sx={{ flexDirection: 'column', alignSelf: 'center', gap: 4, maxWidth: 450 }}
+      sx={{
+        flexDirection: 'column',
+        alignSelf: 'center',
+        gap: 4,
+        maxWidth: 450,
+      }}
     >
       <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
         <TawkeeLogo />

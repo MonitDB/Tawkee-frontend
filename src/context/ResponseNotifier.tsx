@@ -6,15 +6,18 @@ type HttpResponseContextType = {
   notify: (message: string, severity?: AlertColor) => void;
 };
 
-const HttpResponseContext = createContext<HttpResponseContextType | undefined>(undefined);
+const HttpResponseContext = createContext<HttpResponseContextType | undefined>(
+  undefined
+);
 
 export const useHttpResponse = () => {
   const context = useContext(HttpResponseContext);
-  if (!context) throw new Error('useHttpResponse must be used within HttpResponseProvider');
+  if (!context)
+    throw new Error('useHttpResponse must be used within HttpResponseProvider');
   return context;
 };
 
-export const HttpResponseProvider = ({ children }: { children: ReactNode }) => {
+export function HttpResponseProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [severity, setSeverity] = useState<AlertColor>('info');
@@ -30,11 +33,16 @@ export const HttpResponseProvider = ({ children }: { children: ReactNode }) => {
   return (
     <HttpResponseContext.Provider value={{ notify }}>
       {children}
-      <Snackbar open={open} autoHideDuration={5000} onClose={handleClose} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+      <Snackbar
+        open={open}
+        autoHideDuration={5000}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
         <Alert onClose={handleClose} severity={severity} sx={{ width: '100%' }}>
           {message}
         </Alert>
       </Snackbar>
     </HttpResponseContext.Provider>
   );
-};
+}

@@ -1,9 +1,8 @@
-import { HttpResponseProvider } from "./context/ResponseNotifier";
-import { AuthProvider } from "./context/AuthContext";
-import { AgentsProvider } from "./context/AgentsContext";
+import { HttpResponseProvider } from './context/ResponseNotifier';
+import { AuthProvider } from './context/AuthContext';
+import { AgentsProvider } from './context/AgentsContext';
 
-import { Routes } from "./routes";
-
+import { Routes } from './routes';
 
 export default function App() {
   return (

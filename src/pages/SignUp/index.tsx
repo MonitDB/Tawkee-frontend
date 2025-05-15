@@ -76,14 +76,16 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
   const [nameError, setNameError] = useState(false);
   const [nameErrorMessage, setNameErrorMessage] = useState('');
   const [workspaceNameError, setWorkspaceNameError] = useState(false);
-  const [workspaceNameErrorMessage, setWorkspaceNameErrorMessage] = useState('');
-
+  const [workspaceNameErrorMessage, setWorkspaceNameErrorMessage] =
+    useState('');
 
   const validateInputs = () => {
     const email = document.getElementById('email') as HTMLInputElement;
     const password = document.getElementById('password') as HTMLInputElement;
     const name = document.getElementById('name') as HTMLInputElement;
-    const workspaceName = document.getElementById('workspaceName') as HTMLInputElement;
+    const workspaceName = document.getElementById(
+      'workspaceName'
+    ) as HTMLInputElement;
 
     let isValid = true;
 
@@ -100,18 +102,18 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/;
 
     if (!passwordValue || passwordValue.length < 6) {
-        setPasswordError(true);
-        setPasswordErrorMessage('Password must be at least 6 characters long.');
-        isValid = false;
+      setPasswordError(true);
+      setPasswordErrorMessage('Password must be at least 6 characters long.');
+      isValid = false;
     } else if (!passwordRegex.test(passwordValue)) {
-        setPasswordError(true);
-        setPasswordErrorMessage(
+      setPasswordError(true);
+      setPasswordErrorMessage(
         'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.'
-        );
-        isValid = false;
+      );
+      isValid = false;
     } else {
-        setPasswordError(false);
-        setPasswordErrorMessage('');
+      setPasswordError(false);
+      setPasswordErrorMessage('');
     }
 
     if (!name.value || name.value.length < 1) {
@@ -132,7 +134,6 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
       setWorkspaceNameErrorMessage('');
     }
 
-
     return isValid;
   };
 
@@ -147,28 +148,28 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
       name: data.get('name') as string,
       email: data.get('email') as string,
       password: data.get('password') as string,
-      workspaceName: data.get('workspaceName') as string
+      workspaceName: data.get('workspaceName') as string,
     });
   };
 
   const handleNavigationToSignIn = () => {
     navigate('/sign-in');
-  }
+  };
 
   const handleGoogleLogin = () => {
     window.location.href = `${env.API_URL}/auth/google`;
-  }
+  };
 
   const handleFacebookLogin = () => {
     window.location.href = `${env.API_URL}/auth/facebook`;
-  }
+  };
 
   return (
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
       <ColorModeSelect sx={{ position: 'fixed', top: '1rem', right: '1rem' }} />
       <SignUpContainer direction="column" justifyContent="space-between">
-        <Card variant="outlined" sx={{ overflowY: 'auto' }} >
+        <Card variant="outlined" sx={{ overflowY: 'auto' }}>
           <TawkeeLogo />
           <Typography
             component="h1"
@@ -278,18 +279,15 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
             <Typography sx={{ textAlign: 'center' }}>
               Already have an account?{' '}
               <button
-                type='button'
+                type="button"
                 onClick={handleNavigationToSignIn}
                 style={{
                   backgroundColor: '#fff0',
                   border: '1px solid transparent',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
                 }}
               >
-                <Link
-                  variant="body2"
-                  sx={{ alignSelf: 'center' }}
-                >
+                <Link variant="body2" sx={{ alignSelf: 'center' }}>
                   Sign in
                 </Link>
               </button>
@@ -297,7 +295,7 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
           </Box>
         </Card>
       </SignUpContainer>
-      <LoadingBackdrop open={loading} />     
+      <LoadingBackdrop open={loading} />
     </AppTheme>
   );
 }
