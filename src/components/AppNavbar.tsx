@@ -1,4 +1,7 @@
-import * as React from 'react';
+import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
+
+import { useTheme } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
@@ -7,10 +10,32 @@ import MuiToolbar from '@mui/material/Toolbar';
 import { tabsClasses } from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
-import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
 import SideMenuMobile from './SideMenuMobile';
 import MenuButton from './MenuButton';
 import ColorModeIconDropdown from './shared-theme/ColorModeIconDropdown';
+
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import SupportAgentIcon from '@mui/icons-material/SupportAgent';
+import GroupIcon from '@mui/icons-material/groups';
+import ChatIcon from '@mui/icons-material/Chat';
+import ContactIcon from '@mui/icons-material/Contacts';
+
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
+import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
+import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
+
+const ListItems = {
+  Dashboard: <DashboardIcon color="inherit" sx={{ fontSize: '1rem' }} />,
+  Agents: <SupportAgentIcon color="inherit" sx={{ fontSize: '1rem' }} />,
+  Team: <GroupIcon color="inherit" sx={{ fontSize: '1rem' }} />,
+  Chats: <ChatIcon color="inherit" sx={{ fontSize: '1rem' }} />,
+  Contact: <ContactIcon color="inherit" sx={{ fontSize: '1rem' }} />,
+  Billing: <ReceiptLongIcon color="inherit" sx={{ fontSize: '1rem' }} />,
+  Settings: <SettingsRoundedIcon color="inherit" sx={{ fontSize: '1rem' }} />,
+  About: <InfoRoundedIcon color="inherit" sx={{ fontSize: '1rem' }} />,
+  Feedback: <HelpRoundedIcon color="inherit" sx={{ fontSize: '1rem' }} />,
+};
 
 const Toolbar = styled(MuiToolbar)({
   width: '100%',
@@ -29,11 +54,19 @@ const Toolbar = styled(MuiToolbar)({
 });
 
 export default function AppNavbar() {
-  const [open, setOpen] = React.useState(false);
+  const location = useLocation();
+  const [open, setOpen] = useState(false);
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
   };
+
+  function formatRouteName(path: string): string {
+    if (path === '/' || path.trim() === '') return 'Dashboard';
+
+    const segment = path.replace(/^\/+/, '').split('/')[0]; // remove leading slashes and get first segment
+    return segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase();
+  }
 
   return (
     <AppBar
@@ -63,13 +96,17 @@ export default function AppNavbar() {
             spacing={1}
             sx={{ justifyContent: 'center', mr: 'auto' }}
           >
-            <CustomIcon />
+            <CustomIcon
+              location={
+                formatRouteName(location.pathname) as keyof typeof ListItems
+              }
+            />
             <Typography
               variant="h4"
               component="h1"
               sx={{ color: 'text.primary' }}
             >
-              Dashboard
+              {formatRouteName(location.pathname)}
             </Typography>
           </Stack>
           <ColorModeIconDropdown />
@@ -83,7 +120,9 @@ export default function AppNavbar() {
   );
 }
 
-export function CustomIcon() {
+export function CustomIcon({ location }: { location: keyof typeof ListItems }) {
+  const theme = useTheme();
+
   return (
     <Box
       sx={{
@@ -95,15 +134,14 @@ export function CustomIcon() {
         justifyContent: 'center',
         alignItems: 'center',
         alignSelf: 'center',
-        backgroundImage:
-          'linear-gradient(135deg, hsl(210, 98%, 60%) 0%, hsl(210, 100%, 35%) 100%)',
+        backgroundImage: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.dark} 100%)`,
         color: 'hsla(210, 100%, 95%, 0.9)',
         border: '1px solid',
         borderColor: 'hsl(210, 100%, 55%)',
         boxShadow: 'inset 0 2px 5px rgba(255, 255, 255, 0.3)',
       }}
     >
-      <DashboardRoundedIcon color="inherit" sx={{ fontSize: '1rem' }} />
+      {ListItems[location]}
     </Box>
   );
 }

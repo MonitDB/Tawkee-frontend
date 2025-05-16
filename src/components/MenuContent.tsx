@@ -7,21 +7,27 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Stack from '@mui/material/Stack';
 
-import HomeIcon from '@mui/icons-material/Home';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
-import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
+import GroupIcon from '@mui/icons-material/groups';
+import ChatIcon from '@mui/icons-material/Chat';
+import ContactIcon from '@mui/icons-material/Contacts';
 
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
 import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 
 const mainListItems = [
-  { text: 'Home', icon: <HomeIcon /> },
+  { text: 'Dashboard', icon: <DashboardIcon /> },
   { text: 'Agents', icon: <SupportAgentIcon /> },
-  { text: 'Chats', icon: <ChatBubbleIcon /> },
+  { text: 'Team', icon: <GroupIcon /> },
+  { text: 'Chats', icon: <ChatIcon /> },
+  { text: 'Contact', icon: <ContactIcon /> },
 ];
 
 const secondaryListItems = [
+  { text: 'Billing', icon: <ReceiptLongIcon /> },
   { text: 'Settings', icon: <SettingsRoundedIcon /> },
   { text: 'About', icon: <InfoRoundedIcon /> },
   { text: 'Feedback', icon: <HelpRoundedIcon /> },
