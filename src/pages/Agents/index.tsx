@@ -9,7 +9,7 @@ import {
 } from '../../context/AgentsContext';
 
 import { useAuth } from '../../context/AuthContext';
-import { useHttpResponse } from '../../context/ResponseNotifier';
+// import { useHttpResponse } from '../../context/ResponseNotifier';
 
 import { useChannelService } from '../../hooks/useChannelService';
 
@@ -26,7 +26,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
+  // TextField,
   List,
   ListItem,
   ListItemAvatar,
@@ -53,10 +53,11 @@ import {
 import {
   Add as AddIcon,
   DeleteForever,
-  Refresh,
-  MapsUgcOutlined,
+  // Refresh,
+  // MapsUgcOutlined,
   LinkOff,
 } from '@mui/icons-material';
+import QrCode2Icon from '@mui/icons-material/QrCode2';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import { useNavigate } from 'react-router-dom';
 import CreateAgentDialog from './components/CreateAgentDialog';
@@ -158,21 +159,21 @@ function ChannelsDialog({
   open,
   onClose,
 }: ChannelsDialogProps) {
-  const { notify } = useHttpResponse();
+  // const { notify } = useHttpResponse();
   const theme = useTheme();
 
   const { token } = useAuth();
   const {
     channels,
     getChannelsForAgent,
-    createChannel,
+    // createChannel,
     getQRCode,
     disconnectChannel,
     deleteChannel,
     loading,
   } = useChannelService(token as string);
 
-  const [newChannelName, setNewChannelName] = useState('');
+  // const [newChannelName, setNewChannelName] = useState('');
   const [QRCode, setQRCode] = useState<string | null>(null);
 
   const handleDisconnect = (channelId: string) => {
@@ -183,15 +184,15 @@ function ChannelsDialog({
     deleteChannel(channelId);
   };
 
-  const handleCreateChannel = () => {
-    if (newChannelName) {
-      // Assuming you have a method to create a new channel
-      createChannel(agentId, newChannelName, 'WHATSAPP');
-      setNewChannelName('');
-    } else {
-      notify('Please name your channel first.', 'warning');
-    }
-  };
+  // const handleCreateChannel = () => {
+  //   if (newChannelName) {
+  //     // Assuming you have a method to create a new channel
+  //     createChannel(agentId, newChannelName, 'WHATSAPP');
+  //     setNewChannelName('');
+  //   } else {
+  //     notify('Please name your channel first.', 'warning');
+  //   }
+  // };
 
   const handleRefreshQrCode = async (channelId: string) => {
     const { qrCode } = await getQRCode(channelId);
@@ -216,7 +217,7 @@ function ChannelsDialog({
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Agent Channels</DialogTitle>
       <DialogContent>
-        <Grid
+        {/* <Grid
           container
           spacing={2}
           sx={{ display: 'flex', alignItems: 'center', margin: 2 }}
@@ -248,7 +249,7 @@ function ChannelsDialog({
               </Tooltip>
             </IconButton>
           </Grid>
-        </Grid>
+        </Grid> */}
         <Grid>
           {channels.map((channel) => (
             <Card
@@ -329,12 +330,13 @@ function ChannelsDialog({
                     color="primary"
                   >
                     <Tooltip title="Refresh QR Code To Connect">
-                      <Refresh />
+                      <QrCode2Icon />
                     </Tooltip>
                   </IconButton>
                 )}
                 <IconButton
-                  disabled={channel.connected}
+                  disabled
+                  // disabled={channel.connected}
                   onClick={() => handleDeleteChannel(channel.id)}
                   color="error"
                 >
