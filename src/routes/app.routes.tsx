@@ -4,7 +4,7 @@ import { Routes, Route } from 'react-router-dom';
 import AppPageLayout from '../components/AppPageLayout';
 
 import Loading from '../pages/Loading';
-import Dashboard from '../pages/Dashboard';
+// import Dashboard from '../pages/Dashboard';
 import Agents from '../pages/Agents';
 import OAuthCallbackPage from '../pages/OAuthCallback';
 import VerifyAccount from '../pages/VerifyAccount';
@@ -20,7 +20,8 @@ export default function AppRoutes() {
           path="/"
           element={
             <AppPageLayout>
-              <Dashboard />
+              {/* <Dashboard /> */}
+              <Agents />
             </AppPageLayout>
           }
         />
@@ -33,7 +34,7 @@ export default function AppRoutes() {
             </AppPageLayout>
           }
         />
-        <Route
+        {/* <Route
           key="2"
           path="/agents/:agentId/channels"
           element={
@@ -41,7 +42,7 @@ export default function AppRoutes() {
               <Dashboard />
             </AppPageLayout>
           }
-        />
+        /> */}
 
         <Route
           key="3"
@@ -53,7 +54,7 @@ export default function AppRoutes() {
           }
         />
 
-        <Route
+        {/* <Route
           key="4"
           path="/chats"
           element={
@@ -61,7 +62,7 @@ export default function AppRoutes() {
               <Dashboard />
             </AppPageLayout>
           }
-        />
+        /> */}
         <Route
           key="5"
           path="/auth/oauth-result"
@@ -76,7 +77,7 @@ export default function AppRoutes() {
           path="*"
           element={
             <AppPageLayout>
-              <Dashboard />
+              <Agents />
             </AppPageLayout>
           }
         />

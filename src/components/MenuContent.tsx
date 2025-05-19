@@ -7,31 +7,31 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Stack from '@mui/material/Stack';
 
-import DashboardIcon from '@mui/icons-material/Dashboard';
+// import DashboardIcon from '@mui/icons-material/Dashboard';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
-import GroupsIcon from '@mui/icons-material/Groups';
-import ChatIcon from '@mui/icons-material/Chat';
-import ContactIcon from '@mui/icons-material/Contacts';
+// import GroupsIcon from '@mui/icons-material/Groups';
+// import ChatIcon from '@mui/icons-material/Chat';
+// import ContactIcon from '@mui/icons-material/Contacts';
 
-import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
-import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
+// import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+// import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 // import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
 // import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 
 const mainListItems = [
-  { text: 'Dashboard', icon: <DashboardIcon /> },
+  // { text: 'Dashboard', icon: <DashboardIcon /> },
   { text: 'Agents', icon: <SupportAgentIcon /> },
-  { text: 'Team', icon: <GroupsIcon /> },
-  { text: 'Chats', icon: <ChatIcon /> },
-  { text: 'Contact', icon: <ContactIcon /> },
+  // { text: 'Team', icon: <GroupsIcon /> },
+  // { text: 'Chats', icon: <ChatIcon /> },
+  // { text: 'Contact', icon: <ContactIcon /> },
 ];
 
-const secondaryListItems = [
-  { text: 'Billing', icon: <ReceiptLongIcon /> },
-  { text: 'Settings', icon: <SettingsRoundedIcon /> },
-  // { text: 'About', icon: <InfoRoundedIcon /> },
-  // { text: 'Feedback', icon: <HelpRoundedIcon /> },
-];
+// const secondaryListItems = [
+//   { text: 'Billing', icon: <ReceiptLongIcon /> },
+//   { text: 'Settings', icon: <SettingsRoundedIcon /> },
+//   { text: 'About', icon: <InfoRoundedIcon /> },
+//   { text: 'Feedback', icon: <HelpRoundedIcon /> },
+// ];
 
 export default function MenuContent() {
   const location = useLocation();
@@ -60,7 +60,7 @@ export default function MenuContent() {
           </ListItem>
         ))}
       </List>
-      <List dense>
+      {/* <List dense>
         {secondaryListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: 'block' }}>
             <ListItemButton>
@@ -69,7 +69,7 @@ export default function MenuContent() {
             </ListItemButton>
           </ListItem>
         ))}
-      </List>
+      </List> */}
     </Stack>
   );
 }
