@@ -9,6 +9,7 @@ import Agents from '../pages/Agents';
 import OAuthCallbackPage from '../pages/OAuthCallback';
 import VerifyAccount from '../pages/VerifyAccount';
 import ResetPassword from '../pages/ResetPassword';
+import AgentDetails from '../pages/AgentDetails';
 
 export default function AppRoutes() {
   return (
@@ -41,8 +42,19 @@ export default function AppRoutes() {
             </AppPageLayout>
           }
         />
+
         <Route
           key="3"
+          path="/agents/:agentId/:tabName"
+          element={
+            <AppPageLayout segment="Agent Details">
+              <AgentDetails />
+            </AppPageLayout>
+          }
+        />
+
+        <Route
+          key="4"
           path="/chats"
           element={
             <AppPageLayout>
@@ -51,13 +63,13 @@ export default function AppRoutes() {
           }
         />
         <Route
-          key="4"
+          key="5"
           path="/auth/oauth-result"
           element={<OAuthCallbackPage />}
         />
 
-        <Route key="5" path="/verify-email" element={<VerifyAccount />} />
-        <Route key="6" path="/reset-password" element={<ResetPassword />} />
+        <Route key="6" path="/verify-email" element={<VerifyAccount />} />
+        <Route key="7" path="/reset-password" element={<ResetPassword />} />
 
         <Route
           key="*"

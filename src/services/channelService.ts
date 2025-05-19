@@ -1,9 +1,15 @@
 // ChannelService.ts
+export enum ChannelType {
+  WHATSAPP,
+}
+
 export type Channel = {
   id: string;
   name: string;
-  type: string;
+  type: ChannelType;
   connected: boolean;
+  createdAt: string;
+  updatedAt: string;
   config: {
     evolutionApi?: object;
   };

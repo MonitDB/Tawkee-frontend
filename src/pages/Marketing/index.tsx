@@ -12,7 +12,7 @@ import Features from './components/Features';
 import Testimonials from './components/Testimonials';
 import FAQ from './components/FAQ';
 import Footer from './components/Footer';
-import LoadingBackdrop from '../../components/LoadingBackdrop';
+import { LinearProgress } from '@mui/material';
 
 export default function MarketingPage(props: { disableCustomTheme?: boolean }) {
   const { loading } = useAuth();
@@ -22,6 +22,7 @@ export default function MarketingPage(props: { disableCustomTheme?: boolean }) {
       <CssBaseline enableColorScheme />
 
       <AppAppBar />
+      {loading && <LinearProgress color="secondary" />}
       <Hero />
       <div>
         <LogoCollection />
@@ -37,7 +38,6 @@ export default function MarketingPage(props: { disableCustomTheme?: boolean }) {
         <Divider />
         <Footer />
       </div>
-      <LoadingBackdrop open={loading} />
     </AppTheme>
   );
 }

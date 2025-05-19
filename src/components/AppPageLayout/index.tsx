@@ -29,11 +29,13 @@ const xThemeComponents = {
 
 type AppPageLayoutProps = {
   disableCustomTheme?: boolean;
+  segment?: string;
   children: ReactNode;
 };
 
 export default function AppPageLayout({
   disableCustomTheme,
+  segment,
   children,
 }: AppPageLayoutProps) {
   const { loading: authLoading } = useAuth();
@@ -55,7 +57,6 @@ export default function AppPageLayout({
             backgroundColor: theme.vars
               ? `rgba(${theme.vars.palette.background.defaultChannel} / 1)`
               : alpha(theme.palette.background.default, 1),
-            overflow: 'auto',
           })}
         >
           <Stack
@@ -67,7 +68,7 @@ export default function AppPageLayout({
               mt: { xs: 8, md: 0 },
             }}
           >
-            <Header />
+            {segment ? <Header overrideLatestSegment={segment} /> : <Header />}
             {children}
           </Stack>
         </Box>

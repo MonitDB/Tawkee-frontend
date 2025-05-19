@@ -15,8 +15,8 @@ import ContactIcon from '@mui/icons-material/Contacts';
 
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
-import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
-import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
+// import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
+// import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 
 const mainListItems = [
   { text: 'Dashboard', icon: <DashboardIcon /> },
@@ -29,8 +29,8 @@ const mainListItems = [
 const secondaryListItems = [
   { text: 'Billing', icon: <ReceiptLongIcon /> },
   { text: 'Settings', icon: <SettingsRoundedIcon /> },
-  { text: 'About', icon: <InfoRoundedIcon /> },
-  { text: 'Feedback', icon: <HelpRoundedIcon /> },
+  // { text: 'About', icon: <InfoRoundedIcon /> },
+  // { text: 'Feedback', icon: <HelpRoundedIcon /> },
 ];
 
 export default function MenuContent() {

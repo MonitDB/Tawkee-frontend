@@ -64,8 +64,7 @@ export default function QRCodeBackdrop({
             maxWidth: '100%',
             maxHeight: '100%',
             borderRadius: 'inherit',
-            color: 'black',
-            backgroundColor: 'wheat',
+            color: 'black'
           }}
         />
       </Box>

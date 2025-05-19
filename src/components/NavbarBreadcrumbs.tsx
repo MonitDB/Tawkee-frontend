@@ -16,15 +16,21 @@ const StyledBreadcrumbs = styled(Breadcrumbs)(({ theme }) => ({
   },
 }));
 
-export default function NavbarBreadcrumbs() {
+export default function NavbarBreadcrumbs({ overrideLatestSegment = '' }) {
   const location = useLocation();
 
-  function formatRouteName(path: string): string {
-    if (path === '/' || path.trim() === '') return 'Dashboard';
+  function getSegments(path: string): string[] {
+    if (path === '/' || path.trim() === '') return ['Dashboard'];
 
-    const segment = path.replace(/^\/+/, '').split('/')[0]; // remove leading slashes and get first segment
+    return path.replace(/^\/+/, '').split('/');
+  }
+
+  function formatSegment(segment: string): string {
     return segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase();
   }
+  const segments = getSegments(location.pathname);
+
+  const formattedSegments = segments.map((segment) => formatSegment(segment));
 
   return (
     <StyledBreadcrumbs
@@ -32,12 +38,22 @@ export default function NavbarBreadcrumbs() {
       separator={<NavigateNextRoundedIcon fontSize="small" />}
     >
       <Typography variant="body1">Home</Typography>
-      <Typography
-        variant="body1"
-        sx={{ color: 'text.primary', fontWeight: 600 }}
-      >
-        {formatRouteName(location.pathname)}
-      </Typography>
+      {formattedSegments.map((segment, index) => (
+        <Typography
+          key={index}
+          variant="body1"
+          sx={{
+            color: index === formattedSegments.length - 1 ? 'text.primary' : '',
+            fontWeight: index === formattedSegments.length - 1 ? 600 : 400, // Apply bold only to the last
+          }}
+        >
+          {index === formattedSegments.length - 1
+            ? overrideLatestSegment.length > 0
+              ? overrideLatestSegment
+              : segment
+            : segment}
+        </Typography>
+      ))}
     </StyledBreadcrumbs>
   );
 }

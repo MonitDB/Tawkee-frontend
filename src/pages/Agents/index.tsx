@@ -1,19 +1,25 @@
-import { useEffect, useState } from 'react';
-
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import {
   useAgents,
-  Agent,
   AgentSettings,
-  AgentInput,
   AIModel,
   GroupingTime,
   AgentCommunicationType,
   AgentType,
 } from '../../context/AgentsContext';
 
-import LoadingBackdrop from '../../components/LoadingBackdrop';
+import { useAuth } from '../../context/AuthContext';
+import { useHttpResponse } from '../../context/ResponseNotifier';
 
+import { useChannelService } from '../../hooks/useChannelService';
+
+import LoadingBackdrop from '../../components/LoadingBackdrop';
+import QRCodeBackdrop from '../../components/QRCodeBackdrop';
+import ActionMenu from './components/ActionMenu';
+
+import useMediaQuery from '@mui/material/useMediaQuery';
 import {
+  Box,
   Button,
   Typography,
   Dialog,
@@ -21,43 +27,52 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Avatar,
+  Tabs,
+  Tab,
   IconButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Switch,
-  Tooltip,
+  MenuItem,
+  useTheme,
+  styled,
+  DialogProps,
   Chip,
   Grid,
-  useTheme,
-  DialogProps,
-  MenuItem,
-  Box,
   Card,
   CardContent,
   CardActions,
   Divider,
+  Tooltip,
+  useColorScheme,
+  Menu,
+  Pagination,
 } from '@mui/material';
 import {
+  Add as AddIcon,
   DeleteForever,
   Refresh,
   MapsUgcOutlined,
   LinkOff,
 } from '@mui/icons-material';
-import { useHttpResponse } from '../../context/ResponseNotifier';
-import QRCodeBackdrop from '../../components/QRCodeBackdrop';
-import { useChannelService } from '../../hooks/useChannelService';
-import { useAuth } from '../../context/AuthContext';
-import ActionMenu from './components/ActionMenu';
+import SupportAgentIcon from '@mui/icons-material/SupportAgent';
+import { useNavigate } from 'react-router-dom';
+import CreateAgentDialog from './components/CreateAgentDialog';
+import AgentSettingsDialog from './components/AgentSettingsDialog';
+import { Channel } from '../../services/channelService';
 
-type AgentWrapper = {
-  agent: Agent;
-  settings: AgentSettings;
-};
+const StyledTabs = styled(Tabs)(({ theme }) => ({
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  marginBottom: theme.spacing(3),
+  '& .MuiTab-root': {
+    textTransform: 'none',
+    minWidth: 100,
+    fontSize: '0.9rem',
+    padding: '8px 16px',
+  },
+}));
 
 const modelDescriptions: Record<AIModel, string> = {
   [AIModel.GPT_4]: 'GPT-4: General-purpose large language model.',
@@ -121,565 +136,14 @@ export const agentTypeDescriptions: Record<AgentType, string> = {
     'Technical or customer support with a formal and helpful tone.',
   [AgentType.SALE]:
     'Sales-oriented communication with a persuasive and clear tone.',
-  [AgentType.PERSONAL]:
-    'Casual and friendly interaction with an informal tone.',
+  [AgentType.PERSONAL]: 'Support on personal tasks with a helpful tone.',
 };
 
-export default function Agents() {
-  const theme = useTheme();
-
-  const {
-    agents,
-    createAgent,
-    updateAgent,
-    deleteAgent,
-    activateAgent,
-    deactivateAgent,
-    updateAgentSettings,
-    loading,
-  } = useAgents();
-
-  const [open, setOpen] = useState(false);
-
-  const blankAgentInput: AgentInput = {
-    name: '',
-    behavior: '',
-    avatar: undefined,
-    communicationType: AgentCommunicationType.FORMAL,
-    type: AgentType.SALE,
-    jobName: '',
-    jobSite: '',
-    jobDescription: '',
-  };
-
-  const [selectedAgent, setSelectedAgent] = useState<Agent | AgentInput>(
-    blankAgentInput
-  );
-
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [selectedSettings, setSelectedSettings] =
-    useState<AgentSettings | null>(null);
-  const [settingsAgentId, setSettingsAgentId] = useState<string | null>(null);
-
-  const [channelsOpen, setChannelsOpen] = useState(false);
-  const [channelsAgentId, setChannelsAgentId] = useState<string | null>(null);
-  const [channelsAgentActive, setChannelsAgentActive] = useState<
-    boolean | null
-  >(null);
-
-  const [typeOfModalOpened, setTypeOfModalOpened] = useState<string | null>(
-    null
-  );
-
-  const handleOpenModal = (agent?: Agent) => {
-    if (agent == undefined) {
-      setTypeOfModalOpened('Create');
-    } else {
-      setTypeOfModalOpened('Edit');
-    }
-
-    setSelectedAgent(agent || blankAgentInput);
-    setOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setOpen(false);
-    setSelectedAgent(blankAgentInput);
-  };
-
-  const handleSave = async (selectedAgent: Agent | AgentInput) => {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { id, workspaceId, isActive, ...agentInput } =
-        selectedAgent as Agent;
-
-      if (typeOfModalOpened === 'Create') {
-        await createAgent(agentInput as AgentInput);
-      } else {
-        await updateAgent(id, agentInput);
-      }
-    } finally {
-      handleCloseModal();
-    }
-  };
-
-  const handleDelete = (id: string) => {
-    deleteAgent(id);
-  };
-
-  const handleToggleActive = (agent: Agent) => {
-    agent.isActive ? deactivateAgent(agent.id) : activateAgent(agent.id);
-  };
-
-  const handleOpenSettings = (agentId: string, settings: AgentSettings) => {
-    setSettingsAgentId(agentId);
-    setSelectedSettings(settings);
-    setSettingsOpen(true);
-  };
-
-  const handleCloseSettings = () => {
-    setSettingsOpen(false);
-    setSelectedSettings(null);
-    setSettingsAgentId(null);
-  };
-
-  const handleSaveSettings = () => {
-    if (!selectedSettings || settingsAgentId === null) return;
-
-    updateAgentSettings(settingsAgentId, selectedSettings);
-
-    handleCloseSettings();
-  };
-
-  const handleOpenChannels = (agentId: string, agentIsActive: boolean) => {
-    setChannelsAgentId(agentId);
-    setChannelsAgentActive(agentIsActive);
-    setChannelsOpen(true);
-  };
-
-  const handleCloseChannels = () => {
-    setChannelsOpen(false);
-  };
-
-  function TruncatedText({
-    text,
-    maxChars = 40,
-  }: {
-    text: string;
-    maxChars?: number;
-  }) {
-    const truncated =
-      text.length > maxChars ? text.slice(0, maxChars) + '…' : text;
-
-    return (
-      <Tooltip title={text}>
-        <Typography noWrap>{truncated}</Typography>
-      </Tooltip>
-    );
-  }
-
-  return (
-    <>
-      <Typography variant="h4" gutterBottom>
-        Agent Manager
-      </Typography>
-      <Button variant="contained" onClick={() => handleOpenModal()}>
-        Create New Agent
-      </Button>
-
-      <TableContainer component={Paper} sx={{ mt: 3 }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Job</TableCell>
-              <TableCell>Type</TableCell>
-              <TableCell>Communication</TableCell>
-              <TableCell>Behavior</TableCell>
-              <TableCell>Actions</TableCell>
-              <TableCell>Active</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {agents.map((item: AgentWrapper) => {
-              const { agent, settings } = item;
-
-              return (
-                <TableRow
-                  key={agent.id}
-                  sx={{
-                    '&:last-child td, &:last-child th': { border: 0 },
-                    transition: 'background-color 0.3s',
-                    border: '2px solid transparent',
-                    '&:hover': {
-                      backgroundColor: agent.isActive
-                        ? theme.palette.action.hover
-                        : 'transparent',
-                      borderLeft: agent.isActive
-                        ? `2px solid ${theme.palette.info.dark}`
-                        : `2px solid ${theme.palette.action.selected}`,
-                      borderRight: agent.isActive
-                        ? `2px solid ${theme.palette.info.dark}`
-                        : `2px solid ${theme.palette.action.selected}`,
-                    },
-                  }}
-                >
-                  <TableCell
-                    sx={{
-                      color: agent.isActive ? 'text.primary' : 'text.secondary',
-                    }}
-                  >
-                    <TruncatedText text={agent.name} maxChars={20} />
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      color: agent.isActive ? 'text.primary' : 'text.secondary',
-                    }}
-                  >
-                    <TruncatedText text={agent.jobName} maxChars={10} />
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      color: agent.isActive ? 'text.primary' : 'text.secondary',
-                    }}
-                  >
-                    <Tooltip
-                      title={
-                        agentCommunicationDescriptions[agent.communicationType]
-                      }
-                    >
-                      <Chip label={agent.type} />
-                    </Tooltip>
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      color: agent.isActive ? 'text.primary' : 'text.secondary',
-                    }}
-                  >
-                    <Tooltip title={agentTypeDescriptions[agent.type]}>
-                      <Chip label={agent.communicationType} />
-                    </Tooltip>
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      color: agent.isActive ? 'text.primary' : 'text.secondary',
-                    }}
-                  >
-                    <TruncatedText text={agent.behavior} />
-                  </TableCell>
-
-                  <TableCell
-                    sx={{
-                      color: agent.isActive ? 'text.primary' : 'text.secondary',
-                    }}
-                  >
-                    <ActionMenu
-                      agent={agent}
-                      settings={settings}
-                      handleOpenModal={handleOpenModal}
-                      handleDelete={handleDelete}
-                      handleOpenChannels={handleOpenChannels}
-                      handleOpenSettings={handleOpenSettings}
-                      theme={theme}
-                    />
-                  </TableCell>
-
-                  <TableCell
-                    sx={{
-                      color: agent.isActive ? 'text.primary' : 'text.secondary',
-                    }}
-                  >
-                    <Tooltip
-                      placement="left"
-                      title="When inactive, the Agent will not respond to messages"
-                    >
-                      <Switch
-                        checked={agent.isActive}
-                        onChange={() => handleToggleActive(agent)}
-                      />
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {agents.length == 0 && (
-        <Typography
-          variant="h4"
-          component="h1"
-          sx={{ color: 'text.primary', padding: '20px' }}
-        >
-          No agent yet
-        </Typography>
-      )}
-
-      <Dialog open={open} onClose={handleCloseModal} fullWidth maxWidth="md">
-        <DialogTitle>{`${typeOfModalOpened} Agent`}</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2}>
-            <Grid size={12}>
-              <TextField
-                variant="standard"
-                margin="dense"
-                fullWidth
-                label="Name"
-                value={selectedAgent?.name || ''}
-                onChange={(e) =>
-                  setSelectedAgent((prev) =>
-                    prev ? { ...prev, name: e.target.value } : prev
-                  )
-                }
-              />
-            </Grid>
-            <Grid size={12}>
-              <TextField
-                variant="standard"
-                margin="dense"
-                fullWidth
-                label="Behavior"
-                multiline
-                value={selectedAgent?.behavior || ''}
-                onChange={(e) =>
-                  setSelectedAgent((prev) =>
-                    prev ? { ...prev, behavior: e.target.value } : prev
-                  )
-                }
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                variant="standard"
-                select
-                margin="dense"
-                fullWidth
-                label="Communication Type"
-                value={selectedAgent?.communicationType || ''}
-                onChange={(e) =>
-                  setSelectedAgent((prev) =>
-                    prev
-                      ? {
-                          ...prev,
-                          communicationType: e.target
-                            .value as AgentCommunicationType,
-                        }
-                      : prev
-                  )
-                }
-              >
-                {Object.values(AgentCommunicationType).map(
-                  (communicationType) => (
-                    <MenuItem key={communicationType} value={communicationType}>
-                      <Tooltip
-                        title={
-                          agentCommunicationDescriptions[communicationType]
-                        }
-                        placement="right"
-                      >
-                        <span>{communicationType}</span>
-                      </Tooltip>
-                    </MenuItem>
-                  )
-                )}
-              </TextField>
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                variant="standard"
-                select
-                margin="dense"
-                fullWidth
-                label="Type"
-                value={selectedAgent?.type || ''}
-                onChange={(e) =>
-                  setSelectedAgent((prev) =>
-                    prev ? { ...prev, type: e.target.value as AgentType } : prev
-                  )
-                }
-              >
-                {Object.values(AgentType).map((type) => (
-                  <MenuItem key={type} value={type}>
-                    <Tooltip
-                      title={agentTypeDescriptions[type]}
-                      placement="right"
-                    >
-                      <span>{type}</span>
-                    </Tooltip>
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                variant="standard"
-                margin="dense"
-                fullWidth
-                label="Job Name"
-                value={selectedAgent?.jobName || ''}
-                onChange={(e) =>
-                  setSelectedAgent((prev) =>
-                    prev ? { ...prev, jobName: e.target.value } : prev
-                  )
-                }
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
-                variant="standard"
-                margin="dense"
-                fullWidth
-                label="Job Site"
-                value={selectedAgent?.jobSite || ''}
-                onChange={(e) =>
-                  setSelectedAgent((prev) =>
-                    prev ? { ...prev, jobSite: e.target.value } : prev
-                  )
-                }
-              />
-            </Grid>
-            <Grid size={12}>
-              <TextField
-                variant="standard"
-                margin="dense"
-                fullWidth
-                label="Job Description"
-                multiline
-                minRows={3}
-                value={selectedAgent?.jobDescription || ''}
-                onChange={(e) =>
-                  setSelectedAgent((prev) =>
-                    prev ? { ...prev, jobDescription: e.target.value } : prev
-                  )
-                }
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseModal}>Cancel</Button>
-          <Button variant="contained" onClick={() => handleSave(selectedAgent)}>
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog
-        open={settingsOpen}
-        onClose={handleCloseSettings}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>Agent Settings</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <TextField
-                variant="standard"
-                margin="dense"
-                fullWidth
-                label="Timezone"
-                value={selectedSettings?.timezone || ''}
-                onChange={(e) =>
-                  setSelectedSettings((prev) =>
-                    prev ? { ...prev, timezone: e.target.value } : prev
-                  )
-                }
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <TextField
-                variant="standard"
-                margin="dense"
-                select
-                fullWidth
-                label="Preferred Model"
-                value={selectedSettings?.preferredModel || ''}
-                onChange={(e) =>
-                  setSelectedSettings((prev) =>
-                    prev
-                      ? { ...prev, preferredModel: e.target.value as AIModel }
-                      : prev
-                  )
-                }
-              >
-                {Object.values(AIModel).map((model) => (
-                  <MenuItem key={model} value={model}>
-                    <Tooltip title={modelDescriptions[model]} placement="right">
-                      <span>{model}</span>
-                    </Tooltip>
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <TextField
-                variant="standard"
-                margin="dense"
-                select
-                fullWidth
-                label="Message Grouping Time"
-                value={selectedSettings?.messageGroupingTime || ''}
-                onChange={(e) =>
-                  setSelectedSettings((prev) =>
-                    prev
-                      ? {
-                          ...prev,
-                          messageGroupingTime: e.target.value as GroupingTime,
-                        }
-                      : prev
-                  )
-                }
-              >
-                {Object.values(GroupingTime).map((group) => (
-                  <MenuItem key={group} value={group}>
-                    <Tooltip
-                      title={groupingDescriptions[group]}
-                      placement="right"
-                    >
-                      <span>{group}</span>
-                    </Tooltip>
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid size={{ xs: 12, md: 3 }}></Grid>
-            <Grid size={{ xs: 12, md: 3 }}></Grid>
-            <Grid size={{ xs: 12, md: 3 }}></Grid>
-            <Grid size={{ xs: 12, md: 3 }}></Grid>
-            <Grid size={{ xs: 12, md: 3 }}></Grid>
-          </Grid>
-          <Divider />
-          {settingsOptions.map(({ key, label, description }) => (
-            <Tooltip key={key} title={description} placement="right">
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginTop: 8,
-                }}
-              >
-                <Typography>{label}</Typography>
-                <Switch
-                  checked={
-                    (selectedSettings?.[
-                      key as keyof AgentSettings
-                    ] as boolean) || false
-                  }
-                  onChange={(e) =>
-                    setSelectedSettings((prev) =>
-                      prev ? { ...prev, [key]: e.target.checked } : prev
-                    )
-                  }
-                />
-              </div>
-            </Tooltip>
-          ))}
-          <Divider />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseSettings}>Cancel</Button>
-          <Button variant="contained" onClick={handleSaveSettings}>
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <ChannelsDialog
-        agentId={channelsAgentId as string}
-        agentIsActive={channelsAgentActive as boolean}
-        open={channelsOpen}
-        onClose={handleCloseChannels}
-        fullWidth
-        maxWidth="sm"
-      />
-
-      <LoadingBackdrop open={loading} />
-    </>
-  );
-}
+const agentActivityDescriptions: Record<number, string> = {
+  0: 'The agent is shutdown and will not respond to messages even when connected to channels.',
+  1: 'The agent is ready to connect to channels and respond to messages on your behalf.',
+  2: 'The agent is connected to channels and ready to respond to messages.'
+};
 
 interface ChannelsDialogProps extends DialogProps {
   agentId: string;
@@ -896,5 +360,375 @@ function ChannelsDialog({
         onClose={handleCloseQRCodeBackdrop}
       />
     </Dialog>
+  );
+}
+
+export default function Agents() {
+  const theme = useTheme();
+  const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
+  const navigate = useNavigate();
+
+  const [tab, setTab] = useState(0);
+  const {
+    deleteAgent,
+    updateAgentSettings,
+    loading,
+    paginatedAgents,
+    setPage
+  } = useAgents();
+
+  const { agents, meta } = paginatedAgents;
+
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
+    setTab(newValue);
+  };
+
+  const filteredAgents = agents.filter((wrapper) => {
+    if (tab === 1) return wrapper.agent.isActive;
+    if (tab === 2) return !wrapper.agent.isActive;
+    return true;
+  });
+
+  const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
+    setPage(value);
+  };
+
+  const [open, setOpen] = useState(false);
+
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [selectedSettings, setSelectedSettings] =
+    useState<AgentSettings | null>(null);
+  const [settingsAgentId, setSettingsAgentId] = useState<string | null>(null);
+
+  const [channelsOpen, setChannelsOpen] = useState(false);
+  const [channelsAgentId, setChannelsAgentId] = useState<string | null>(null);
+  const [channelsAgentActive, setChannelsAgentActive] = useState<
+    boolean | null
+  >(null);
+
+  const handleOpenModal = () => {
+    setOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setOpen(false);
+  };
+
+  const handleDelete = (id: string) => {
+    deleteAgent(id);
+  };
+
+  const handleOpenSettings = (agentId: string, settings: AgentSettings) => {
+    setSettingsAgentId(agentId);
+    setSelectedSettings(settings);
+    setSettingsOpen(true);
+  };
+
+  const handleCloseSettings = () => {
+    setSettingsOpen(false);
+    setSelectedSettings(null);
+    setSettingsAgentId(null);
+  };
+
+  const handleSaveSettings = () => {
+    if (!selectedSettings || settingsAgentId === null) return;
+
+    updateAgentSettings(settingsAgentId, selectedSettings);
+
+    handleCloseSettings();
+  };
+
+  const handleOpenChannels = (agentId: string, agentIsActive: boolean) => {
+    setChannelsAgentId(agentId);
+    setChannelsAgentActive(agentIsActive);
+    setChannelsOpen(true);
+  };
+
+  const handleCloseChannels = () => {
+    setChannelsOpen(false);
+  };
+
+  function TruncatedText({
+    text,
+    maxChars = 40,
+  }: {
+    text: string;
+    maxChars?: number;
+  }) {
+    const truncated =
+      text.length > maxChars ? text.slice(0, maxChars) + '…' : text;
+
+    return (
+      <Tooltip title={text}>
+        <Typography noWrap>{truncated}</Typography>
+      </Tooltip>
+    );
+  }
+
+  // Add these inside your Agents component
+  const { mode, systemMode } = useColorScheme();
+
+  const resolvedMode = (systemMode || mode) as 'light' | 'dark';
+
+  // Estado para o Menu de verificação
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const openMenu = Boolean(anchorEl);
+
+  const handleMenuClick = (
+    event: React.MouseEvent<HTMLElement>,
+    agentId: string
+  ) => {
+    setSettingsAgentId(agentId);
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleNavigateToAgentDetails = () => {
+    navigate(`/agents/${settingsAgentId}/none`);
+  };
+
+  return (
+    <Card variant="outlined" sx={{ margin: '0 auto', width: '100%' }}>
+      <CardContent>
+        <Box sx={{ p: 3 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 4,
+            }}
+          >
+            <Typography
+              variant="h4"
+              sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+            >
+              <Box
+                sx={{
+                  width: '1.5rem',
+                  height: '1.5rem',
+                  bgcolor: 'black',
+                  borderRadius: '999px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  alignSelf: 'center',
+                  backgroundImage: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.dark} 100%)`,
+                  color: 'hsla(210, 100%, 95%, 0.9)',
+                  border: '1px solid',
+                  borderColor: 'hsl(210, 100%, 55%)',
+                  boxShadow: 'inset 0 2px 5px rgba(255, 255, 255, 0.3)',
+                }}
+              >
+                <SupportAgentIcon color="inherit" sx={{ fontSize: '1rem' }} />
+              </Box>
+              Agents
+            </Typography>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => handleOpenModal()}
+            >
+              Create Agent
+            </Button>
+          </Box>
+
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            Create, train and manage your AI agents
+          </Typography>
+
+          <StyledTabs value={tab} onChange={handleTabChange}>
+            <Tab label="All" />
+            <Tab label="Actives" />
+            <Tab label="Inactives" />
+          </StyledTabs>
+
+          <List>
+            {filteredAgents.map(({ agent, settings }) => (
+              <Card
+                key={agent.id}
+                sx={{
+                  margin: `${theme.spacing(2)} 0`,
+                  '&:hover': {
+                    backgroundColor:
+                      resolvedMode == 'dark'
+                        ? theme.palette.action.hover
+                        : theme.palette.action.focus,
+                  },
+                }}
+              >
+                <>
+                  <CardContent>
+                    <ListItem>
+                      <ListItemAvatar>
+                        <Avatar src={agent.avatar} alt={agent.name}>
+                          {agent.name[0]}
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        onClick={(event) => handleMenuClick(event, agent.id)}
+                        sx={{ cursor: 'pointer' }}
+                        primary={
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: theme.spacing(1),
+                            }}
+                          >
+                            {agent.name}
+                            <Tooltip
+                              title={
+                                agentActivityDescriptions[
+                                  agent.isActive
+                                    ? agent.channels.find((channel: Channel) => channel.connected)
+                                      ? 2
+                                      : 1
+                                    : 0 
+                                ]
+                              }
+                            >
+                              <Chip
+                                color={agent.isActive
+                                  ? agent.channels.find((channel: Channel) => channel.connected)
+                                    ? 'success'
+                                    : 'warning'
+                                  : 'error'
+                                }
+                                label={agent.isActive
+                                  ? agent.channels.find((channel: Channel) => channel.connected)
+                                    ? 'ACTIVE & CONNECTED'
+                                    : 'ACTIVE BUT DISCONNECTED'
+                                  : 'INACTIVE'
+                                }
+                              />
+                            </Tooltip>
+                            {isMdUp && (
+                              <Tooltip
+                                title={
+                                  agentCommunicationDescriptions[
+                                    agent.communicationType
+                                  ]
+                                }
+                                placement="top"
+                              >
+                                <Chip label={agent.communicationType} />
+                              </Tooltip>
+                            )}
+                            {isMdUp && (
+                              <Tooltip
+                                title={agentTypeDescriptions[agent.type]}
+                                placement="top"
+                              >
+                                <Chip label={agent.type} />
+                              </Tooltip>
+                            )}
+                            {isMdUp && (
+                              <TruncatedText
+                                text={
+                                  agent.behavior
+                                    ? agent.behavior
+                                    : agent.jobDescription
+                                      ? agent.jobDescription
+                                      : ''
+                                }
+                                maxChars={50}
+                              />
+                            )}
+                          </Box>
+                        }
+                      />
+                      <ActionMenu
+                        agent={agent}
+                        settings={settings}
+                        handleDelete={handleDelete}
+                        handleOpenChannels={handleOpenChannels}
+                        handleOpenSettings={handleOpenSettings}
+                        theme={theme}
+                      />
+                    </ListItem>
+                  </CardContent>
+                  <Menu
+                    id="edit-menu"
+                    anchorEl={anchorEl}
+                    open={openMenu}
+                    onClose={handleMenuClose}
+                    anchorOrigin={{
+                      vertical: 'bottom',
+                      horizontal: 'center',
+                    }}
+                    transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'left',
+                    }}
+                  >
+                    <MenuItem
+                      onClick={handleNavigateToAgentDetails}
+                      sx={{ fontSize: '0.875rem' }}
+                    >
+                      Edit Agent
+                    </MenuItem>
+                  </Menu>
+                </>
+              </Card>
+            ))}
+          </List>
+
+          {agents.length === 0 ? (
+            <Typography
+              variant="h6"
+              sx={{ textAlign: 'center', color: 'text.secondary', mt: 4 }}
+            >
+              No agent found.
+            </Typography>
+          ) : (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+              <Typography sx={{ mr: 2 }}>
+                Total: {filteredAgents.length} agents
+              </Typography>
+              <Pagination
+                count={meta.totalPages}
+                page={meta.page}
+                onChange={handlePageChange}
+                color="primary"
+              />
+            </Box>
+          )}
+
+          <CreateAgentDialog
+            open={open}
+            onClose={handleCloseModal}
+            agentTypeDescriptions={agentTypeDescriptions}
+          />
+
+          <AgentSettingsDialog
+            open={settingsOpen}
+            onClose={handleCloseSettings}
+            onSave={handleSaveSettings}
+            settings={selectedSettings as AgentSettings}
+            setSettings={
+              setSelectedSettings as Dispatch<SetStateAction<AgentSettings>>
+            }
+            modelDescriptions={modelDescriptions}
+            groupingDescriptions={groupingDescriptions}
+            settingsOptions={settingsOptions}
+          />
+
+          <ChannelsDialog
+            agentId={channelsAgentId as string}
+            agentIsActive={channelsAgentActive as boolean}
+            open={channelsOpen}
+            onClose={handleCloseChannels}
+            fullWidth
+            maxWidth="sm"
+          />
+
+          <LoadingBackdrop open={loading } />
+        </Box>
+      </CardContent>
+    </Card>
   );
 }

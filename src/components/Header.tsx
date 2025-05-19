@@ -7,7 +7,11 @@ import ColorModeIconDropdown from './shared-theme/ColorModeIconDropdown';
 
 import Search from '../pages/Dashboard/components/Search';
 
-export default function Header() {
+export default function Header({
+  overrideLatestSegment,
+}: {
+  overrideLatestSegment?: string;
+}) {
   return (
     <Stack
       direction="row"
@@ -21,7 +25,7 @@ export default function Header() {
       }}
       spacing={2}
     >
-      <NavbarBreadcrumbs />
+      <NavbarBreadcrumbs overrideLatestSegment={overrideLatestSegment} />
       <Stack direction="row" sx={{ gap: 1 }}>
         <Search />
         <CustomDatePicker />

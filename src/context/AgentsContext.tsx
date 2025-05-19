@@ -8,6 +8,7 @@ import {
 import env from '../config/env';
 import { useHttpResponse } from './ResponseNotifier';
 import { useAuth } from './AuthContext';
+import { Channel } from '../services/channelService';
 
 export enum AIModel {
   GPT_4 = 'GPT_4',
@@ -67,6 +68,7 @@ export interface Agent {
   jobSite: string;
   jobDescription: string;
   isActive: boolean;
+  channels: Channel[]
 }
 
 export interface AgentWrapper {
@@ -75,14 +77,24 @@ export interface AgentWrapper {
   webhooks: AgentWebhooks;
 }
 
-export interface AgentInput
-  extends Omit<Agent, 'id' | 'workspaceId' | 'isActive'> {}
+export interface PaginatedAgentWrapper {
+  agents: AgentWrapper[];
+  meta: {
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  };
+}
+
+export type AgentInput = Partial<Omit<Agent, 'id' | 'workspaceId' | 'isActive'>>;
 
 interface AgentsContextType {
-  agents: AgentWrapper[];
+  paginatedAgents: PaginatedAgentWrapper;
   loading: boolean;
+  fetchAgents: () => Promise<void>
   getAgentById: (id: string) => Promise<Agent | null>;
-  createAgent: (input: AgentInput) => Promise<boolean>;
+  createAgent: (input: AgentInput) => Promise<{success: boolean, id?: string}>;
   updateAgent: (id: string, input: AgentInput) => Promise<boolean>;
   deleteAgent: (id: string) => Promise<boolean>;
   activateAgent: (id: string) => Promise<boolean>;
@@ -92,7 +104,9 @@ interface AgentsContextType {
     id: string,
     settings: AgentSettings
   ) => Promise<boolean>;
-  refreshAgents: () => Promise<void>;
+  setPage: (page: number) => void;
+  setPageSize: (pageSize: number) => void;
+  setQuery: (query: string) => void;
 }
 
 interface AgentsProviderProps {
@@ -105,14 +119,33 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
   const { user, token } = useAuth();
   const { notify } = useHttpResponse();
 
-  const [agents, setAgents] = useState<AgentWrapper[]>([]);
+  const [paginatedAgents, setPaginatedAgents] = useState<PaginatedAgentWrapper>(
+    {
+      agents: [],
+      meta: {
+        total: 0,
+        page: 1,
+        pageSize: 3,
+        totalPages: 0,
+      },
+    }
+  );
   const [loading, setLoading] = useState<boolean>(true);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(3);
+  const [query, setQuery] = useState('');
 
-  const fetchAgents = async () => {
+  const fetchAgents = async (): Promise<void> => {
     try {
       setLoading(true);
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+        ...(query && { query }),
+      });
+
       const response = await fetch(
-        `${env.API_URL}/workspace/${user?.workspaceId}/agents`,
+        `${env.API_URL}/workspace/${user?.workspaceId}/agents?${queryParams}`,
         {
           method: 'GET',
           headers: {
@@ -122,16 +155,15 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       );
       const data = await response.json();
       if (data.error) throw new Error(data.error);
-      setAgents(data.data || []);
+      setPaginatedAgents({
+        agents: data.data || [],
+        meta: data.meta,
+      });
     } catch (error) {
       notify(error instanceof Error ? error.message : '', 'error');
     } finally {
       setLoading(false);
     }
-  };
-
-  const refreshAgents = async () => {
-    await fetchAgents();
   };
 
   const getAgentById = async (id: string): Promise<Agent | null> => {
@@ -154,7 +186,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     }
   };
 
-  const createAgent = async (input: AgentInput): Promise<boolean> => {
+  const createAgent = async (input: AgentInput): Promise<{success: boolean, id?: string}> => {
     try {
       setLoading(true);
       const response = await fetch(
@@ -172,16 +204,20 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       const data = await response.json();
       if (data.error) throw new Error(data.error);
 
+      setPaginatedAgents((prev) => ({
+        ...prev,
+        agents: [...prev.agents, data.data],
+        meta: {
+          ...prev.meta,
+          total: prev.meta.total + 1,
+        },
+      }));
+
       notify('Agent created successfully!', 'success');
-
-      if (data.data) {
-        setAgents((prev) => [...prev, data.data]);
-      }
-
-      return true;
+      return { success: true, id: data.data.agent.id };
     } catch (error) {
       notify(error instanceof Error ? error.message : '', 'error');
-      return false;
+      return { success: false };
     } finally {
       setLoading(false);
     }
@@ -204,17 +240,8 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
       const data = await response.json();
       if (data.error) throw new Error(data.error);
-
       notify('Agent updated successfully!', 'success');
-
-      if (data.data) {
-        setAgents((prev) =>
-          prev.map((agent) =>
-            agent.agent.id === id ? { ...agent, ...data.data } : agent
-          )
-        );
-      }
-
+      await fetchAgents(); // Refresh the list after updating
       return true;
     } catch (error) {
       notify(error instanceof Error ? error.message : '', 'error');
@@ -235,8 +262,16 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       const data = await response.json();
       if (data.error) throw new Error(data.error);
 
+      setPaginatedAgents((prev) => ({
+        ...prev,
+        agents: prev.agents.filter((wrapper) => wrapper.agent.id !== id),
+        meta: {
+          ...prev.meta,
+          total: prev.meta.total - 1,
+        },
+      }));
+
       notify('Agent deleted successfully!', 'success');
-      setAgents((prev) => prev.filter((agent) => agent.agent.id !== id));
       return true;
     } catch (error) {
       notify(error instanceof Error ? error.message : '', 'error');
@@ -256,16 +291,8 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
       const data = await response.json();
       if (data.error) throw new Error(data.error);
-
       notify('Agent activated!', 'success');
-      setAgents((prev) =>
-        prev.map((wrapper) =>
-          wrapper.agent.id === id
-            ? { ...wrapper, agent: { ...wrapper.agent, isActive: true } }
-            : wrapper
-        )
-      );
-
+      await fetchAgents(); // Refresh the list after activating
       return true;
     } catch (error) {
       notify(error instanceof Error ? error.message : '', 'error');
@@ -285,16 +312,8 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
       const data = await response.json();
       if (data.error) throw new Error(data.error);
-
       notify('Agent deactivated!', 'success');
-      setAgents((prev) =>
-        prev.map((wrapper) =>
-          wrapper.agent.id === id
-            ? { ...wrapper, agent: { ...wrapper.agent, isActive: false } }
-            : wrapper
-        )
-      );
-
+      await fetchAgents(); // Refresh the list after deactivating
       return true;
     } catch (error) {
       notify(error instanceof Error ? error.message : '', 'error');
@@ -340,15 +359,16 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       const data = await response.json();
       if (data.error) throw new Error(data.error);
 
+      setPaginatedAgents((prev) => ({
+        ...prev,
+        agents: prev.agents.map((wrapper) =>
+          wrapper.agent.id === id
+            ? { ...wrapper, settings: data.data }
+            : wrapper
+        ),
+      }));
+
       notify('Settings updated successfully!', 'success');
-
-      // Atualiza o agente no estado
-      setAgents((prev) =>
-        prev.map((wrapper) =>
-          wrapper.agent.id === id ? { ...wrapper, settings } : wrapper
-        )
-      );
-
       return true;
     } catch (error) {
       notify(error instanceof Error ? error.message : '', 'error');
@@ -359,12 +379,15 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
   };
 
   useEffect(() => {
-    if (user) fetchAgents();
-  }, [user]);
+    if (user) {
+      fetchAgents();
+    }
+  }, [user, page, pageSize, query]);
 
   const contextValue: AgentsContextType = {
-    agents,
+    paginatedAgents,
     loading,
+    fetchAgents,
     getAgentById,
     createAgent,
     updateAgent,
@@ -373,7 +396,9 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     deactivateAgent,
     getAgentSettings,
     updateAgentSettings,
-    refreshAgents,
+    setPage,
+    setPageSize,
+    setQuery,
   };
 
   return (
@@ -383,7 +408,6 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
   );
 }
 
-// Hook
 export const useAgents = (): AgentsContextType => {
   const context = useContext(AgentsContext);
   if (!context) {

@@ -14,13 +14,19 @@ import {
   Settings as SettingsIcon,
   Hub as HubIcon,
   Delete as DeleteIcon,
+  PowerSettingsNew,
+  StopCircle,
 } from '@mui/icons-material';
-import { Agent, AgentSettings } from '../../../context/AgentsContext';
+import {
+  Agent,
+  AgentSettings,
+  useAgents,
+} from '../../../context/AgentsContext';
+import { useNavigate } from 'react-router-dom';
 
 interface ActionMenuProps {
   agent: Agent;
   settings: AgentSettings;
-  handleOpenModal: (agent: Agent) => void;
   handleOpenSettings: (agentId: string, settings: AgentSettings) => void;
   handleOpenChannels: (agentId: string, agentIsActive: boolean) => void;
   handleDelete: (agentId: string) => void;
@@ -30,13 +36,16 @@ interface ActionMenuProps {
 export default function ActionMenu({
   agent,
   settings,
-  handleOpenModal,
   handleOpenSettings,
   handleOpenChannels,
   handleDelete,
   theme,
 }: ActionMenuProps) {
+  const navigate = useNavigate();
+
   const [anchorEl, setAnchorEl] = useState<EventTarget | null>(null);
+  const { activateAgent, deactivateAgent } = useAgents();
+
   const open = Boolean(anchorEl);
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
@@ -50,6 +59,15 @@ export default function ActionMenu({
   const handleMenuItemClick = (action: () => void) => {
     handleClose();
     action();
+  };
+
+  const handleToggleActive = (agent: Agent) => {
+    agent.isActive ? deactivateAgent(agent.id) : activateAgent(agent.id);
+    handleClose();
+  };
+
+  const handleNavigateToAgentDetails = (agentId: string) => {
+    navigate(`/agents/${agentId}/none`);
   };
 
   return (
@@ -80,15 +98,12 @@ export default function ActionMenu({
           horizontal: 'right',
         }}
       >
-        <MenuItem
-          onClick={() => handleMenuItemClick(() => handleOpenModal(agent))}
-        >
+        <MenuItem onClick={() => handleNavigateToAgentDetails(agent.id)}>
           <ListItemIcon>
             <EditIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Edit</ListItemText>
         </MenuItem>
-        <Divider />
         <MenuItem
           onClick={() =>
             handleMenuItemClick(() => handleOpenSettings(agent.id, settings))
@@ -99,6 +114,15 @@ export default function ActionMenu({
           </ListItemIcon>
           <ListItemText>Settings</ListItemText>
         </MenuItem>
+        <Divider />
+        {!agent.isActive && (
+          <MenuItem onClick={() => handleToggleActive(agent)}>
+            <ListItemIcon>
+              <PowerSettingsNew fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Activate</ListItemText>
+          </MenuItem>
+        )}
         <MenuItem
           onClick={() =>
             handleMenuItemClick(() =>
@@ -111,6 +135,14 @@ export default function ActionMenu({
           </ListItemIcon>
           <ListItemText>Channels</ListItemText>
         </MenuItem>
+        {agent.isActive && (
+          <MenuItem onClick={() => handleToggleActive(agent)}>
+            <ListItemIcon>
+              <StopCircle fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Deactivate</ListItemText>
+          </MenuItem>
+        )}
         <Divider />
         <MenuItem
           onClick={() => handleMenuItemClick(() => handleDelete(agent.id))}
