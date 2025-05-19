@@ -8,7 +8,7 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5002,
     allowedHosts: [
-      'http://monitdb-dev.ddns.net:5002'
+      'monitdb-dev.ddns.net'
     ],
     strictPort: true,
     hmr: {
