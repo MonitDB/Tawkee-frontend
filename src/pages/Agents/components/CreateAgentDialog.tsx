@@ -41,11 +41,7 @@ import {
   Settings,
 } from '@mui/icons-material';
 import {
-  newAgent,
-  newPersonalAgent,
-  newSaleAgent,
-  newSupportAgent,
-  successfulAgentCreation
+  newAgent
 } from '../../../assets';
 
 const steps = ['Name', 'Type', 'Role', 'Description', 'Settings', 'Complete'];
@@ -275,19 +271,19 @@ export default function CreateAgentDialog({
                   </Box>
                   {selectedAgent?.type === AgentType.SALE && (
                     <img
-                      src={newSaleAgent}
+                      src={newAgent}
                       style={{ width: '10.0rem', borderRadius: '8px' }}
                     />
                   )}
                   {selectedAgent?.type === AgentType.SUPPORT && (
                     <img
-                      src={newSupportAgent}
+                      src={newAgent}
                       style={{ width: '10.0rem', borderRadius: '8px' }}
                     />
                   )}
                   {selectedAgent?.type === AgentType.PERSONAL && (
                     <img
-                      src={newPersonalAgent}
+                      src={newAgent}
                       style={{ width: '10.0rem', borderRadius: '8px' }}
                     />
                   )}
@@ -309,7 +305,7 @@ export default function CreateAgentDialog({
                   {selectedAgent?.type === AgentType.SALE && (
                     <>
                       <img
-                        src={newSaleAgent}
+                        src={newAgent}
                         style={{ width: '10.0rem', borderRadius: '8px' }}
                       />
                       <Typography>
@@ -322,7 +318,7 @@ export default function CreateAgentDialog({
                   {selectedAgent?.type === AgentType.SUPPORT && (
                     <>
                       <img
-                        src={newSupportAgent}
+                        src={newAgent}
                         style={{ width: '10.0rem', borderRadius: '8px' }}
                       />
                       <Typography>
@@ -335,7 +331,7 @@ export default function CreateAgentDialog({
                   {selectedAgent?.type === AgentType.PERSONAL && (
                     <>
                       <img
-                        src={newPersonalAgent}
+                        src={newAgent}
                         style={{ width: '10.0rem', borderRadius: '8px' }}
                       />
                       <Typography>
@@ -365,7 +361,7 @@ export default function CreateAgentDialog({
                   {selectedAgent?.type === AgentType.SALE && (
                     <>
                       <img
-                        src={newSaleAgent}
+                        src={newAgent}
                         style={{ width: '10.0rem', borderRadius: '8px' }}
                       />
                       <Typography>
@@ -377,7 +373,7 @@ export default function CreateAgentDialog({
                   {selectedAgent?.type === AgentType.SUPPORT && (
                     <>
                       <img
-                        src={newSupportAgent}
+                        src={newAgent}
                         style={{ width: '10.0rem', borderRadius: '8px' }}
                       />
                       <Typography>
@@ -389,7 +385,7 @@ export default function CreateAgentDialog({
                   {selectedAgent?.type === AgentType.PERSONAL && (
                     <>
                       <img
-                        src={newPersonalAgent}
+                        src={newAgent}
                         style={{ width: '10.0rem', borderRadius: '8px' }}
                       />
                       <Typography>
@@ -461,7 +457,7 @@ export default function CreateAgentDialog({
                     Your agent has been created successfully!
                   </Typography>
                   <img
-                    src={successfulAgentCreation}
+                    src={newAgent}
                     style={{ width: '10.0rem', borderRadius: '8px' }}
                   />
                   <Box
