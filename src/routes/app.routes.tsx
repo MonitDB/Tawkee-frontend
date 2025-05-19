@@ -46,7 +46,7 @@ export default function AppRoutes() {
 
         <Route
           key="3"
-          path="/agents/:agentId/:tabName"
+          path="/agents/:agentId"
           element={
             <AppPageLayout segment="Agent Details">
               <AgentDetails />

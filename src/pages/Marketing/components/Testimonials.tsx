@@ -1,165 +1,152 @@
-import Card from '@mui/material/Card';
-import CardHeader from '@mui/material/CardHeader';
-import CardContent from '@mui/material/CardContent';
-import Avatar from '@mui/material/Avatar';
-import Typography from '@mui/material/Typography';
+import { useNavigate } from 'react-router-dom';
+
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
+import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
-import { useTheme } from '@mui/system';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
+import PsychologyIcon from '@mui/icons-material/Psychology';
+import SchoolIcon from '@mui/icons-material/School';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { newAgent } from '../../../assets';
 
-const userTestimonials = [
+const features = [
   {
-    avatar: <Avatar alt="Remy Sharp" src="/static/images/avatar/1.jpg" />,
-    name: 'Remy Sharp',
-    occupation: 'Senior Engineer',
-    testimonial:
-      "I absolutely love how versatile this product is! Whether I'm tackling work projects or indulging in my favorite hobbies, it seamlessly adapts to my changing needs. Its intuitive design has truly enhanced my daily routine, making tasks more efficient and enjoyable.",
+    icon: <SmartToyIcon sx={{ fontSize: 32 }} />,
+    title: 'Human-like service',
+    description: 'Provide your customers with a natural, humanized service that’s available anytime.'
   },
   {
-    avatar: <Avatar alt="Travis Howard" src="/static/images/avatar/2.jpg" />,
-    name: 'Travis Howard',
-    occupation: 'Lead Product Designer',
-    testimonial:
-      "One of the standout features of this product is the exceptional customer support. In my experience, the team behind this product has been quick to respond and incredibly helpful. It's reassuring to know that they stand firmly behind their product.",
+    icon: <AutorenewIcon sx={{ fontSize: 32 }} />,
+    title: 'Automate repetitive tasks',
+    description: 'Let the AI employee handle repetitive processes so your team can focus on what really matters.'
   },
   {
-    avatar: <Avatar alt="Cindy Baker" src="/static/images/avatar/3.jpg" />,
-    name: 'Cindy Baker',
-    occupation: 'CTO',
-    testimonial:
-      'The level of simplicity and user-friendliness in this product has significantly simplified my life. I appreciate the creators for delivering a solution that not only meets but exceeds user expectations.',
+    icon: <PsychologyIcon sx={{ fontSize: 32 }} />,
+    title: 'Learns about your business and processes',
+    description: 'Responds to customers quickly and accurately, offering always up-to-date information about your company and operations.'
   },
   {
-    avatar: <Avatar alt="Remy Sharp" src="/static/images/avatar/4.jpg" />,
-    name: 'Julia Stewart',
-    occupation: 'Senior Engineer',
-    testimonial:
-      "I appreciate the attention to detail in the design of this product. The small touches make a big difference, and it's evident that the creators focused on delivering a premium experience.",
-  },
-  {
-    avatar: <Avatar alt="Travis Howard" src="/static/images/avatar/5.jpg" />,
-    name: 'John Smith',
-    occupation: 'Product Designer',
-    testimonial:
-      "I've tried other similar products, but this one stands out for its innovative features. It's clear that the makers put a lot of thought into creating a solution that truly addresses user needs.",
-  },
-  {
-    avatar: <Avatar alt="Cindy Baker" src="/static/images/avatar/6.jpg" />,
-    name: 'Daniel Wolf',
-    occupation: 'CDO',
-    testimonial:
-      "The quality of this product exceeded my expectations. It's durable, well-designed, and built to last. Definitely worth the investment!",
-  },
+    icon: <SchoolIcon sx={{ fontSize: 32 }} />,
+    title: 'Automate repetitive tasks',
+    description: 'Let the AI employee handle repetitive processes so your team can focus on what really matters.'
+  }
 ];
-
-const whiteLogos = [
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/6560628e8573c43893fe0ace_Sydney-white.svg',
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/655f4d520d0517ae8e8ddf13_Bern-white.svg',
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/655f46794c159024c1af6d44_Montreal-white.svg',
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/61f12e891fa22f89efd7477a_TerraLight.svg',
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/6560a09d1f6337b1dfed14ab_colorado-white.svg',
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/655f5caa77bf7d69fb78792e_Ankara-white.svg',
-];
-
-const darkLogos = [
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/6560628889c3bdf1129952dc_Sydney-black.svg',
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/655f4d4d8b829a89976a419c_Bern-black.svg',
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/655f467502f091ccb929529d_Montreal-black.svg',
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/61f12e911fa22f2203d7514c_TerraDark.svg',
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/6560a0990f3717787fd49245_colorado-black.svg',
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/655f5ca4e548b0deb1041c33_Ankara-black.svg',
-];
-
-const logoStyle = {
-  width: '64px',
-  opacity: 0.3,
-};
 
 export default function Testimonials() {
-  const theme = useTheme();
-  const logos = theme.palette.mode === 'light' ? darkLogos : whiteLogos;
+  const navigate = useNavigate();
 
   return (
-    <Container
-      id="testimonials"
+    <Box
       sx={{
-        pt: { xs: 4, sm: 12 },
-        pb: { xs: 8, sm: 16 },
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: { xs: 3, sm: 6 },
+        width: '100%',
+        background: 'linear-gradient(180deg, #0A0F23 0%, #0F172A 100%)',
+        color: 'white',
+        py: { xs: 8, md: 12 },
+        overflow: 'hidden',
       }}
     >
-      <Box
-        sx={{
-          width: { sm: '100%', md: '60%' },
-          textAlign: { sm: 'left', md: 'center' },
-        }}
-      >
-        <Typography
-          component="h2"
-          variant="h4"
-          gutterBottom
-          sx={{ color: 'text.primary' }}
-        >
-          Testimonials
-        </Typography>
-        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-          See what our customers love about our products. Discover how we excel
-          in efficiency, durability, and satisfaction. Join us for quality,
-          innovation, and reliable support.
-        </Typography>
-      </Box>
-      <Grid container spacing={2}>
-        {userTestimonials.map((testimonial, index) => (
-          <Grid
-            size={{ xs: 12, sm: 6, md: 4 }}
-            key={index}
-            sx={{ display: 'flex' }}
-          >
-            <Card
-              variant="outlined"
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                flexGrow: 1,
-              }}
-            >
-              <CardContent>
-                <Typography
-                  variant="body1"
-                  gutterBottom
-                  sx={{ color: 'text.secondary' }}
-                >
-                  {testimonial.testimonial}
-                </Typography>
-              </CardContent>
-              <Box
+      <Container maxWidth="lg">
+        <Grid container spacing={4}>
+          <Grid size={{ xs: 12, md: 7 }}>
+            <Box sx={{ mb: 6 }}>
+              <Chip
+                icon={<SmartToyIcon />}
+                label="Near-perfect employees"
                 sx={{
-                  display: 'flex',
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
+                  mb: 4,
+                  color: 'white',
+                  borderColor: 'rgba(255,255,255,0.2)',
+                  '& .MuiChip-icon': { color: 'white' },
+                }}
+                variant="outlined"
+              />
+              <Typography
+                variant="h3"
+                component="h2"
+                sx={{
+                  fontWeight: 700,
+                  mb: 3,
                 }}
               >
-                <CardHeader
-                  avatar={testimonial.avatar}
-                  title={testimonial.name}
-                  subheader={testimonial.occupation}
-                />
-                <img
-                  src={logos[index]}
-                  alt={`Logo ${index + 1}`}
-                  style={logoStyle}
-                />
-              </Box>
-            </Card>
+                How will AI help me in my service?
+              </Typography>
+              <Typography
+                variant="h6"
+                sx={{
+                  color: 'grey.400',
+                  mb: 4,
+                }}
+              >
+                AI employees are like having a dedicated 'ChatGPT' for your business: they understand and respond to customers, perform tasks, and are available 24/7 for you.
+              </Typography>
+            </Box>
+
+            <Grid container spacing={3}>
+              {features.map((feature, index) => (
+                <Grid size={{ xs: 12, md: 6 }} key={index}>
+                  <Card
+                    sx={{
+                      height: '100%',
+                      backgroundColor: 'rgba(255,255,255,0.05)',
+                      borderColor: 'rgba(255,255,255,0.1)',
+                    }}
+                  >
+                    <CardContent>
+                      <Box sx={{ mb: 2, color: 'primary.main' }}>
+                        {feature.icon}
+                      </Box>
+                      <Typography variant="h6" component="h3" gutterBottom>
+                        {feature.title}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'grey.400' }}>
+                        {feature.description}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+
+            <Button 
+              variant="contained"
+              size="large"
+              endIcon={<ArrowForwardIcon />}
+              sx={{ mt: 4 }}
+              onClick={() => navigate('/sign-up')}
+            >
+              Build Your AI Employee
+            </Button>
           </Grid>
-        ))}
-      </Grid>
-    </Container>
+
+          <Grid size={{ xs: 12, md: 5 }}>
+            <Box
+              sx={{
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Box
+                sx={{
+                  width: '100%',
+                  height: '600px',
+                  bgcolor: 'rgba(255,255,255,0.05)',
+                  borderRadius: 4,
+                }}
+              >
+                <img src={newAgent} style={{ width: '100%', padding: '1.0rem' }} />
+              </Box>
+            </Box>
+          </Grid>
+        </Grid>
+      </Container>
+    </Box>
   );
 }

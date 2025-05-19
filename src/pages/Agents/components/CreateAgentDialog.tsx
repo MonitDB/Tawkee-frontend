@@ -470,21 +470,21 @@ export default function CreateAgentDialog({
                   >
                     <Button
                       variant="outlined"
-                      onClick={() => navigate(`/agents/${createdAgentId}/training`)}
+                      onClick={() => navigate(`/agents/${createdAgentId}?tabName=training`)}
                       startIcon={<School />}
                     >
                       Training
                     </Button>
                     <Button
                       variant="outlined"
-                      onClick={() => navigate(`/agents/${createdAgentId}/intentions`)}
+                      onClick={() => navigate(`/agents/${createdAgentId}?tabName=intentions`)}
                       startIcon={<Psychology />}
                     >
                       Intentions
                     </Button>
                     <Button
                       variant="outlined"
-                      onClick={() => navigate(`/agents/${createdAgentId}/settings`)}
+                      onClick={() => navigate(`/agents/${createdAgentId}?tabName=settings`)}
                       startIcon={<Settings />}
                     >
                       Settings

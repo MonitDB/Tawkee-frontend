@@ -20,11 +20,14 @@ export default function NavbarBreadcrumbs({ overrideLatestSegment = '' }) {
   const location = useLocation();
 
   function getSegments(path: string): string[] {
-    if (path === '/' || path.trim() === '') return ['Dashboard'];
+    // Remove query parameters if any
+    const cleanPath = path.split('?')[0];
 
-    return path.replace(/^\/+/, '').split('/');
+    if (cleanPath === '/' || cleanPath.trim() === '') return ['Dashboard'];
+
+    return cleanPath.replace(/^\/+/, '').split('/');
   }
-
+  
   function formatSegment(segment: string): string {
     return segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase();
   }

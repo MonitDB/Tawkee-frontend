@@ -1,116 +1,132 @@
+
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
-import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import AutoFixHighRoundedIcon from '@mui/icons-material/AutoFixHighRounded';
-import ConstructionRoundedIcon from '@mui/icons-material/ConstructionRounded';
-import QueryStatsRoundedIcon from '@mui/icons-material/QueryStatsRounded';
-import SettingsSuggestRoundedIcon from '@mui/icons-material/SettingsSuggestRounded';
-import SupportAgentRoundedIcon from '@mui/icons-material/SupportAgentRounded';
-import ThumbUpAltRoundedIcon from '@mui/icons-material/ThumbUpAltRounded';
+import Button from '@mui/material/Button';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import SupportAgentIcon from '@mui/icons-material/SupportAgent';
+import EventNoteIcon from '@mui/icons-material/EventNote';
+import AutoGraphIcon from '@mui/icons-material/AutoGraph';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
+import QueryStatsIcon from '@mui/icons-material/QueryStats';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import { useNavigate } from 'react-router-dom';
 
 const items = [
   {
-    icon: <SettingsSuggestRoundedIcon />,
-    title: 'Adaptable performance',
-    description:
-      'Our product effortlessly adjusts to your needs, boosting efficiency and simplifying your tasks.',
+    icon: <SupportAgentIcon sx={{ fontSize: 32 }} />,
+    title: 'Customer Service',
+    description: 'Enhance customer experience with personalized messages',
   },
   {
-    icon: <ConstructionRoundedIcon />,
-    title: 'Built to last',
-    description:
-      'Experience unmatched durability that goes above and beyond with lasting investment.',
+    icon: <EventNoteIcon sx={{ fontSize: 32 }} />,
+    title: 'Schedule Management',
+    description: 'Simplify the scheduling process and reduce time spent on this task',
   },
   {
-    icon: <ThumbUpAltRoundedIcon />,
-    title: 'Great user experience',
-    description:
-      'Integrate our product into your routine with an intuitive and easy-to-use interface.',
+    icon: <AutoGraphIcon sx={{ fontSize: 32 }} />,
+    title: 'Personalized Responses',
+    description: 'Create tailored responses for each customer, providing a humanized experience',
   },
   {
-    icon: <AutoFixHighRoundedIcon />,
-    title: 'Innovative functionality',
-    description:
-      'Stay ahead with features that set new standards, addressing your evolving needs better than the rest.',
+    icon: <AutorenewIcon sx={{ fontSize: 32 }} />,
+    title: 'Sales Automation',
+    description: 'Automate the sales process and help your customers find what they’re looking for',
   },
   {
-    icon: <SupportAgentRoundedIcon />,
-    title: 'Reliable support',
-    description:
-      'Count on our responsive customer support, offering assistance that goes beyond the purchase.',
+    icon: <QueryStatsIcon sx={{ fontSize: 32 }} />,
+    title: 'Data Analysis',
+    description: 'Collect and analyze data efficiently to make metric-based decisions',
   },
   {
-    icon: <QueryStatsRoundedIcon />,
-    title: 'Precision in every detail',
-    description:
-      'Enjoy a meticulously crafted product where small touches make a significant impact on your overall experience.',
+    icon: <AssignmentIcon sx={{ fontSize: 32 }} />,
+    title: 'Repetitive Task Management',
+    description: 'Automate repetitive tasks and free up your team to focus on what really matters',
   },
 ];
 
 export default function Highlights() {
+  const navigate = useNavigate();
+
   return (
     <Box
       id="highlights"
       sx={{
-        pt: { xs: 4, sm: 12 },
-        pb: { xs: 8, sm: 16 },
-        color: 'white',
-        bgcolor: 'grey.900',
+        py: { xs: 8, sm: 16 },
+        color: 'text.primary',
+        bgcolor: 'background.default',
       }}
     >
-      <Container
-        sx={{
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: { xs: 3, sm: 6 },
-        }}
-      >
-        <Box
-          sx={{
-            width: { sm: '100%', md: '60%' },
-            textAlign: { sm: 'left', md: 'center' },
-          }}
-        >
-          <Typography component="h2" variant="h4" gutterBottom>
-            Highlights
+      <Container maxWidth="lg">
+        <Box sx={{ mb: 8, textAlign: 'center' }}>
+          <Typography
+            component="span"
+            variant="body1"
+            sx={{
+              color: 'primary.main',
+              fontWeight: 500,
+              mb: 2,
+              display: 'block',
+            }}
+          >
+            New AI
           </Typography>
-          <Typography variant="body1" sx={{ color: 'grey.400' }}>
-            Explore why our product stands out: adaptability, durability,
-            user-friendly design, and innovation. Enjoy reliable customer
-            support and precision in every detail.
+          <Typography
+            component="h2"
+            variant="h3"
+            sx={{
+              fontWeight: 700,
+              mb: 3,
+            }}
+          >
+            AI-powered service like you've never seen before!
           </Typography>
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ maxWidth: 800, mx: 'auto', mb: 4 }}
+          >
+           AI is no longer just a tool, but an intelligent assistant that enhances your business with 24/7 customer service, schedule management, and much more. Let AI employees work for you! 
+          </Typography>
+          <Button
+            variant="contained"
+            size="large"
+            endIcon={<ArrowForwardIcon />}
+            onClick={() => navigate('/sign-up')}
+          >
+            7-day free trial
+          </Button>
         </Box>
-        <Grid container spacing={2}>
+
+        <Grid container spacing={3}>
           {items.map((item, index) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
-              <Stack
-                direction="column"
-                component={Card}
-                spacing={1}
-                useFlexGap
+            <Grid size={{ xs: 12, md: 6, sm: 4 }} key={index}>
+              <Card
                 sx={{
-                  color: 'inherit',
-                  p: 3,
                   height: '100%',
-                  borderColor: 'hsla(220, 25%, 25%, 0.3)',
-                  backgroundColor: 'grey.800',
+                  p: 3,
+                  bgcolor: 'background.paper',
+                  border: '1px solid',
+                  borderColor: 'divider',
                 }}
               >
-                <Box sx={{ opacity: '50%' }}>{item.icon}</Box>
-                <div>
-                  <Typography gutterBottom sx={{ fontWeight: 'medium' }}>
-                    {item.title}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'grey.400' }}>
-                    {item.description}
-                  </Typography>
-                </div>
-              </Stack>
+                <Box sx={{ color: 'primary.main', mb: 2 }}>
+                  {item.icon}
+                </Box>
+                <Typography
+                  variant="h6"
+                  component="h3"
+                  gutterBottom
+                  sx={{ fontWeight: 600 }}
+                >
+                  {item.title}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {item.description}
+                </Typography>
+              </Card>
             </Grid>
           ))}
         </Grid>

@@ -67,7 +67,7 @@ export default function ActionMenu({
   };
 
   const handleNavigateToAgentDetails = (agentId: string) => {
-    navigate(`/agents/${agentId}/none`);
+    navigate(`/agents/${agentId}`);
   };
 
   return (

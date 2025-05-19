@@ -489,7 +489,7 @@ export default function Agents() {
   };
 
   const handleNavigateToAgentDetails = () => {
-    navigate(`/agents/${settingsAgentId}/none`);
+    navigate(`/agents/${settingsAgentId}`);
   };
 
   return (

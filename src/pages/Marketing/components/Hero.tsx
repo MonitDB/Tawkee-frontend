@@ -1,161 +1,128 @@
 import { useNavigate } from 'react-router-dom';
 
-import env from '../../../config/env';
-
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
-import InputLabel from '@mui/material/InputLabel';
-import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
-import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import visuallyHidden from '@mui/utils/visuallyHidden';
-import { styled } from '@mui/material/styles';
+import Grid from '@mui/material/Grid';
+import Chip from '@mui/material/Chip';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
+import { useColorScheme } from '@mui/material';
+import { tawkeeDesktop, tawkeeDesktopLight } from '../../../assets';
 
-const StyledBox = styled('div')(({ theme }) => ({
-  alignSelf: 'center',
-  width: '100%',
-  height: 400,
-  marginTop: theme.spacing(8),
-  borderRadius: (theme.vars || theme).shape.borderRadius,
-  outline: '6px solid',
-  outlineColor: 'hsla(220, 25%, 80%, 0.2)',
-  border: '1px solid',
-  borderColor: (theme.vars || theme).palette.grey[200],
-  boxShadow: '0 0 12px 8px hsla(220, 25%, 80%, 0.2)',
-  backgroundImage: `url(${env.TEMPLATE_IMAGE_URL || 'https://mui.com'}/static/screenshots/material-ui/getting-started/templates/dashboard.jpg)`,
-  backgroundSize: 'cover',
-  [theme.breakpoints.up('sm')]: {
-    marginTop: theme.spacing(10),
-    height: 700,
-  },
-  ...theme.applyStyles('dark', {
-    boxShadow: '0 0 24px 12px hsla(210, 100%, 25%, 0.2)',
-    backgroundImage: `url(${env.TEMPLATE_IMAGE_URL || 'https://mui.com'}/static/screenshots/material-ui/getting-started/templates/dashboard-dark.jpg)`,
-    outlineColor: 'hsla(220, 20%, 42%, 0.1)',
-    borderColor: (theme.vars || theme).palette.grey[700],
-  }),
-}));
 
 export default function Hero() {
   const navigate = useNavigate();
 
-  const handleNavigationToSignUp = () => {
-    navigate('sign-up');
+  const { mode, systemMode } = useColorScheme();
+  const resolvedMode = (systemMode || mode) as 'light' | 'dark';
+
+  const handleNavigateToSignUp = () => {
+    navigate('/sign-up');
   };
 
   return (
     <Box
-      id="hero"
-      sx={(theme) => ({
+      sx={{
         width: '100%',
-        backgroundRepeat: 'no-repeat',
-
-        backgroundImage:
-          'radial-gradient(ellipse 80% 50% at 50% -20%, hsl(210, 100%, 90%), transparent)',
-        ...theme.applyStyles('dark', {
-          backgroundImage:
-            'radial-gradient(ellipse 80% 50% at 50% -20%, hsl(210, 100%, 16%), transparent)',
-        }),
-      })}
+        overflow: 'hidden',
+        position: 'relative',
+        minHeight: '100vh',
+      }}
     >
-      <Container
+      {/* Background decoration */}
+      <Box
         sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          pt: { xs: 14, sm: 20 },
-          pb: { xs: 8, sm: 12 },
+          position: 'absolute',
+          width: '100%',
+          height: '100%',
+          opacity: 0.1,
+          background: 'radial-gradient(circle at 50% 50%, rgba(100, 150, 255, 0.2) 0%, transparent 50%)',
         }}
-      >
-        <Stack
-          spacing={2}
-          useFlexGap
-          sx={{ alignItems: 'center', width: { xs: '100%', sm: '70%' } }}
-        >
-          <Typography
-            variant="h1"
-            sx={{
-              display: 'flex',
-              flexDirection: { xs: 'column', sm: 'row' },
-              alignItems: 'center',
-              fontSize: 'clamp(3rem, 10vw, 3.5rem)',
-            }}
-          >
-            Our&nbsp;latest&nbsp;
-            <Typography
-              component="span"
-              variant="h1"
-              sx={(theme) => ({
-                fontSize: 'inherit',
-                color: 'primary.main',
-                ...theme.applyStyles('dark', {
-                  color: 'primary.light',
-                }),
-              })}
-            >
-              products
-            </Typography>
-          </Typography>
-          <Typography
-            sx={{
-              textAlign: 'center',
-              color: 'text.secondary',
-              width: { sm: '100%', md: '80%' },
-            }}
-          >
-            Explore our cutting-edge dashboard, delivering high-quality
-            solutions tailored to your needs. Elevate your experience with
-            top-tier features and services.
-          </Typography>
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            spacing={1}
-            useFlexGap
-            sx={{ pt: 2, width: { xs: '100%', sm: '350px' } }}
-          >
-            <InputLabel htmlFor="email-hero" sx={visuallyHidden}>
-              Email
-            </InputLabel>
-            <TextField
-              id="email-hero"
-              hiddenLabel
-              size="small"
-              variant="outlined"
-              aria-label="Enter your email address"
-              placeholder="Your email address"
-              fullWidth
-              slotProps={{
-                htmlInput: {
-                  autoComplete: 'off',
-                  'aria-label': 'Enter your email address',
-                },
+      />
+
+      <Container maxWidth="lg" sx={{ pt: { xs: 8, sm: 12, md: 16 }, pb: 8 }}>
+        <Grid container spacing={4} alignItems="center">
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Stack spacing={3}>
+              <Chip
+                icon={<SmartToyIcon />}
+                label="FAST SUPPORT"
+                color='success'
+                sx={{ width: 'fit-content' }}
+              />
+
+              <Typography
+                component="h1"
+                variant="h2"
+                color="text.primary"
+                sx={{
+                  fontWeight: 800,
+                  fontSize: { xs: '2.5rem', sm: '3rem', md: '3.5rem' },
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                Automate support and sales with AI agents that work for you!
+              </Typography>
+
+              <Typography
+                variant="h6"
+                color="text.secondary"
+                sx={{ maxWidth: 600 }}
+              >
+                AI agents ready to scale your sales, customer support, and manage your schedule — answering questions and helping automate service with customizable AIs.
+              </Typography>
+
+              <Button
+                variant="contained"
+                size="large"
+                endIcon={<ArrowForwardIcon />}
+                onClick={handleNavigateToSignUp}
+                sx={{
+                  width: 'fit-content',
+                  fontSize: '1.1rem',
+                  py: 1.5,
+                  px: 3,
+                  borderRadius: 2,
+                }}
+              >
+                Get 1,000 credits to try it now
+              </Button>
+            </Stack>
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Box
+              sx={{
+                position: 'relative',
+                height: { xs: 400, md: 600 },
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
               }}
-            />
-            <Button
-              variant="contained"
-              color="primary"
-              size="small"
-              sx={{ minWidth: 'fit-content' }}
-              onClick={handleNavigationToSignUp}
             >
-              Start now
-            </Button>
-          </Stack>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ textAlign: 'center' }}
-          >
-            By clicking &quot;Start now&quot; you agree to our&nbsp;
-            <Link href="#" color="primary">
-              Terms & Conditions
-            </Link>
-            .
-          </Typography>
-        </Stack>
-        <StyledBox id="image" />
+              {/* Placeholder for the main app screenshot */}
+              <Box
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  bgcolor: 'background.paper',
+                  borderRadius: 4,
+                  boxShadow: (theme) => theme.shadows[20],
+                  overflow: 'hidden',
+                }}
+              >
+                <img src={ resolvedMode == 'dark'
+                  ? tawkeeDesktop
+                  : tawkeeDesktopLight
+                } />
+              </Box>
+            </Box>
+          </Grid>
+        </Grid>
       </Container>
     </Box>
   );

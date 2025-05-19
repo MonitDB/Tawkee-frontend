@@ -1,55 +1,117 @@
+
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
-import { useTheme } from '@mui/system';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 
-const whiteLogos = [
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/6560628e8573c43893fe0ace_Sydney-white.svg',
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/655f4d520d0517ae8e8ddf13_Bern-white.svg',
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/655f46794c159024c1af6d44_Montreal-white.svg',
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/61f12e891fa22f89efd7477a_TerraLight.svg',
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/6560a09d1f6337b1dfed14ab_colorado-white.svg',
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/655f5caa77bf7d69fb78792e_Ankara-white.svg',
+const metrics = [
+  {
+    value: '80%',
+    label: 'less time spent on customer service',
+    originalValue: '350%',
+  },
+  {
+    value: '4X',
+    label: 'faster customer response time',
+    highlight: true,
+  },
+  {
+    value: '60%',
+    label: 'reduction in operational costs',
+    originalValue: '450%',
+  },
 ];
-
-const darkLogos = [
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/6560628889c3bdf1129952dc_Sydney-black.svg',
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/655f4d4d8b829a89976a419c_Bern-black.svg',
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/655f467502f091ccb929529d_Montreal-black.svg',
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/61f12e911fa22f2203d7514c_TerraDark.svg',
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/6560a0990f3717787fd49245_colorado-black.svg',
-  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/655f5ca4e548b0deb1041c33_Ankara-black.svg',
-];
-
-const logoStyle = {
-  width: '100px',
-  height: '80px',
-  margin: '0 32px',
-  opacity: 0.7,
-};
 
 export default function LogoCollection() {
   const theme = useTheme();
-  const logos = theme.palette.mode === 'light' ? darkLogos : whiteLogos;
 
   return (
-    <Box id="logoCollection" sx={{ py: 4 }}>
+    <Box 
+      id="metricsCollection" 
+      sx={{ 
+        py: 6,
+        px: 3,
+        backgroundColor: theme.palette.mode === 'dark' 
+          ? alpha(theme.palette.primary.dark, 0.2)
+          : alpha(theme.palette.primary.light, 0.1),
+      }}
+    >
       <Typography
-        component="p"
-        variant="subtitle2"
+        component="h2"
+        variant="h4"
         align="center"
-        sx={{ color: 'text.secondary' }}
+        sx={{ 
+          mb: 6,
+          color: 'text.primary',
+          fontWeight: 'bold' 
+        }}
       >
-        Trusted by the best companies
+        Proven Results
       </Typography>
-      <Grid container sx={{ justifyContent: 'center', mt: 0.5, opacity: 0.6 }}>
-        {logos.map((logo, index) => (
-          <Grid key={index}>
-            <img
-              src={logo}
-              alt={`Fake company number ${index + 1}`}
-              style={logoStyle}
-            />
+      <Grid 
+        container 
+        spacing={4} 
+        sx={{ 
+          justifyContent: 'center',
+          alignItems: 'stretch',
+        }}
+      >
+        {metrics.map((metric, index) => (
+          <Grid size={{ xs: 12, sm: 4 }} key={index}>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                textAlign: 'center',
+                height: '100%',
+                p: 3,
+                borderRadius: 2,
+                backgroundColor: metric.highlight 
+                  ? alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.2 : 0.1)
+                  : 'transparent',
+              }}
+            >
+              <Typography
+                variant="h2"
+                component="div"
+                sx={{
+                  color: metric.highlight ? 'primary.main' : 'text.primary',
+                  fontWeight: 'bold',
+                  mb: 2,
+                  position: 'relative',
+                }}
+              >
+                {metric.value}
+                {metric.originalValue && (
+                  <Typography
+                    component="span"
+                    sx={{
+                      position: 'absolute',
+                      top: -15,
+                      right: -40,
+                      fontSize: '1rem',
+                      color: 'error.main',
+                      textDecoration: 'line-through',
+                    }}
+                  >
+                    {metric.originalValue}
+                  </Typography>
+                )}
+              </Typography>
+              <Typography
+                variant="h6"
+                sx={{
+                  color: 'text.secondary',
+                  fontWeight: 'medium',
+                  maxWidth: '200px',
+                  mx: 'auto',
+                }}
+              >
+                {metric.label}
+              </Typography>
+            </Box>
           </Grid>
         ))}
       </Grid>

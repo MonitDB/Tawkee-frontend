@@ -58,6 +58,8 @@ function TabPanel(props: TabPanelProps) {
 export default function AgentDetails() {
   const theme = useTheme();
   const params = useParams();
+//   const [searchParams] = useSearchParams();
+
   const { paginatedAgents, updateAgent, loading } = useAgents();
   const { agents } = paginatedAgents;
 
@@ -150,12 +152,13 @@ export default function AgentDetails() {
         }
     }
 
-    // if (params.tabName) {
-    //     if (params.tabName === 'training') {
+    // const tabName = searchParams.get('tabName');
+    // if (tabName) {
+    //     if (tabName === 'training') {
     //         setCurrentTab(2);
-    //     } else if (params.tabName === 'intentions') {
+    //     } else if (tabName === 'intentions') {
     //         setCurrentTab(3);
-    //     } else if (params.tabName === 'settings') {
+    //     } else if (tabName === 'settings') {
     //         setCurrentTab(5);
     //     }
     // }
