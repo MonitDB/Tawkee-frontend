@@ -9,7 +9,7 @@ import Stack from '@mui/material/Stack';
 
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
-import GroupIcon from '@mui/icons-material/groups';
+import GroupsIcon from '@mui/icons-material/Groups';
 import ChatIcon from '@mui/icons-material/Chat';
 import ContactIcon from '@mui/icons-material/Contacts';
 
@@ -21,7 +21,7 @@ import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 const mainListItems = [
   { text: 'Dashboard', icon: <DashboardIcon /> },
   { text: 'Agents', icon: <SupportAgentIcon /> },
-  { text: 'Team', icon: <GroupIcon /> },
+  { text: 'Team', icon: <GroupsIcon /> },
   { text: 'Chats', icon: <ChatIcon /> },
   { text: 'Contact', icon: <ContactIcon /> },
 ];
