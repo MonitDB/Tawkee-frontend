@@ -74,9 +74,9 @@ export class ChannelService {
   async getQRCode(channelId: string): Promise<{ qrCode: string | null }> {
     try {
       const response = await fetch(
-        `${this.apiUrl}/channel/${channelId}/qr-code`,
+        `${this.apiUrl}/channel/${channelId}/refresh-qr-code`,
         {
-          method: 'GET',
+          method: 'PUT',
           headers: { Authorization: `Bearer ${this.token}` } as const,
         }
       );
