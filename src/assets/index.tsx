@@ -14,18 +14,16 @@ import newAgent from './newAgent.svg';
 // import successfulAgentCreation from './successfulAgentCreation.png';
 
 export {
-    tawkeeLogo,
-    tawkeeLogoLight,
-    tawkeeDesktop,
-    tawkeeDesktopLight,
-
-    tawkeeAgencies,
-    tawkeeProfessionals,
-    tawkeeEntrepreneurs,
-
-    newAgent
-    // newPersonalAgent,
-    // newSaleAgent,
-    // newSupportAgent,
-    // successfulAgentCreation
+  tawkeeLogo,
+  tawkeeLogoLight,
+  tawkeeDesktop,
+  tawkeeDesktopLight,
+  tawkeeAgencies,
+  tawkeeProfessionals,
+  tawkeeEntrepreneurs,
+  newAgent,
+  // newPersonalAgent,
+  // newSaleAgent,
+  // newSupportAgent,
+  // successfulAgentCreation
 };

@@ -1,52 +1,32 @@
 import { useState, useCallback, useMemo } from 'react';
 import { Channel, ChannelService } from '../services/channelService';
-import { env } from '../config/env'; // adjust path as needed
-import { useHttpResponse } from '../context/ResponseNotifier'; // adjust to your notification utility
+import { env } from '../config/env';
+import { useHttpResponse } from '../context/ResponseNotifier';
+import { useAgents } from '../context/AgentsContext';
 
 export const useChannelService = (token: string) => {
   const { notify } = useHttpResponse();
+  const { createAgentChannel, deleteAgentChannel, disconnectAgentChannel } =
+    useAgents();
 
   const [loading, setLoading] = useState(false);
-  const [channels, setChannels] = useState<Channel[]>([]);
-  const [currentAgentId, setCurrentAgentId] = useState<string | null>(null);
 
   const service = useMemo(
     () => new ChannelService({ token, apiUrl: env.API_URL }),
     [token, env.API_URL]
   );
 
-  const getChannelsForAgent = useCallback(
-    async (agentId: string) => {
-      setLoading(true);
-      try {
-        if (currentAgentId !== agentId) {
-          setCurrentAgentId(agentId);
-        }
-
-        const list = await service.getChannelsForAgent(agentId);
-        setChannels(list);
-        return list;
-      } catch (error) {
-        notify(
-          error instanceof Error ? error.message : 'Unknown error',
-          'error'
-        );
-        return [];
-      } finally {
-        setLoading(false);
-      }
-    },
-    [service, currentAgentId]
-  );
-
   const createChannel = useCallback(
     async (agentId: string, name: string, type: string) => {
       setLoading(true);
       try {
-        const newChannel = await service.createChannel(agentId, name, type);
-        if (newChannel && currentAgentId === agentId) {
-          setChannels((prev) => [...prev, newChannel]);
-        }
+        const newChannel = (await service.createChannel(
+          agentId,
+          name,
+          type
+        )) as Channel;
+        createAgentChannel(agentId, newChannel);
+
         notify('Channel created successfully!', 'success');
         return newChannel;
       } catch (error) {
@@ -59,7 +39,7 @@ export const useChannelService = (token: string) => {
         setLoading(false);
       }
     },
-    [service, currentAgentId]
+    [service, createAgentChannel, notify]
   );
 
   const getQRCode = useCallback(
@@ -85,29 +65,12 @@ export const useChannelService = (token: string) => {
   );
 
   const disconnectChannel = useCallback(
-    async (channelId: string) => {
+    async (agentId: string, channelId: string) => {
       setLoading(true);
       try {
         const success = await service.disconnectChannel(channelId);
         if (success) {
-          setChannels((prev) =>
-            prev.map((ch) =>
-              ch.id === channelId
-                ? {
-                    ...ch,
-                    connected: false,
-                    config: {
-                      ...ch.config,
-                      evolutionApi: {
-                        ...ch.config.evolutionApi,
-                        status: 'close',
-                      },
-                    },
-                  }
-                : ch
-            )
-          );
-
+          disconnectAgentChannel(agentId, channelId);
           notify('Channel disconnected!', 'success');
         }
         return success;
@@ -125,12 +88,12 @@ export const useChannelService = (token: string) => {
   );
 
   const deleteChannel = useCallback(
-    async (channelId: string) => {
+    async (agentId: string, channelId: string) => {
       setLoading(true);
       try {
         const success = await service.deleteChannel(channelId);
         if (success) {
-          setChannels((prev) => prev.filter((ch) => ch.id !== channelId));
+          deleteAgentChannel(agentId, channelId);
           notify('Channel deleted!', 'success');
         }
         return success;
@@ -144,13 +107,11 @@ export const useChannelService = (token: string) => {
         setLoading(false);
       }
     },
-    [service]
+    [service, deleteAgentChannel, notify]
   );
 
   return {
     loading,
-    channels,
-    getChannelsForAgent,
     createChannel,
     getQRCode,
     disconnectChannel,

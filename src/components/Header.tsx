@@ -25,7 +25,7 @@ export default function Header({
       }}
       spacing={2}
     >
-      <NavbarBreadcrumbs overrideLatestSegment={overrideLatestSegment} />
+      <NavbarBreadcrumbs overrideLatestSegment={overrideLatestSegment || ''} />
       <Stack direction="row" sx={{ gap: 1 }}>
         <Search />
         <CustomDatePicker />

@@ -5,42 +5,44 @@ import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
-import { tawkeeAgencies, tawkeeEntrepreneurs, tawkeeProfessionals } from '../../../assets';
+import {
+  tawkeeAgencies,
+  tawkeeEntrepreneurs,
+  tawkeeProfessionals,
+} from '../../../assets';
 
 const items = [
   {
     title: 'Agencies',
     description: 'who want to offer automation as a service to other companies',
-    image: tawkeeAgencies
+    image: tawkeeAgencies,
   },
   {
     title: 'Professionals',
-    description: 'who want to scale their support and manage the company where they work with AI as collaborative assistants',
-    image: tawkeeProfessionals
+    description:
+      'who want to scale their support and manage the company where they work with AI as collaborative assistants',
+    image: tawkeeProfessionals,
   },
   {
     title: 'Entrepreneurs',
-    description: 'who want to transform their innovative services using AI assistants',
-    image: tawkeeEntrepreneurs
-  }
+    description:
+      'who want to transform their innovative services using AI assistants',
+    image: tawkeeEntrepreneurs,
+  },
 ];
 
 export default function Features() {
   return (
     <Container id="features" sx={{ py: { xs: 8, sm: 16 } }}>
       <Box sx={{ textAlign: 'center', mb: 8 }}>
-        <Chip
-          label="MADE FOR YOU"
-          color="success"
-          sx={{ mb: 4 }}
-        />
+        <Chip label="MADE FOR YOU" color="success" sx={{ mb: 4 }} />
         <Typography
           component="h2"
           variant="h3"
           gutterBottom
           sx={{
             fontWeight: 700,
-            mb: 4
+            mb: 4,
           }}
         >
           Tawkee was designed for you
@@ -78,10 +80,7 @@ export default function Features() {
                 >
                   {item.title}
                 </Typography>
-                <Typography
-                  variant="body1"
-                  color="text.secondary"
-                >
+                <Typography variant="body1" color="text.secondary">
                   {item.description}
                 </Typography>
               </CardContent>

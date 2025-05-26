@@ -1,4 +1,3 @@
-
 import * as React from 'react';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -60,7 +59,12 @@ export default function FAQ() {
           </AccordionSummary>
           <AccordionDetails>
             <Typography variant="body2" gutterBottom>
-              It depends on what you need! At Tawkee, we have basic plans for those taking their first steps with AI, intermediate plans for growing businesses, and robust plans for companies with a high volume of contacts. Check out the volume of credits you'll need per day up to the chosen plan. You can always upgrade your plan as your business grows.
+              It depends on what you need! At Tawkee, we have basic plans for
+              those taking their first steps with AI, intermediate plans for
+              growing businesses, and robust plans for companies with a high
+              volume of contacts. Check out the volume of credits you&apos;ll
+              need per day up to the chosen plan. You can always upgrade your
+              plan as your business grows.
             </Typography>
           </AccordionDetails>
         </Accordion>
@@ -80,7 +84,11 @@ export default function FAQ() {
           </AccordionSummary>
           <AccordionDetails>
             <Typography variant="body2" gutterBottom>
-              It's very simple! Each interaction with our AI assistant (sent or received messages) consumes a credit, with the amount varying according to the model used. Before starting a conversation, you can check your credit balance in your Tawkee.ai account. You need to have credits to use Tawkee.ai features.
+              It&apos;s very simple! Each interaction with our AI assistant
+              (sent or received messages) consumes a credit, with the amount
+              varying according to the model used. Before starting a
+              conversation, you can check your credit balance in your Tawkee.ai
+              account. You need to have credits to use Tawkee.ai features.
             </Typography>
           </AccordionDetails>
         </Accordion>
@@ -100,7 +108,10 @@ export default function FAQ() {
           </AccordionSummary>
           <AccordionDetails>
             <Typography variant="body2" gutterBottom>
-              Yes! Tawkee.ai employees are trained professionals to act on WhatsApp, chatting with your customers naturally, answering questions, and understanding their needs. Want to see how it works? You can configure an AI employee right now!
+              Yes! Tawkee.ai employees are trained professionals to act on
+              WhatsApp, chatting with your customers naturally, answering
+              questions, and understanding their needs. Want to see how it
+              works? You can configure an AI employee right now!
             </Typography>
           </AccordionDetails>
         </Accordion>
@@ -120,7 +131,11 @@ export default function FAQ() {
           </AccordionSummary>
           <AccordionDetails>
             <Typography variant="body2" gutterBottom>
-              Tawkee's Partnership Program is perfect for optimizing your AI usage. Take the first step accessing our Partner Portal, fill in your information, and submit! The client will receive their email, and the Tawkee team will get in touch with you to get started!
+              Tawkee&lsquo;s Partnership Program is perfect for optimizing your
+              AI usage. Take the first step accessing our Partner Portal, fill
+              in your information, and submit! The client will receive their
+              email, and the Tawkee team will get in touch with you to get
+              started!
             </Typography>
           </AccordionDetails>
         </Accordion>
@@ -140,7 +155,11 @@ export default function FAQ() {
           </AccordionSummary>
           <AccordionDetails>
             <Typography variant="body2" gutterBottom>
-              Yes! Depending on your Tawkee.ai plan, you can use multiple "AI employees" in your account. The more employees, the more types of customers you can serve. In Tawkee.ai's enterprise plans, this is even easier to configure. Want to know how? Talk to us now!
+              Yes! Depending on your Tawkee.ai plan, you can use multiple
+              &quot;AI employees&quot; in your account. The more employees, the
+              more types of customers you can serve. In Tawkee.ai&apos;s
+              enterprise plans, this is even easier to configure. Want to know
+              how? Talk to us now!
             </Typography>
           </AccordionDetails>
         </Accordion>
@@ -155,12 +174,16 @@ export default function FAQ() {
             id="panel6d-header"
           >
             <Typography component="span" variant="subtitle2">
-              What's the difference between API and WhatsApp?
+              What&apos;s the difference between API and WhatsApp?
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Typography variant="body2" gutterBottom>
-              At Tawkee.ai, we offer both options! WhatsApp allows you to use our AI on your own phone, directly from WhatsApp itself. Perfect for agencies or your own product. Great for scaling up or testing! Want to know more about costs and implementation with Tawkee.ai? Let us know what you need!
+              At Tawkee.ai, we offer both options! WhatsApp allows you to use
+              our AI on your own phone, directly from WhatsApp itself. Perfect
+              for agencies or your own product. Great for scaling up or testing!
+              Want to know more about costs and implementation with Tawkee.ai?
+              Let us know what you need!
             </Typography>
           </AccordionDetails>
         </Accordion>
@@ -180,7 +203,10 @@ export default function FAQ() {
           </AccordionSummary>
           <AccordionDetails>
             <Typography variant="body2" gutterBottom>
-              Yes, it's possible with Tawkee.ai! Get in touch with us through WhatsApp or email so Tawkee.ai can help with the transfer. We'll verify the billing plan, make adjustments if needed, and tell you everything about your options that best suit you!
+              Yes, it is possible with Tawkee.ai! Get in touch with us through
+              WhatsApp or email so Tawkee.ai can help with the transfer. We will
+              verify the billing plan, make adjustments if needed, and tell you
+              everything about your options that best suit you!
             </Typography>
           </AccordionDetails>
         </Accordion>
@@ -195,12 +221,16 @@ export default function FAQ() {
             id="panel8d-header"
           >
             <Typography component="span" variant="subtitle2">
-              What's the difference between an agency account and a client account?
+              What is the difference between an agency account and a client
+              account?
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Typography variant="body2" gutterBottom>
-              At Tawkee.ai, an agency account is for managing multiple client accounts (like agencies and consultants managing multiple client accounts), while a client account is for end-users. Can I show you some examples?
+              At Tawkee.ai, an agency account is for managing multiple client
+              accounts (like agencies and consultants managing multiple client
+              accounts), while a client account is for end-users. Can I show you
+              some examples?
             </Typography>
           </AccordionDetails>
         </Accordion>

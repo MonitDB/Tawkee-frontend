@@ -19,23 +19,27 @@ const features = [
   {
     icon: <SmartToyIcon sx={{ fontSize: 32 }} />,
     title: 'Human-like service',
-    description: 'Provide your customers with a natural, humanized service that’s available anytime.'
+    description:
+      'Provide your customers with a natural, humanized service that’s available anytime.',
   },
   {
     icon: <AutorenewIcon sx={{ fontSize: 32 }} />,
     title: 'Automate repetitive tasks',
-    description: 'Let the AI employee handle repetitive processes so your team can focus on what really matters.'
+    description:
+      'Let the AI employee handle repetitive processes so your team can focus on what really matters.',
   },
   {
     icon: <PsychologyIcon sx={{ fontSize: 32 }} />,
     title: 'Learns about your business and processes',
-    description: 'Responds to customers quickly and accurately, offering always up-to-date information about your company and operations.'
+    description:
+      'Responds to customers quickly and accurately, offering always up-to-date information about your company and operations.',
   },
   {
     icon: <SchoolIcon sx={{ fontSize: 32 }} />,
     title: 'Automate repetitive tasks',
-    description: 'Let the AI employee handle repetitive processes so your team can focus on what really matters.'
-  }
+    description:
+      'Let the AI employee handle repetitive processes so your team can focus on what really matters.',
+  },
 ];
 
 export default function Testimonials() {
@@ -83,7 +87,9 @@ export default function Testimonials() {
                   mb: 4,
                 }}
               >
-                AI employees are like having a dedicated 'ChatGPT' for your business: they understand and respond to customers, perform tasks, and are available 24/7 for you.
+                AI employees are like having a dedicated &apos;ChatGPT&apos; for
+                your business: they understand and respond to customers, perform
+                tasks, and are available 24/7 for you.
               </Typography>
             </Box>
 
@@ -113,7 +119,7 @@ export default function Testimonials() {
               ))}
             </Grid>
 
-            <Button 
+            <Button
               variant="contained"
               size="large"
               endIcon={<ArrowForwardIcon />}
@@ -141,7 +147,10 @@ export default function Testimonials() {
                   borderRadius: 4,
                 }}
               >
-                <img src={newAgent} style={{ width: '100%', padding: '1.0rem' }} />
+                <img
+                  src={newAgent}
+                  style={{ width: '100%', padding: '1.0rem' }}
+                />
               </Box>
             </Box>
           </Grid>

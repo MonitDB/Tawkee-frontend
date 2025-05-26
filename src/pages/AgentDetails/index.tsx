@@ -1,9 +1,12 @@
-import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useLocation, useParams } from 'react-router-dom';
 
-import { Agent, AgentType, useAgents } from '../../context/AgentsContext';
+// Keep necessary imports from original file
+import { useAuth } from '../../context/AuthContext';
+import { Agent, useAgents } from '../../context/AgentsContext';
+import { useChannelService } from '../../hooks/useChannelService';
 import { Channel } from '../../services/channelService';
-
+import LoadingBackdrop from '../../components/LoadingBackdrop';
 import {
   Box,
   Typography,
@@ -16,11 +19,7 @@ import {
   Tabs,
   useTheme,
   Button,
-  TextField,
-  MenuItem,
-  FormControl,
-  FormLabel,
-  CircularProgress
+  Tooltip,
 } from '@mui/material';
 import {
   Person as PersonIcon,
@@ -30,14 +29,36 @@ import {
   Settings as SettingsIcon,
   Hub as HubIcon,
 } from '@mui/icons-material';
-import { useChannelService } from '../../hooks/useChannelService';
-import { useAuth } from '../../context/AuthContext';
 
+// Import the newly created TabPanel components
+import ProfileTabPanel from './components/ProfileTabPanel';
+import WorkTabPanel from './components/WorkTabPanel';
+import TrainingTabPanel from './components/TrainingTabPanel';
+import IntentionsTabPanel from './components/IntentionsTabPanel';
+import IntegrationsTabPanel from './components/IntegrationsTabPanel';
+import SettingsTabPanel from './components/SettingsTabPanel';
+import {
+  agentCommunicationDescriptions,
+  agentTypeDescriptions,
+} from '../Agents';
+
+// Keep the original TabPanel helper component if it's generic
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
   value: number;
 }
+
+const tabIndexFromName = {
+  profile: 0,
+  work: 1,
+  training: 2,
+  intentions: 3,
+  integrations: 4,
+  settings: 5,
+} as const;
+
+type TabName = keyof typeof tabIndexFromName;
 
 function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
@@ -58,342 +79,202 @@ function TabPanel(props: TabPanelProps) {
 export default function AgentDetails() {
   const theme = useTheme();
   const params = useParams();
-//   const [searchParams] = useSearchParams();
+  const location = useLocation();
 
-  const { paginatedAgents, updateAgent, loading } = useAgents();
+  const { paginatedAgents, activateAgent, deactivateAgent, loading } =
+    useAgents();
   const { agents } = paginatedAgents;
+  const { token } = useAuth();
+  const {
+    getQRCode,
+    disconnectChannel,
+    loading: channelQRCodeLoading,
+  } = useChannelService(token as string);
 
   const [currentTab, setCurrentTab] = useState(0);
   const [agentData, setAgentData] = useState<Agent | null>(null);
 
-  const [agentNameError, setAgentNameError] = useState<boolean>(false);
-  const [agentNameErrorMessage, setAgentNameErrorMessage] =
-    useState<string>('');
-  const [agentBehaviorValue, setAgentBehaviorValue] = useState<string>("");
-
-  const { token } = useAuth();
-  const { getQRCode, loading: channelQRCodeLoading } = useChannelService(token as string);
   const [QRCode, setQRCode] = useState<string | undefined>(undefined);
 
-
+  // Keep handlers and useEffect from original file
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue);
   };
 
-  const handleChangeAgentBehavior = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setAgentBehaviorValue(event.target.value);
-  }
-
-  const validateInputs = () => {
-    const agentName = document.getElementById('agent-name') as HTMLInputElement;
-    const agentBehavior = document.getElementById(
-      'agent-behavior'
-    ) as HTMLInputElement;
-
-    let isValid = true;
-
-    if (!agentName.value) {
-      setAgentNameError(true);
-      setAgentNameErrorMessage('Agent name should not be left blank.');
-      isValid = false;
-    } else {
-      setAgentNameError(false);
-      setAgentNameErrorMessage('');
-    }
-
-    if (agentBehavior.value.length > 3000) {
-      isValid = false;
-    }
-
-    return isValid;
-  };
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (agentNameError || agentBehaviorValue.length > 3000) {
-      return;
-    }
-    const data = new FormData(event.currentTarget);
-
-    try {
-        updateAgent(params.agentId as string, {
-            name: data.get('agent-name') as string || undefined,
-            behavior: data.get('agent-behavior') as string || undefined,
-            type: data.get('agent-type') as AgentType || undefined
-        })
-    } catch (error) {
-      return;
-    }
-  };
-
   const handleRefreshQrCode = async (channelId: string) => {
-    const { qrCode } = await getQRCode(channelId);
-    setQRCode(qrCode as string);
+    try {
+      const { qrCode } = await getQRCode(channelId);
+      setQRCode(qrCode as string);
+    } catch (error) {
+      console.error('Failed to refresh QR code:', error);
+    }
   };
 
+  const handleDisconnectChannel = async (
+    agentId: string,
+    channelId: string
+  ) => {
+    try {
+      await disconnectChannel(agentId, channelId);
+    } catch (error) {
+      console.error('Failed to disconnect channel:', error);
+    }
+  };
 
   useEffect(() => {
     if (params.agentId) {
-        const agent = agents.find(
-            (wrapper) => wrapper.agent.id === params.agentId
-        )?.agent;
-        
-        if (agent) {
-            setAgentData(agent);    
-            setAgentBehaviorValue(agent.behavior);
+      const agentWrapper = agents.find(
+        (wrapper) => wrapper.agent.id === params.agentId
+      );
+      const agent = agentWrapper?.agent;
 
-            const disconnectedToAnyChannel = agent.channels.find((channel: Channel) => !channel.connected);
+      // try to fetch tabName from query Params
+      const searchParams = new URLSearchParams(location.search);
+      const tabName = searchParams.get('tabName');
 
-            if (disconnectedToAnyChannel) {
-                setCurrentTab(4);
-                handleRefreshQrCode(disconnectedToAnyChannel.id);
-            }
+      if (agent) {
+        setAgentData(agent);
+        if (tabName) {
+          setCurrentTab(tabIndexFromName[tabName as TabName]);
         }
+      }
     }
-
-    // const tabName = searchParams.get('tabName');
-    // if (tabName) {
-    //     if (tabName === 'training') {
-    //         setCurrentTab(2);
-    //     } else if (tabName === 'intentions') {
-    //         setCurrentTab(3);
-    //     } else if (tabName === 'settings') {
-    //         setCurrentTab(5);
-    //     }
-    // }
-
-
-  }, [params.agentId, agents])
+  }, [params.agentId, agents]); // Dependencies kept as original
 
   if (!agentData) {
-    return <></>
-  } else {
-    return (
+    // Maybe show a loading indicator or a not found message
+    return <LoadingBackdrop open={true} />;
+  }
+
+  return (
     <Card
-        variant="outlined"
-        sx={{ height: '100%', bgcolor: theme.palette.background.default }}
+      variant="outlined"
+      sx={{ height: '100%', bgcolor: theme.palette.background.default }}
     >
-        <CardContent sx={{ height: '100%', overflowY: 'hidden' }}>
+      <CardContent sx={{ height: '100%', overflowY: 'auto' }}>
+        {' '}
+        {/* Changed overflowY to auto */}
         <Box sx={{ p: 3 }}>
-            <Grid container spacing={3}>
-            {/* Agent Header */}
+          <Grid container spacing={3}>
+            {/* Agent Header (Keep as is) */}
             <Grid size={{ xs: 12 }}>
-                <Box
+              <Box
                 sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}
-                >
+              >
                 <Avatar src={agentData.avatar} sx={{ width: 100, height: 100 }}>
-                    {agentData.name[0]}
+                  {agentData.name[0]}
                 </Avatar>
                 <Box>
-                    <Typography variant="h4">{agentData.name}</Typography>
-                    <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                    <Chip
-                    color={agentData.isActive
-                        ? agentData.channels.filter((channel: Channel) => channel.connected).length > 0
-                        ? 'success'
-                        : 'warning'
-                        : 'error'
-                    }
-                    label={agentData.isActive
-                        ? agentData.channels.filter((channel: Channel) => channel.connected).length > 0
-                        ? 'ACTIVE & CONNECTED'
-                        : 'ACTIVE BUT DISCONNECTED'
-                        : 'INACTIVE'
-                    }
-                    />
-                    <Chip label={agentData.communicationType} />
-                    <Chip label={agentData.type} />
-                    </Box>
+                  <Typography variant="h4">{agentData.name}</Typography>
+                  <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                    <Tooltip
+                      title={
+                        agentData.isActive ? 'Deactivate me' : 'Activate me'
+                      }
+                    >
+                      <Chip
+                        color={
+                          agentData.isActive
+                            ? agentData.channels.filter(
+                                (channel: Channel) => channel.connected
+                              ).length > 0
+                              ? 'success'
+                              : 'warning'
+                            : 'error'
+                        }
+                        label={
+                          agentData.isActive
+                            ? agentData.channels.filter(
+                                (channel: Channel) => channel.connected
+                              ).length > 0
+                              ? 'ACTIVE & CONNECTED'
+                              : 'ACTIVE BUT DISCONNECTED'
+                            : 'INACTIVE'
+                        }
+                        onClick={() =>
+                          agentData.isActive
+                            ? deactivateAgent(agentData.id)
+                            : activateAgent(agentData.id)
+                        }
+                      />
+                    </Tooltip>
+                    <Tooltip
+                      title={
+                        agentCommunicationDescriptions[
+                          agentData.communicationType
+                        ]
+                      }
+                      placement="bottom"
+                    >
+                      <Chip label={agentData.communicationType} />
+                    </Tooltip>
+                    <Tooltip
+                      title={agentTypeDescriptions[agentData.type]}
+                      placement="bottom"
+                    >
+                      <Chip label={agentData.type} />
+                    </Tooltip>
+                  </Box>
                 </Box>
                 <Box sx={{ ml: 'auto' }}>
-                    <Button variant="contained" color="primary">
-                    Chat with {agentData.name}
+                  <Tooltip title="Not yet implemented">
+                    <Button variant="outlined" color="primary" disabled>
+                      Chat with {agentData.name}
                     </Button>
+                  </Tooltip>
                 </Box>
-                </Box>
+              </Box>
             </Grid>
 
-            {/* Navigation */}
+            {/* Navigation Tabs (Keep as is) */}
             <Grid size={{ xs: 12 }}>
-                <Tabs value={currentTab} onChange={handleTabChange}>
+              <Tabs
+                value={currentTab}
+                onChange={handleTabChange}
+                variant="scrollable"
+                scrollButtons="auto"
+                allowScrollButtonsMobile
+              >
                 <Tab icon={<PersonIcon />} label="Profile" />
                 <Tab icon={<WorkIcon />} label="Work" />
                 <Tab icon={<SchoolIcon />} label="Training" />
-                <Tab icon={<PsychologyIcon />} label="Intentions" />
+                <Tab icon={<PsychologyIcon />} disabled label="Intentions" />
                 <Tab icon={<HubIcon />} label="Integrations" />
-                <Tab icon={<SettingsIcon />} label="Settings" />
-                </Tabs>
+                <Tab icon={<SettingsIcon />} disabled label="Settings" />
+              </Tabs>
             </Grid>
 
-            {/* Content */}
+            {/* Content Area - Use imported components */}
             <Grid size={{ xs: 12 }}>
-                <TabPanel value={currentTab} index={0}>
-                <Typography variant="h6" gutterBottom>
-                    Personal Information
-                </Typography>
-                <Grid
-                    container
-                    spacing={3}
-                    component="form"
-                    onSubmit={handleSubmit}
-                    noValidate
-                >
-                    <Grid size={{ xs: 12, md: 6 }}>
-                        <FormControl sx={{ width: '100%' }}>
-                            <FormLabel htmlFor="agent-name">Name</FormLabel>
-                            <TextField
-                                error={agentNameError}
-                                defaultValue={agentData.name}
-                                helperText={agentNameErrorMessage}
-                                id="agent-name"
-                                name="agent-name"
-                                autoFocus
-                                required
-                                fullWidth
-                                variant="outlined"
-                                color={agentNameError ? 'error' : 'primary'}
-                            />
-                        </FormControl>
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 6 }}>
-                        <FormControl sx={{ width: '100%' }}>
-                            <FormLabel htmlFor="agent-type">Type</FormLabel>
-                            <TextField
-                                defaultValue={agentData.type}
-                                id="agent-type"
-                                name="agent-type"
-                                select
-                                required
-                                fullWidth
-                                variant="outlined"
-                            >
-                            {Object.values(AgentType).map((type) => (
-                                <MenuItem key={type} value={type}>
-                                {type}
-                                </MenuItem>
-                            ))}
-                            </TextField>
-                        </FormControl>
-                    </Grid>
-                    <Grid size={{ xs: 12 }}>
-                        <FormControl sx={{ width: '100%' }}>
-                            <FormLabel htmlFor="agent-behavior">Behavior</FormLabel>
-                            <TextField
-                                error={agentBehaviorValue.length > 3000}
-                                defaultValue={agentData.behavior}
-                                id="agent-behavior"
-                                name="agent-behavior"
-                                required
-                                fullWidth
-                                multiline
-                                rows={6}
-                                variant="outlined"
-                                helperText={`${agentBehaviorValue.length}/3000`}
-                                onChange={handleChangeAgentBehavior}
-                                color={agentBehaviorValue.length > 3000 ? 'error' : 'primary'}
-                            />
-                        </FormControl>
-                    </Grid>
-                    <Grid size={{ xs: 9 }}>
-                    </Grid>
-                    <Grid size={{ xs: 3 }}>
-                        <Button
-                            type="submit"
-                            fullWidth
-                            variant={loading ? 'outlined' : 'contained'}
-                            onClick={validateInputs}
-                            disabled={loading}
-                        >
-                            Save
-                        </Button>
-                    </Grid>
-                </Grid>
-                </TabPanel>
-
-                <TabPanel value={currentTab} index={1}>
-                <Typography variant="h6" gutterBottom>
-                    Work Information
-                </Typography>
-                <Grid container spacing={2}>
-                    <Grid size={{ xs: 12 }}>
-                    <Typography variant="subtitle1" color="text.secondary">
-                        Company/Organization
-                    </Typography>
-                    <Typography variant="body1">{agentData.jobName}</Typography>
-                    </Grid>
-                    <Grid size={{ xs: 12 }}>
-                    <Typography variant="subtitle1" color="text.secondary">
-                        Role Description
-                    </Typography>
-                    <Typography variant="body1">
-                        {agentData.jobDescription}
-                    </Typography>
-                    </Grid>
-                </Grid>
-                </TabPanel>
-
-                <TabPanel value={currentTab} index={2}>
-                <Typography variant="h6">Training Content</Typography>
-                </TabPanel>
-
-                <TabPanel value={currentTab} index={3}>
-                <Typography variant="h6">Agent Intentions</Typography>
-                </TabPanel>
-
-                <TabPanel value={currentTab} index={4}>
-                    { agentData.channels.find(channel => !channel.connected) && (
-                        <>
-                            <Grid container spacing={3}>
-                                <Typography variant="h6">Connect Agent To Your WhatsApp</Typography>
-                                <Grid size={{ xs: 12 }}>
-                                    <Box
-                                        sx={{
-                                            maxWidth: '90%',
-                                            height: '70vh',
-                                            padding: 3,
-                                            boxShadow: 3,
-                                            borderRadius: 2,
-                                            overflow: 'hidden',
-                                            bgcolor: 'background.paper',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }}
-                                    >
-                                        { channelQRCodeLoading
-                                            ? (
-                                                <CircularProgress />
-                                            )
-                                            : (
-                                                <img
-                                                    src={QRCode}
-                                                    alt="QR Code"
-                                                    style={{
-                                                        display: 'block',
-                                                        maxWidth: '100%',
-                                                        maxHeight: '100%',
-                                                        borderRadius: 'inherit',
-                                                        color: 'black'
-                                                    }}
-                                                />
-                                            )
-                                        }
-                                    </Box>
-                                </Grid>
-                            </Grid>
-                        </>
-                    )}
-                </TabPanel>
-
-                <TabPanel value={currentTab} index={5}>
-                <Typography variant="h6">Agent Settings</Typography>
-                </TabPanel>
+              <TabPanel value={currentTab} index={0}>
+                <ProfileTabPanel agentData={agentData} loading={loading} />
+              </TabPanel>
+              <TabPanel value={currentTab} index={1}>
+                <WorkTabPanel agentData={agentData} loading={loading} />
+              </TabPanel>
+              <TabPanel value={currentTab} index={2}>
+                <TrainingTabPanel agentData={agentData} />
+              </TabPanel>
+              <TabPanel value={currentTab} index={3}>
+                <IntentionsTabPanel agentData={agentData} />
+              </TabPanel>
+              <TabPanel value={currentTab} index={4}>
+                <IntegrationsTabPanel
+                  agentData={agentData}
+                  QRCode={QRCode}
+                  handleRefreshQrCode={handleRefreshQrCode}
+                  disconnectChannel={handleDisconnectChannel}
+                  channelQRCodeLoading={channelQRCodeLoading}
+                />
+              </TabPanel>
+              <TabPanel value={currentTab} index={5}>
+                <SettingsTabPanel agentData={agentData} />
+              </TabPanel>
             </Grid>
-            </Grid>
+          </Grid>
         </Box>
-        </CardContent>
+      </CardContent>
+      <LoadingBackdrop open={loading || channelQRCodeLoading} />
     </Card>
-    );
-  }
+  );
 }

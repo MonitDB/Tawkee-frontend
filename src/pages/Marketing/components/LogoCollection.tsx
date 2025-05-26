@@ -1,4 +1,3 @@
-
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
@@ -27,32 +26,33 @@ export default function LogoCollection() {
   const theme = useTheme();
 
   return (
-    <Box 
-      id="metricsCollection" 
-      sx={{ 
+    <Box
+      id="metricsCollection"
+      sx={{
         py: 6,
         px: 3,
-        backgroundColor: theme.palette.mode === 'dark' 
-          ? alpha(theme.palette.primary.dark, 0.2)
-          : alpha(theme.palette.primary.light, 0.1),
+        backgroundColor:
+          theme.palette.mode === 'dark'
+            ? alpha(theme.palette.primary.dark, 0.2)
+            : alpha(theme.palette.primary.light, 0.1),
       }}
     >
       <Typography
         component="h2"
         variant="h4"
         align="center"
-        sx={{ 
+        sx={{
           mb: 6,
           color: 'text.primary',
-          fontWeight: 'bold' 
+          fontWeight: 'bold',
         }}
       >
         Proven Results
       </Typography>
-      <Grid 
-        container 
-        spacing={4} 
-        sx={{ 
+      <Grid
+        container
+        spacing={4}
+        sx={{
           justifyContent: 'center',
           alignItems: 'stretch',
         }}
@@ -68,8 +68,11 @@ export default function LogoCollection() {
                 height: '100%',
                 p: 3,
                 borderRadius: 2,
-                backgroundColor: metric.highlight 
-                  ? alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.2 : 0.1)
+                backgroundColor: metric.highlight
+                  ? alpha(
+                      theme.palette.primary.main,
+                      theme.palette.mode === 'dark' ? 0.2 : 0.1
+                    )
                   : 'transparent',
               }}
             >

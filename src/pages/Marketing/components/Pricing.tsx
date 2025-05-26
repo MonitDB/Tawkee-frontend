@@ -1,4 +1,3 @@
-
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
@@ -113,7 +112,8 @@ export default function Pricing() {
                   height: '100%',
                 },
                 tier.title === 'Standard' && {
-                  background: 'linear-gradient(180deg, #E838FF 0%, #350641 100%)',
+                  background:
+                    'linear-gradient(180deg, #E838FF 0%, #350641 100%)',
                   color: 'white',
                 },
               ]}
@@ -177,13 +177,15 @@ export default function Pricing() {
                     <CheckCircleRoundedIcon
                       sx={{
                         width: 20,
-                        color: tier.title === 'Standard' ? 'white' : 'primary.main',
+                        color:
+                          tier.title === 'Standard' ? 'white' : 'primary.main',
                       }}
                     />
                     <Typography
                       variant="body2"
                       sx={{
-                        color: tier.title === 'Standard' ? 'white' : 'text.primary',
+                        color:
+                          tier.title === 'Standard' ? 'white' : 'text.primary',
                       }}
                     >
                       {feature}

@@ -23,6 +23,7 @@
     "@mui/x-tree-view": "^8.2.0",
     "@react-spring/web": "^9.7.5",
     "dayjs": "^1.11.13",
+    "qrcode.react": "^4.2.0",
     "react": "latest",
     "react-dom": "latest",
     "react-router-dom": "^7.5.3"

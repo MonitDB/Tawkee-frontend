@@ -12,7 +12,6 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { useColorScheme } from '@mui/material';
 import { tawkeeDesktop, tawkeeDesktopLight } from '../../../assets';
 
-
 export default function Hero() {
   const navigate = useNavigate();
 
@@ -39,7 +38,8 @@ export default function Hero() {
           width: '100%',
           height: '100%',
           opacity: 0.1,
-          background: 'radial-gradient(circle at 50% 50%, rgba(100, 150, 255, 0.2) 0%, transparent 50%)',
+          background:
+            'radial-gradient(circle at 50% 50%, rgba(100, 150, 255, 0.2) 0%, transparent 50%)',
         }}
       />
 
@@ -50,7 +50,7 @@ export default function Hero() {
               <Chip
                 icon={<SmartToyIcon />}
                 label="FAST SUPPORT"
-                color='success'
+                color="success"
                 sx={{ width: 'fit-content' }}
               />
 
@@ -72,7 +72,9 @@ export default function Hero() {
                 color="text.secondary"
                 sx={{ maxWidth: 600 }}
               >
-                AI agents ready to scale your sales, customer support, and manage your schedule — answering questions and helping automate service with customizable AIs.
+                AI agents ready to scale your sales, customer support, and
+                manage your schedule — answering questions and helping automate
+                service with customizable AIs.
               </Typography>
 
               <Button
@@ -115,10 +117,11 @@ export default function Hero() {
                   overflow: 'hidden',
                 }}
               >
-                <img src={ resolvedMode == 'dark'
-                  ? tawkeeDesktop
-                  : tawkeeDesktopLight
-                } />
+                <img
+                  src={
+                    resolvedMode == 'dark' ? tawkeeDesktop : tawkeeDesktopLight
+                  }
+                />
               </Box>
             </Box>
           </Grid>

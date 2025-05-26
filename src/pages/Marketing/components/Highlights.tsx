@@ -1,4 +1,3 @@
-
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Container from '@mui/material/Container';
@@ -23,27 +22,32 @@ const items = [
   {
     icon: <EventNoteIcon sx={{ fontSize: 32 }} />,
     title: 'Schedule Management',
-    description: 'Simplify the scheduling process and reduce time spent on this task',
+    description:
+      'Simplify the scheduling process and reduce time spent on this task',
   },
   {
     icon: <AutoGraphIcon sx={{ fontSize: 32 }} />,
     title: 'Personalized Responses',
-    description: 'Create tailored responses for each customer, providing a humanized experience',
+    description:
+      'Create tailored responses for each customer, providing a humanized experience',
   },
   {
     icon: <AutorenewIcon sx={{ fontSize: 32 }} />,
     title: 'Sales Automation',
-    description: 'Automate the sales process and help your customers find what they’re looking for',
+    description:
+      'Automate the sales process and help your customers find what they are looking for',
   },
   {
     icon: <QueryStatsIcon sx={{ fontSize: 32 }} />,
     title: 'Data Analysis',
-    description: 'Collect and analyze data efficiently to make metric-based decisions',
+    description:
+      'Collect and analyze data efficiently to make metric-based decisions',
   },
   {
     icon: <AssignmentIcon sx={{ fontSize: 32 }} />,
     title: 'Repetitive Task Management',
-    description: 'Automate repetitive tasks and free up your team to focus on what really matters',
+    description:
+      'Automate repetitive tasks and free up your team to focus on what really matters',
   },
 ];
 
@@ -81,14 +85,16 @@ export default function Highlights() {
               mb: 3,
             }}
           >
-            AI-powered service like you've never seen before!
+            AI-powered service like you&lsquo;ve never seen before!
           </Typography>
           <Typography
             variant="body1"
             color="text.secondary"
             sx={{ maxWidth: 800, mx: 'auto', mb: 4 }}
           >
-           AI is no longer just a tool, but an intelligent assistant that enhances your business with 24/7 customer service, schedule management, and much more. Let AI employees work for you! 
+            AI is no longer just a tool, but an intelligent assistant that
+            enhances your business with 24/7 customer service, schedule
+            management, and much more. Let AI employees work for you!
           </Typography>
           <Button
             variant="contained"
@@ -112,9 +118,7 @@ export default function Highlights() {
                   borderColor: 'divider',
                 }}
               >
-                <Box sx={{ color: 'primary.main', mb: 2 }}>
-                  {item.icon}
-                </Box>
+                <Box sx={{ color: 'primary.main', mb: 2 }}>{item.icon}</Box>
                 <Typography
                   variant="h6"
                   component="h3"

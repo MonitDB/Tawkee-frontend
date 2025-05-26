@@ -9,6 +9,7 @@ import env from '../config/env';
 import { useHttpResponse } from './ResponseNotifier';
 import { useAuth } from './AuthContext';
 import { Channel } from '../services/channelService';
+import { TrainingDto } from '../services/trainingService';
 
 export enum AIModel {
   GPT_4 = 'GPT_4',
@@ -68,7 +69,8 @@ export interface Agent {
   jobSite: string;
   jobDescription: string;
   isActive: boolean;
-  channels: Channel[]
+  channels: Channel[];
+  trainings: TrainingDto[];
 }
 
 export interface AgentWrapper {
@@ -87,14 +89,18 @@ export interface PaginatedAgentWrapper {
   };
 }
 
-export type AgentInput = Partial<Omit<Agent, 'id' | 'workspaceId' | 'isActive'>>;
+export type AgentInput = Partial<
+  Omit<Agent, 'id' | 'workspaceId' | 'isActive'>
+>;
 
 interface AgentsContextType {
   paginatedAgents: PaginatedAgentWrapper;
   loading: boolean;
-  fetchAgents: () => Promise<void>
+  fetchAgents: () => Promise<void>;
   getAgentById: (id: string) => Promise<Agent | null>;
-  createAgent: (input: AgentInput) => Promise<{success: boolean, id?: string}>;
+  createAgent: (
+    input: AgentInput
+  ) => Promise<{ success: boolean; id?: string }>;
   updateAgent: (id: string, input: AgentInput) => Promise<boolean>;
   deleteAgent: (id: string) => Promise<boolean>;
   activateAgent: (id: string) => Promise<boolean>;
@@ -107,6 +113,14 @@ interface AgentsContextType {
   setPage: (page: number) => void;
   setPageSize: (pageSize: number) => void;
   setQuery: (query: string) => void;
+
+  createAgentChannel: (agentId: string, newChannel: Channel) => boolean;
+  deleteAgentChannel: (agentId: string, channelId: string) => boolean;
+  disconnectAgentChannel: (agentId: string, channelId: string) => boolean;
+
+  setAgentTrainings: (agentId: string, trainings: TrainingDto[]) => boolean;
+  createAgentTraining: (agentId: string, newTraining: TrainingDto) => boolean;
+  deleteAgentTraining: (agentId: string, trainingId: string) => boolean;
 }
 
 interface AgentsProviderProps {
@@ -186,7 +200,9 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     }
   };
 
-  const createAgent = async (input: AgentInput): Promise<{success: boolean, id?: string}> => {
+  const createAgent = async (
+    input: AgentInput
+  ): Promise<{ success: boolean; id?: string }> => {
     try {
       setLoading(true);
       const response = await fetch(
@@ -240,8 +256,15 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
       const data = await response.json();
       if (data.error) throw new Error(data.error);
+
+      setPaginatedAgents((prev) => ({
+        ...prev,
+        agents: prev.agents.map((wrapper) =>
+          wrapper.agent.id === id ? data.data : wrapper
+        ),
+      }));
+
       notify('Agent updated successfully!', 'success');
-      await fetchAgents(); // Refresh the list after updating
       return true;
     } catch (error) {
       notify(error instanceof Error ? error.message : '', 'error');
@@ -291,8 +314,23 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
       const data = await response.json();
       if (data.error) throw new Error(data.error);
+
+      setPaginatedAgents((prev) => ({
+        ...prev,
+        agents: prev.agents.map((wrapper) =>
+          wrapper.agent.id === id
+            ? {
+                ...wrapper,
+                agent: {
+                  ...wrapper.agent,
+                  isActive: true,
+                },
+              }
+            : wrapper
+        ),
+      }));
+
       notify('Agent activated!', 'success');
-      await fetchAgents(); // Refresh the list after activating
       return true;
     } catch (error) {
       notify(error instanceof Error ? error.message : '', 'error');
@@ -313,7 +351,22 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       const data = await response.json();
       if (data.error) throw new Error(data.error);
       notify('Agent deactivated!', 'success');
-      await fetchAgents(); // Refresh the list after deactivating
+
+      setPaginatedAgents((prev) => ({
+        ...prev,
+        agents: prev.agents.map((wrapper) =>
+          wrapper.agent.id === id
+            ? {
+                ...wrapper,
+                agent: {
+                  ...wrapper.agent,
+                  isActive: false,
+                },
+              }
+            : wrapper
+        ),
+      }));
+
       return true;
     } catch (error) {
       notify(error instanceof Error ? error.message : '', 'error');
@@ -378,6 +431,240 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     }
   };
 
+  const createAgentChannel = (
+    agentId: string,
+    newChannel: Channel
+  ): boolean => {
+    try {
+      setPaginatedAgents((prev) => {
+        const updatedAgents = prev.agents.map((wrapper) => {
+          if (wrapper.agent.id === agentId) {
+            // Create a new channels array immutably
+            const updatedChannels = [
+              ...(wrapper.agent.channels || []),
+              newChannel,
+            ];
+            return {
+              ...wrapper,
+              agent: {
+                ...wrapper.agent,
+                channels: updatedChannels,
+              },
+            };
+          }
+          return wrapper; // Return unchanged wrapper if ID doesn't match
+        });
+
+        // Return the updated state structure
+        return {
+          ...prev,
+          agents: updatedAgents,
+        };
+      });
+
+      return true; // Return true on successful state update
+    } catch (error) {
+      console.error('Error adding agent channel locally:', error);
+      return false; // Return false if an error occurred
+    }
+  };
+
+  const deleteAgentChannel = (agentId: string, channelId: string): boolean => {
+    try {
+      setPaginatedAgents((prev) => {
+        const updatedAgents = prev.agents.map((wrapper) => {
+          if (wrapper.agent.id === agentId) {
+            // Remove deleted channel from array immutably
+            const updatedChannels = wrapper.agent.channels.filter(
+              (channel) => channel.id != channelId
+            );
+            return {
+              ...wrapper,
+              agent: {
+                ...wrapper.agent,
+                channels: updatedChannels,
+              },
+            };
+          }
+          return wrapper; // Return unchanged wrapper if ID doesn't match
+        });
+
+        // Return the updated state structure
+        return {
+          ...prev,
+          agents: updatedAgents,
+        };
+      });
+
+      return true; // Return true on successful state update
+    } catch (error) {
+      console.error('Error deleting agent channel locally:', error);
+      return false; // Return false if an error occurred
+    }
+  };
+
+  const disconnectAgentChannel = (
+    agentId: string,
+    channelId: string
+  ): boolean => {
+    try {
+      setPaginatedAgents((prev) => {
+        const updatedAgents = prev.agents.map((wrapper) => {
+          if (wrapper.agent.id !== agentId) return wrapper;
+
+          const updatedChannels = (wrapper.agent.channels || []).map(
+            (channel) => {
+              if (channel.id !== channelId) return channel;
+
+              return {
+                ...channel,
+                connected: false,
+                config: channel.config
+                  ? {
+                      ...channel.config,
+                      wahaApi: channel.config.wahaApi
+                        ? {
+                            ...channel.config.wahaApi,
+                            status: 'SCAN_QR_CODE',
+                          }
+                        : channel.config.wahaApi,
+                    }
+                  : channel.config,
+              };
+            }
+          );
+
+          return {
+            ...wrapper,
+            agent: {
+              ...wrapper.agent,
+              channels: updatedChannels,
+            },
+          };
+        });
+
+        return {
+          ...prev,
+          agents: updatedAgents,
+        };
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error disconnecting agent channel locally:', error);
+      return false;
+    }
+  };
+
+  const setAgentTrainings = (
+    agentId: string,
+    trainings: TrainingDto[]
+  ): boolean => {
+    try {
+      setPaginatedAgents((prev) => {
+        const updatedAgents = prev.agents.map((wrapper) => {
+          if (wrapper.agent.id === agentId) {
+            // Create a new training array immutably
+            return {
+              ...wrapper,
+              agent: {
+                ...wrapper.agent,
+                trainings,
+              },
+            };
+          }
+          return wrapper; // Return unchanged wrapper if ID doesn't match
+        });
+
+        // Return the updated state structure
+        return {
+          ...prev,
+          agents: updatedAgents,
+        };
+      });
+
+      return true; // Return true on successful state update
+    } catch (error) {
+      console.error('Error adding agent training locally:', error);
+      return false; // Return false if an error occurred
+    }
+  };
+
+  const createAgentTraining = (
+    agentId: string,
+    newTraining: TrainingDto
+  ): boolean => {
+    try {
+      setPaginatedAgents((prev) => {
+        const updatedAgents = prev.agents.map((wrapper) => {
+          if (wrapper.agent.id === agentId) {
+            // Create a new training array immutably
+            const updatedTrainings = [
+              ...(wrapper.agent.trainings || []),
+              newTraining,
+            ];
+            return {
+              ...wrapper,
+              agent: {
+                ...wrapper.agent,
+                trainings: updatedTrainings,
+              },
+            };
+          }
+          return wrapper; // Return unchanged wrapper if ID doesn't match
+        });
+
+        // Return the updated state structure
+        return {
+          ...prev,
+          agents: updatedAgents,
+        };
+      });
+
+      return true; // Return true on successful state update
+    } catch (error) {
+      console.error('Error adding agent training locally:', error);
+      return false; // Return false if an error occurred
+    }
+  };
+
+  const deleteAgentTraining = (
+    agentId: string,
+    trainingId: string
+  ): boolean => {
+    try {
+      setPaginatedAgents((prev) => {
+        const updatedAgents = prev.agents.map((wrapper) => {
+          if (wrapper.agent.id === agentId) {
+            // Remove deleted training from array immutably
+            const updatedTrainings = wrapper.agent.trainings.filter(
+              (training) => training.id != trainingId
+            );
+            return {
+              ...wrapper,
+              agent: {
+                ...wrapper.agent,
+                trainings: updatedTrainings,
+              },
+            };
+          }
+          return wrapper; // Return unchanged wrapper if ID doesn't match
+        });
+
+        // Return the updated state structure
+        return {
+          ...prev,
+          agents: updatedAgents,
+        };
+      });
+
+      return true; // Return true on successful state update
+    } catch (error) {
+      console.error('Error deleting agent training locally:', error);
+      return false; // Return false if an error occurred
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchAgents();
@@ -399,6 +686,14 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     setPage,
     setPageSize,
     setQuery,
+
+    createAgentChannel,
+    deleteAgentChannel,
+    disconnectAgentChannel,
+
+    createAgentTraining,
+    deleteAgentTraining,
+    setAgentTrainings,
   };
 
   return (

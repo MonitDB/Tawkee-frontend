@@ -40,9 +40,7 @@ import {
   Psychology,
   Settings,
 } from '@mui/icons-material';
-import {
-  newAgent
-} from '../../../assets';
+import { newAgent } from '../../../assets';
 
 const steps = ['Name', 'Type', 'Role', 'Description', 'Settings', 'Complete'];
 
@@ -94,9 +92,11 @@ export default function CreateAgentDialog({
 
   const navigate = useNavigate();
 
-  const { createAgent, fetchAgents, loading } = useAgents();
+  const { createAgent, loading } = useAgents();
   const { token } = useAuth();
-  const { createChannel, loading: channelCreationLoading } = useChannelService(token as string);
+  const { createChannel, loading: channelCreationLoading } = useChannelService(
+    token as string
+  );
 
   const [activeStep, setActiveStep] = useState(0);
   const blankAgentInput: AgentInput = {
@@ -112,7 +112,9 @@ export default function CreateAgentDialog({
   const [selectedAgent, setSelectedAgent] = useState<Agent | AgentInput>(
     blankAgentInput
   );
-  const [createdAgentId, setCreatedAgentId] = useState<string | undefined>(undefined);
+  const [createdAgentId, setCreatedAgentId] = useState<string | undefined>(
+    undefined
+  );
 
   const handleNext = () => {
     setActiveStep((prevStep) => prevStep + 1);
@@ -130,8 +132,8 @@ export default function CreateAgentDialog({
 
       const { id: agentId } = await createAgent(agentInput as AgentInput);
       setCreatedAgentId(agentId);
-      await createChannel(agentId as string, 'New Whatsapp Channel', 'WHATSAPP');
-      await fetchAgents();
+      await createChannel(agentId as string, 'Whatsapp', 'WHATSAPP');
+      // await fetchAgents(); // I guess it's safe to remove
     } finally {
       setActiveStep(5);
     }
@@ -152,7 +154,10 @@ export default function CreateAgentDialog({
       case 2:
         return selectedAgent.jobName && selectedAgent.jobName.trim().length > 0;
       case 3:
-        return selectedAgent.jobDescription && selectedAgent.jobDescription.trim().length > 0;
+        return (
+          selectedAgent.jobDescription &&
+          selectedAgent.jobDescription.trim().length > 0
+        );
       default:
         return true;
     }
@@ -287,7 +292,7 @@ export default function CreateAgentDialog({
                       style={{ width: '10.0rem', borderRadius: '8px' }}
                     />
                   )}
-                  { selectedAgent.type && (
+                  {selectedAgent.type && (
                     <Typography>
                       {agentTypeDescriptions[selectedAgent?.type]}
                     </Typography>
@@ -336,7 +341,7 @@ export default function CreateAgentDialog({
                       />
                       <Typography>
                         Insert the name of the person who will be assisted by{' '}
-                        <strong>{selectedAgent.name}</strong>'s help.
+                        <strong>{selectedAgent.name}</strong>&lsquo;s help.
                       </Typography>
                     </>
                   )}
@@ -365,8 +370,10 @@ export default function CreateAgentDialog({
                         style={{ width: '10.0rem', borderRadius: '8px' }}
                       />
                       <Typography>
-                        Give {selectedAgent.name} a detailed description regarding its role in the
-                        company <strong>{selectedAgent.jobName}</strong>. Start introducing the company itself.
+                        Give {selectedAgent.name} a detailed description
+                        regarding its role in the company{' '}
+                        <strong>{selectedAgent.jobName}</strong>. Start
+                        introducing the company itself.
                       </Typography>
                     </>
                   )}
@@ -377,8 +384,10 @@ export default function CreateAgentDialog({
                         style={{ width: '10.0rem', borderRadius: '8px' }}
                       />
                       <Typography>
-                        Give {selectedAgent.name} a detailed description regarding its role in the
-                        company <strong>{selectedAgent.jobName}</strong>. Start introducing the company itself.
+                        Give {selectedAgent.name} a detailed description
+                        regarding its role in the company{' '}
+                        <strong>{selectedAgent.jobName}</strong>. Start
+                        introducing the company itself.
                       </Typography>
                     </>
                   )}
@@ -389,7 +398,10 @@ export default function CreateAgentDialog({
                         style={{ width: '10.0rem', borderRadius: '8px' }}
                       />
                       <Typography>
-                        Give {selectedAgent.name} a detailed description regarding its role in assisting <strong>{selectedAgent.jobName}</strong>. Start introducing {selectedAgent.jobName}.
+                        Give {selectedAgent.name} a detailed description
+                        regarding its role in assisting{' '}
+                        <strong>{selectedAgent.jobName}</strong>. Start
+                        introducing {selectedAgent.jobName}.
                       </Typography>
                     </>
                   )}
@@ -448,9 +460,10 @@ export default function CreateAgentDialog({
                 <Box sx={{ textAlign: 'center' }}>
                   <Typography
                     variant="h6"
-                    color={ resolvedMode == 'dark'
-                      ? theme.palette.success.light
-                      : theme.palette.success.dark
+                    color={
+                      resolvedMode == 'dark'
+                        ? theme.palette.success.light
+                        : theme.palette.success.dark
                     }
                     gutterBottom
                   >
@@ -470,21 +483,29 @@ export default function CreateAgentDialog({
                   >
                     <Button
                       variant="outlined"
-                      onClick={() => navigate(`/agents/${createdAgentId}?tabName=training`)}
+                      onClick={() =>
+                        navigate(`/agents/${createdAgentId}?tabName=training`)
+                      }
                       startIcon={<School />}
                     >
                       Training
                     </Button>
                     <Button
                       variant="outlined"
-                      onClick={() => navigate(`/agents/${createdAgentId}?tabName=intentions`)}
+                      onClick={() =>
+                        navigate(`/agents/${createdAgentId}?tabName=intentions`)
+                      }
+                      disabled
                       startIcon={<Psychology />}
                     >
                       Intentions
                     </Button>
                     <Button
                       variant="outlined"
-                      onClick={() => navigate(`/agents/${createdAgentId}?tabName=settings`)}
+                      onClick={() =>
+                        navigate(`/agents/${createdAgentId}?tabName=settings`)
+                      }
+                      disabled
                       startIcon={<Settings />}
                     >
                       Settings
@@ -521,7 +542,7 @@ export default function CreateAgentDialog({
           </Button>
         )}
       </DialogActions>
-      <LoadingBackdrop open={loading || channelCreationLoading } />
+      <LoadingBackdrop open={loading || channelCreationLoading} />
     </Dialog>
   );
 }

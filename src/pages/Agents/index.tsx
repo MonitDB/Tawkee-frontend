@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 import {
   useAgents,
   AgentSettings,
@@ -8,13 +8,7 @@ import {
   AgentType,
 } from '../../context/AgentsContext';
 
-import { useAuth } from '../../context/AuthContext';
-// import { useHttpResponse } from '../../context/ResponseNotifier';
-
-import { useChannelService } from '../../hooks/useChannelService';
-
 import LoadingBackdrop from '../../components/LoadingBackdrop';
-import QRCodeBackdrop from '../../components/QRCodeBackdrop';
 import ActionMenu from './components/ActionMenu';
 
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -22,11 +16,6 @@ import {
   Box,
   Button,
   Typography,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  // TextField,
   List,
   ListItem,
   ListItemAvatar,
@@ -34,30 +23,18 @@ import {
   Avatar,
   Tabs,
   Tab,
-  IconButton,
   MenuItem,
   useTheme,
   styled,
-  DialogProps,
   Chip,
-  Grid,
   Card,
   CardContent,
-  CardActions,
-  Divider,
   Tooltip,
   useColorScheme,
   Menu,
   Pagination,
 } from '@mui/material';
-import {
-  Add as AddIcon,
-  DeleteForever,
-  // Refresh,
-  // MapsUgcOutlined,
-  LinkOff,
-} from '@mui/icons-material';
-import QrCode2Icon from '@mui/icons-material/QrCode2';
+import { Add as AddIcon } from '@mui/icons-material';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import { useNavigate } from 'react-router-dom';
 import CreateAgentDialog from './components/CreateAgentDialog';
@@ -124,7 +101,10 @@ const settingsOptions = [
   },
 ];
 
-const agentCommunicationDescriptions: Record<AgentCommunicationType, string> = {
+export const agentCommunicationDescriptions: Record<
+  AgentCommunicationType,
+  string
+> = {
   [AgentCommunicationType.FORMAL]:
     'Uses polite and professional language at all times.',
   [AgentCommunicationType.NORMAL]: 'Maintains a balanced and neutral tone.',
@@ -143,227 +123,8 @@ export const agentTypeDescriptions: Record<AgentType, string> = {
 const agentActivityDescriptions: Record<number, string> = {
   0: 'The agent is shutdown and will not respond to messages even when connected to channels.',
   1: 'The agent is ready to connect to channels and respond to messages on your behalf.',
-  2: 'The agent is connected to channels and ready to respond to messages.'
+  2: 'The agent is connected to channels and ready to respond to messages.',
 };
-
-interface ChannelsDialogProps extends DialogProps {
-  agentId: string;
-  agentIsActive: boolean;
-  open: boolean;
-  onClose: () => void;
-}
-
-function ChannelsDialog({
-  agentId,
-  agentIsActive,
-  open,
-  onClose,
-}: ChannelsDialogProps) {
-  // const { notify } = useHttpResponse();
-  const theme = useTheme();
-
-  const { token } = useAuth();
-  const {
-    channels,
-    getChannelsForAgent,
-    // createChannel,
-    getQRCode,
-    disconnectChannel,
-    deleteChannel,
-    loading,
-  } = useChannelService(token as string);
-
-  // const [newChannelName, setNewChannelName] = useState('');
-  const [QRCode, setQRCode] = useState<string | null>(null);
-
-  const handleDisconnect = (channelId: string) => {
-    disconnectChannel(channelId);
-  };
-
-  const handleDeleteChannel = (channelId: string) => {
-    deleteChannel(channelId);
-  };
-
-  // const handleCreateChannel = () => {
-  //   if (newChannelName) {
-  //     // Assuming you have a method to create a new channel
-  //     createChannel(agentId, newChannelName, 'WHATSAPP');
-  //     setNewChannelName('');
-  //   } else {
-  //     notify('Please name your channel first.', 'warning');
-  //   }
-  // };
-
-  const handleRefreshQrCode = async (channelId: string) => {
-    const { qrCode } = await getQRCode(channelId);
-    setQRCode(qrCode);
-  };
-
-  const handleCloseQRCodeBackdrop = () => {
-    setQRCode(null);
-  };
-
-  useEffect(() => {
-    const handleGetChannelsForAgent = async (agentId: string) => {
-      await getChannelsForAgent(agentId);
-    };
-
-    if (agentId) {
-      handleGetChannelsForAgent(agentId);
-    }
-  }, [agentId, getChannelsForAgent]);
-
-  return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Agent Channels</DialogTitle>
-      <DialogContent>
-        {/* <Grid
-          container
-          spacing={2}
-          sx={{ display: 'flex', alignItems: 'center', margin: 2 }}
-        >
-          <Grid size={{ xs: 12, md: 8 }}>
-            <TextField
-              variant="standard"
-              label="New Channel Name"
-              margin="dense"
-              fullWidth
-              value={newChannelName}
-              onChange={(e) => setNewChannelName(e.target.value)}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 3 }}>
-            <TextField
-              variant="standard"
-              label="Channel Type"
-              margin="dense"
-              disabled
-              fullWidth
-              value="WHATSAPP"
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 1 }}>
-            <IconButton onClick={handleCreateChannel}>
-              <Tooltip title="Create Channel">
-                <MapsUgcOutlined />
-              </Tooltip>
-            </IconButton>
-          </Grid>
-        </Grid> */}
-        <Grid>
-          {channels.map((channel) => (
-            <Card
-              key={channel.id}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                mb: 2,
-                p: 1.5,
-                boxShadow: 3,
-                borderLeft: `6px solid ${
-                  channel.connected
-                    ? agentIsActive
-                      ? theme.palette.success.main
-                      : theme.palette.warning.main
-                    : theme.palette.error.main
-                }`,
-              }}
-            >
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                  <Box
-                    sx={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: '50%',
-                      bgcolor: channel.connected
-                        ? agentIsActive
-                          ? theme.palette.success.main
-                          : theme.palette.warning.main
-                        : theme.palette.error.main,
-                      mr: 1,
-                    }}
-                  />
-                  <Typography variant="h6" component="div">
-                    {channel.name}
-                  </Typography>
-                </Box>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ display: 'flex', gap: '8px' }}
-                >
-                  <Chip label={channel.type} />
-                  <Divider orientation="vertical" flexItem />
-                  <Chip
-                    color={
-                      channel.connected
-                        ? agentIsActive
-                          ? 'success'
-                          : 'warning'
-                        : 'error'
-                    }
-                    label={
-                      channel.connected
-                        ? agentIsActive
-                          ? 'Connected'
-                          : 'Connected but inactive'
-                        : 'Disconnected'
-                    }
-                  />
-                </Typography>
-              </CardContent>
-              <CardActions>
-                {channel.connected ? (
-                  <IconButton
-                    onClick={() => handleDisconnect(channel.id)}
-                    color="primary"
-                  >
-                    <Tooltip title="Disconnect">
-                      <LinkOff />
-                    </Tooltip>
-                  </IconButton>
-                ) : (
-                  <IconButton
-                    onClick={() => handleRefreshQrCode(channel.id)}
-                    color="primary"
-                  >
-                    <Tooltip title="Refresh QR Code To Connect">
-                      <QrCode2Icon />
-                    </Tooltip>
-                  </IconButton>
-                )}
-                <IconButton
-                  disabled
-                  // disabled={channel.connected}
-                  onClick={() => handleDeleteChannel(channel.id)}
-                  color="error"
-                >
-                  <Tooltip title="Delete Channel">
-                    <DeleteForever />
-                  </Tooltip>
-                </IconButton>
-              </CardActions>
-            </Card>
-          ))}
-        </Grid>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} variant="contained" color="primary">
-          Exit
-        </Button>
-      </DialogActions>
-
-      <LoadingBackdrop open={loading} />
-      <QRCodeBackdrop
-        open={typeof QRCode == 'string'}
-        base64={QRCode as string}
-        onClose={handleCloseQRCodeBackdrop}
-      />
-    </Dialog>
-  );
-}
 
 export default function Agents() {
   const theme = useTheme();
@@ -376,7 +137,7 @@ export default function Agents() {
     updateAgentSettings,
     loading,
     paginatedAgents,
-    setPage
+    setPage,
   } = useAgents();
 
   const { agents, meta } = paginatedAgents;
@@ -401,12 +162,6 @@ export default function Agents() {
   const [selectedSettings, setSelectedSettings] =
     useState<AgentSettings | null>(null);
   const [settingsAgentId, setSettingsAgentId] = useState<string | null>(null);
-
-  const [channelsOpen, setChannelsOpen] = useState(false);
-  const [channelsAgentId, setChannelsAgentId] = useState<string | null>(null);
-  const [channelsAgentActive, setChannelsAgentActive] = useState<
-    boolean | null
-  >(null);
 
   const handleOpenModal = () => {
     setOpen(true);
@@ -438,16 +193,6 @@ export default function Agents() {
     updateAgentSettings(settingsAgentId, selectedSettings);
 
     handleCloseSettings();
-  };
-
-  const handleOpenChannels = (agentId: string, agentIsActive: boolean) => {
-    setChannelsAgentId(agentId);
-    setChannelsAgentActive(agentIsActive);
-    setChannelsOpen(true);
-  };
-
-  const handleCloseChannels = () => {
-    setChannelsOpen(false);
   };
 
   function TruncatedText({
@@ -586,25 +331,33 @@ export default function Agents() {
                               title={
                                 agentActivityDescriptions[
                                   agent.isActive
-                                    ? agent.channels.find((channel: Channel) => channel.connected)
+                                    ? agent.channels.find(
+                                        (channel: Channel) => channel.connected
+                                      )
                                       ? 2
                                       : 1
-                                    : 0 
+                                    : 0
                                 ]
                               }
                             >
                               <Chip
-                                color={agent.isActive
-                                  ? agent.channels.find((channel: Channel) => channel.connected)
-                                    ? 'success'
-                                    : 'warning'
-                                  : 'error'
+                                color={
+                                  agent.isActive
+                                    ? agent.channels.find(
+                                        (channel: Channel) => channel.connected
+                                      )
+                                      ? 'success'
+                                      : 'warning'
+                                    : 'error'
                                 }
-                                label={agent.isActive
-                                  ? agent.channels.find((channel: Channel) => channel.connected)
-                                    ? 'ACTIVE & CONNECTED'
-                                    : 'ACTIVE BUT DISCONNECTED'
-                                  : 'INACTIVE'
+                                label={
+                                  agent.isActive
+                                    ? agent.channels.find(
+                                        (channel: Channel) => channel.connected
+                                      )
+                                      ? 'ACTIVE & CONNECTED'
+                                      : 'ACTIVE BUT DISCONNECTED'
+                                    : 'INACTIVE'
                                 }
                               />
                             </Tooltip>
@@ -647,7 +400,6 @@ export default function Agents() {
                         agent={agent}
                         settings={settings}
                         handleDelete={handleDelete}
-                        handleOpenChannels={handleOpenChannels}
                         handleOpenSettings={handleOpenSettings}
                         theme={theme}
                       />
@@ -719,16 +471,7 @@ export default function Agents() {
             settingsOptions={settingsOptions}
           />
 
-          <ChannelsDialog
-            agentId={channelsAgentId as string}
-            agentIsActive={channelsAgentActive as boolean}
-            open={channelsOpen}
-            onClose={handleCloseChannels}
-            fullWidth
-            maxWidth="sm"
-          />
-
-          <LoadingBackdrop open={loading } />
+          <LoadingBackdrop open={loading} />
         </Box>
       </CardContent>
     </Card>

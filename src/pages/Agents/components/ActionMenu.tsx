@@ -28,7 +28,6 @@ interface ActionMenuProps {
   agent: Agent;
   settings: AgentSettings;
   handleOpenSettings: (agentId: string, settings: AgentSettings) => void;
-  handleOpenChannels: (agentId: string, agentIsActive: boolean) => void;
   handleDelete: (agentId: string) => void;
   theme: any;
 }
@@ -37,7 +36,6 @@ export default function ActionMenu({
   agent,
   settings,
   handleOpenSettings,
-  handleOpenChannels,
   handleDelete,
   theme,
 }: ActionMenuProps) {
@@ -126,7 +124,7 @@ export default function ActionMenu({
         <MenuItem
           onClick={() =>
             handleMenuItemClick(() =>
-              handleOpenChannels(agent.id, agent.isActive)
+              navigate(`/agents/${agent.id}?tabName=integrations`)
             )
           }
         >

@@ -1,0 +1,189 @@
+// Define TrainingType enum based on DTO examples
+export enum TrainingType {
+  TEXT = 'TEXT',
+  WEBSITE = 'WEBSITE',
+  VIDEO = 'VIDEO',
+  DOCUMENT = 'DOCUMENT',
+}
+
+// Define DTOs and other types (interfaces for structure)
+export interface CreateTrainingDto {
+  type: TrainingType;
+  text?: string;
+  image?: string;
+  website?: string;
+  trainingSubPages?: string;
+  trainingInterval?: string;
+  video?: string;
+  documentUrl?: string;
+  documentName?: string;
+  documentMimetype?: string;
+}
+
+export interface UpdateTrainingDto {
+  type: TrainingType.TEXT; // Only TEXT type allowed for updates
+  text: string;
+  image?: string;
+}
+
+// TrainingDto is the same as CreateTrainingDto
+export type TrainingDto = CreateTrainingDto & {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+}; // Assuming id and timestamps are present
+
+// Assume standard pagination DTOs
+export interface PaginationDto {
+  page: number;
+  pageSize: number;
+  query?: string;
+  type?: TrainingType;
+}
+
+export interface PaginationMetaDto {
+  totalItems: number;
+  itemCount: number;
+  itemsPerPage: number;
+  totalPages: number;
+  currentPage: number;
+}
+
+export interface PaginatedTrainingsResponseDto {
+  data: TrainingDto[];
+  meta: PaginationMetaDto;
+}
+
+// // Default empty response for findAll error case
+const defaultPaginatedResponse: PaginatedTrainingsResponseDto = {
+  data: [],
+  meta: {
+    totalItems: 0,
+    itemCount: 0,
+    itemsPerPage: 0,
+    totalPages: 0,
+    currentPage: 0,
+  },
+};
+
+interface TrainingServiceConfig {
+  token: string;
+  apiUrl: string;
+}
+
+export class TrainingService {
+  private token: string;
+  private apiUrl: string;
+
+  constructor(config: TrainingServiceConfig) {
+    this.token = config.token;
+    this.apiUrl = config.apiUrl;
+  }
+
+  // /**
+  //  * List agent trainings with pagination and optional type filter.
+  //  * GET /agent/:agentId/trainings
+  //  */
+  async findAll(
+    agentId: string,
+    paginationDto: PaginationDto
+  ): Promise<PaginatedTrainingsResponseDto> {
+    try {
+      const queryParams = new URLSearchParams({
+        page: paginationDto.page.toString(),
+        pageSize: paginationDto.pageSize.toString(),
+      });
+
+      const response = await fetch(
+        `${this.apiUrl}/agent/${agentId}/trainings?${queryParams}`,
+        {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${this.token}` } as const,
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        console.error(
+          'Error fetching trainings:',
+          data.error || response.statusText
+        );
+        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+      }
+
+      // Ensure the response matches the expected structure
+      if (data && Array.isArray(data.data) && data.meta) {
+        return data as PaginatedTrainingsResponseDto;
+      } else {
+        console.error('Invalid response structure for findAll:', data);
+        return defaultPaginatedResponse;
+      }
+    } catch (error) {
+      console.error('Failed to fetch trainings:', error);
+      return defaultPaginatedResponse;
+    }
+  }
+
+  /**
+   * Create a new training for an agent.
+   * POST /agent/:agentId/trainings
+   */
+  async create(
+    agentId: string,
+    createTrainingDto: CreateTrainingDto
+  ): Promise<TrainingDto> {
+    try {
+      const response = await fetch(
+        `${this.apiUrl}/agent/${agentId}/trainings`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${this.token}`,
+            'Content-Type': 'application/json',
+          } as const,
+          body: JSON.stringify(createTrainingDto),
+        }
+      );
+
+      const data = await response.json();
+      if (!response.ok || data.error) {
+        console.error(
+          'Error creating training:',
+          data.error || response.statusText
+        );
+        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+      }
+      return data.data;
+    } catch (error) {
+      console.error('Failed to create training:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Remove a training.
+   * DELETE /training/:trainingId
+   */
+  async remove(trainingId: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.apiUrl}/training/${trainingId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${this.token}` } as const,
+      });
+
+      const data = await response.json();
+      if (!response.ok || data.error) {
+        console.error(
+          'Error removing training:',
+          data.error || response.statusText
+        );
+        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+      }
+      return data.success === true;
+    } catch (error) {
+      console.error('Failed to remove training:', error);
+      return false;
+    }
+  }
+}

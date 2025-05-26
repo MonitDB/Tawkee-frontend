@@ -1,17 +1,19 @@
 import { useEffect } from 'react';
 import { useHttpResponse } from '../context/ResponseNotifier';
 
+import { QRCodeSVG } from 'qrcode.react';
+
 import Backdrop from '@mui/material/Backdrop';
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles';
 
 export default function QRCodeBackdrop({
   open,
-  base64,
+  value,
   onClose,
 }: {
   open: boolean;
-  base64: string;
+  value: string;
   onClose: () => void;
 }) {
   const theme = useTheme();
@@ -56,7 +58,8 @@ export default function QRCodeBackdrop({
           bgcolor: 'background.paper',
         }}
       >
-        <img
+        <QRCodeSVG value={value} />
+        {/* <img
           src={base64}
           alt="Preview"
           style={{
@@ -66,7 +69,7 @@ export default function QRCodeBackdrop({
             borderRadius: 'inherit',
             color: 'black'
           }}
-        />
+        /> */}
       </Box>
     </Backdrop>
   );
