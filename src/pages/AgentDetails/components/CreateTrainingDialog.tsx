@@ -1,4 +1,4 @@
-import { useState, ChangeEvent } from 'react';
+import { useState, ChangeEvent, SyntheticEvent } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -77,7 +77,7 @@ export default function CreateTrainingDialog({
 
   // Função para lidar com a mudança de aba
   const handleTabChange = (
-    _event: React.SyntheticEvent,
+    _event: SyntheticEvent,
     newValue: TrainingType
   ) => {
     setActiveTab(newValue);
@@ -195,7 +195,6 @@ export default function CreateTrainingDialog({
 
   // Função para enviar o formulário
   const handleSubmit = () => {
-    console.log({ formData });
     // Validar valores do formulário primeiro
     if (textError || websiteError) {
       setTextError(true);

@@ -10,7 +10,7 @@ import Stack from '@mui/material/Stack';
 // import DashboardIcon from '@mui/icons-material/Dashboard';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 // import GroupsIcon from '@mui/icons-material/Groups';
-// import ChatIcon from '@mui/icons-material/Chat';
+import ChatIcon from '@mui/icons-material/Chat';
 // import ContactIcon from '@mui/icons-material/Contacts';
 
 // import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
@@ -22,7 +22,7 @@ const mainListItems = [
   // { text: 'Dashboard', icon: <DashboardIcon /> },
   { text: 'Agents', icon: <SupportAgentIcon /> },
   // { text: 'Team', icon: <GroupsIcon /> },
-  // { text: 'Chats', icon: <ChatIcon /> },
+  { text: 'Chats', icon: <ChatIcon /> },
   // { text: 'Contact', icon: <ContactIcon /> },
 ];
 
@@ -39,8 +39,7 @@ export default function MenuContent() {
 
   const routeKeyMap: Record<number, string> = {
     0: '/',
-    1: '/agents',
-    2: '/chats',
+    1: '/chats'
   };
 
   return (

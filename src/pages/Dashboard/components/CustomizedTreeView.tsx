@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { ReactNode, forwardRef, Ref, HTMLAttributes } from 'react';
 import clsx from 'clsx';
 import { animated, useSpring } from '@react-spring/web';
 import { TransitionProps } from '@mui/material/transitions';
@@ -97,7 +97,7 @@ function TransitionComponent(props: TransitionProps) {
 }
 
 interface CustomLabelProps {
-  children: React.ReactNode;
+  children: ReactNode;
   color?: Color;
 }
 
@@ -125,11 +125,11 @@ function CustomLabel({ color, children, ...other }: CustomLabelProps) {
 
 interface CustomTreeItemProps
   extends Omit<UseTreeItemParameters, 'rootRef'>,
-    Omit<React.HTMLAttributes<HTMLLIElement>, 'onFocus'> {}
+    Omit<HTMLAttributes<HTMLLIElement>, 'onFocus'> {}
 
-const CustomTreeItem = React.forwardRef(function CustomTreeItem(
+const CustomTreeItem = forwardRef(function CustomTreeItem(
   props: CustomTreeItemProps,
-  ref: React.Ref<HTMLLIElement>
+  ref: Ref<HTMLLIElement>
 ) {
   const { id, itemId, label, disabled, children, ...other } = props;
 

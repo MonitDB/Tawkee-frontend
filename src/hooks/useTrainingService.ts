@@ -10,29 +10,26 @@ import { useAgents } from '../context/AgentsContext';
 
 export const useTrainingService = (token: string) => {
   const { notify } = useHttpResponse();
-  const { setAgentTrainings, createAgentTraining, deleteAgentTraining } =
-    useAgents();
+  const { syncAgentTrainings, syncAgentTrainingCreation, syncAgentTrainingDeletion } = useAgents();
 
   const [loading, setLoading] = useState(false);
-  // const [page, setPage] = useState(1);
-  // const [pageSize, setPageSize] = useState(10);
-  // const [query, setQuery] = useState('');
 
   const service = useMemo(
     () => new TrainingService({ token, apiUrl: env.API_URL }),
     [token, env.API_URL]
   );
+
   const fetchTrainings = useCallback(
-    async (agentId: string) => {
+    async (agentId: string, page: number) => {
       try {
         setLoading(true);
         const response = await service.findAll(agentId, {
-          page: 1,
-          pageSize: 1000,
+          page,
+          pageSize: 10
         });
-        setAgentTrainings(agentId, response.data);
+        syncAgentTrainings(agentId, response);
 
-        return response.data;
+        return response;
       } catch (error) {
         notify(
           error instanceof Error ? error.message : 'Unknown error',
@@ -43,7 +40,7 @@ export const useTrainingService = (token: string) => {
         setLoading(false);
       }
     },
-    [service, setAgentTrainings, notify]
+    [service, syncAgentTrainings, notify]
   );
 
   const createTraining = useCallback(
@@ -55,7 +52,7 @@ export const useTrainingService = (token: string) => {
           agentId,
           trainingData
         )) as TrainingDto;
-        createAgentTraining(agentId, newTraining);
+        syncAgentTrainingCreation(agentId, newTraining);
 
         notify('Training created successfully!', 'success');
         return newTraining;
@@ -69,7 +66,7 @@ export const useTrainingService = (token: string) => {
         setLoading(false);
       }
     },
-    [service, createAgentTraining, notify]
+    [service, syncAgentTrainingCreation, notify]
   );
 
   const deleteTraining = useCallback(
@@ -77,7 +74,7 @@ export const useTrainingService = (token: string) => {
       setLoading(true);
       try {
         const success = await service.remove(trainingId);
-        deleteAgentTraining(agentId, trainingId);
+        syncAgentTrainingDeletion(agentId, trainingId);
 
         if (success) {
           notify('Training deleted!', 'success');
@@ -93,13 +90,13 @@ export const useTrainingService = (token: string) => {
         setLoading(false);
       }
     },
-    [service, deleteAgentTraining, notify]
+    [service, syncAgentTrainingDeletion, notify]
   );
 
   return {
-    loading,
     fetchTrainings,
     createTraining,
     deleteTraining,
+    loading
   };
 };

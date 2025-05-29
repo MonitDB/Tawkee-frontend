@@ -1,3 +1,9 @@
+import { useMemo } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+
+import { Agent } from '../../../context/AgentsContext';
+import { Channel } from '../../../services/channelService';
+
 import {
   Box,
   Typography,
@@ -13,9 +19,6 @@ import {
   useColorScheme,
   Button,
 } from '@mui/material';
-import { QRCodeSVG } from 'qrcode.react';
-import { Agent } from '../../../context/AgentsContext';
-import { Channel } from '../../../services/channelService';
 import { LinkOff, DeleteForever } from '@mui/icons-material';
 import QrCode2Icon from '@mui/icons-material/QrCode2';
 
@@ -40,8 +43,9 @@ export default function IntegrationsTabPanel({
 
   if (!agentData) return null;
 
-  const disconnectedChannel = agentData.channels?.find(
-    (channel: Channel) => !channel.connected
+  const disconnectedChannel = useMemo(() => 
+    agentData.channels?.find((channel: Channel) => !channel.connected),
+    [agentData.channels]
   );
 
   return (

@@ -90,9 +90,6 @@ export class ChannelService {
 
   async disconnectChannel(channelId: string): Promise<boolean> {
     try {
-      console.log(
-        `PUT ${this.apiUrl}/channel/${channelId}/disconnect with auth... ${this.token}`
-      );
       const response = await fetch(
         `${this.apiUrl}/channel/${channelId}/disconnect`,
         {
@@ -102,7 +99,6 @@ export class ChannelService {
       );
 
       const data = await response.json();
-      console.log(`PUT Response: ${JSON.stringify(data, null, 3)}`);
       if (data.error) throw new Error(data.error);
       return data.success === true;
     } catch {

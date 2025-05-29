@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { SyntheticEvent, ReactNode, useEffect, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 
 // Keep necessary imports from original file
 import { useAuth } from '../../context/AuthContext';
-import { Agent, useAgents } from '../../context/AgentsContext';
+import { Agent, AgentSettings, useAgents } from '../../context/AgentsContext';
 import { useChannelService } from '../../hooks/useChannelService';
 import { Channel } from '../../services/channelService';
 import LoadingBackdrop from '../../components/LoadingBackdrop';
@@ -44,7 +44,7 @@ import {
 
 // Keep the original TabPanel helper component if it's generic
 interface TabPanelProps {
-  children?: React.ReactNode;
+  children?: ReactNode;
   index: number;
   value: number;
 }
@@ -93,11 +93,12 @@ export default function AgentDetails() {
 
   const [currentTab, setCurrentTab] = useState(0);
   const [agentData, setAgentData] = useState<Agent | null>(null);
+  const [agentSettingsData, setAgentSettingsData] = useState<AgentSettings | null>(null);
 
   const [QRCode, setQRCode] = useState<string | undefined>(undefined);
 
   // Keep handlers and useEffect from original file
-  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_: SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue);
   };
 
@@ -126,20 +127,21 @@ export default function AgentDetails() {
       const agentWrapper = agents.find(
         (wrapper) => wrapper.agent.id === params.agentId
       );
-      const agent = agentWrapper?.agent;
 
       // try to fetch tabName from query Params
       const searchParams = new URLSearchParams(location.search);
       const tabName = searchParams.get('tabName');
 
-      if (agent) {
-        setAgentData(agent);
+      if (agentWrapper?.agent) {
+        console.log('Setting new agentSettingsData:', agentWrapper.settings);
+        setAgentData(agentWrapper?.agent);
+        setAgentSettingsData(agentWrapper?.settings);
         if (tabName) {
           setCurrentTab(tabIndexFromName[tabName as TabName]);
         }
       }
     }
-  }, [params.agentId, agents]); // Dependencies kept as original
+  }, [params.agentId, agents]);
 
   if (!agentData) {
     // Maybe show a loading indicator or a not found message
@@ -240,7 +242,7 @@ export default function AgentDetails() {
                 <Tab icon={<SchoolIcon />} label="Training" />
                 <Tab icon={<PsychologyIcon />} disabled label="Intentions" />
                 <Tab icon={<HubIcon />} label="Integrations" />
-                <Tab icon={<SettingsIcon />} disabled label="Settings" />
+                <Tab icon={<SettingsIcon />} label="Settings" />
               </Tabs>
             </Grid>
 
@@ -268,7 +270,11 @@ export default function AgentDetails() {
                 />
               </TabPanel>
               <TabPanel value={currentTab} index={5}>
-                <SettingsTabPanel agentData={agentData} />
+                <SettingsTabPanel
+                  key={`${agentData.id}-${JSON.stringify(agentSettingsData)}`}
+                  agentId={agentData.id}
+                  agentSettingsData={agentSettingsData}
+                />
               </TabPanel>
             </Grid>
           </Grid>

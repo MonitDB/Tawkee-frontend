@@ -3,13 +3,16 @@ import { AuthProvider } from './context/AuthContext';
 import { AgentsProvider } from './context/AgentsContext';
 
 import { Routes } from './routes';
+import { SocketProvider } from './context/SocketContext';
 
 export default function App() {
   return (
     <HttpResponseProvider>
       <AuthProvider>
         <AgentsProvider>
-          <Routes />
+          <SocketProvider>
+              <Routes />
+          </SocketProvider>
         </AgentsProvider>
       </AuthProvider>
     </HttpResponseProvider>

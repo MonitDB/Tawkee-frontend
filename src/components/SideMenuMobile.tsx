@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; // Adicionado useState
+import { MouseEvent, useState } from 'react'; // Adicionado useState
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
@@ -42,7 +42,7 @@ export default function SideMenuMobile({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const openMenu = Boolean(anchorEl);
 
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+  const handleMenuClick = (event: MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 

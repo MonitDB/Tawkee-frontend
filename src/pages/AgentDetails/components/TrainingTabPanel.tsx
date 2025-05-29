@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, SyntheticEvent, MouseEvent, ChangeEvent } from 'react';
 import {
   Box,
   Typography,
@@ -17,6 +17,8 @@ import {
   AccordionSummary,
   AccordionDetails,
   LinearProgress,
+  useColorScheme,
+  Pagination
 } from '@mui/material';
 import {
   MoreVert as MoreVertIcon,
@@ -35,6 +37,8 @@ import { useTrainingService } from '../../../hooks/useTrainingService';
 import { useAuth } from '../../../context/AuthContext';
 import {
   CreateTrainingDto,
+  defaultPaginatedResponse,
+  PaginatedTrainingsResponseDto,
   TrainingDto,
 } from '../../../services/trainingService';
 import LoadingBackdrop from '../../../components/LoadingBackdrop';
@@ -45,9 +49,14 @@ interface TrainingTabPanelProps {
 }
 
 export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
+  const { mode, systemMode } = useColorScheme();
+  const resolvedMode = (systemMode || mode) as 'light' | 'dark';
+
   const { token } = useAuth();
   const { fetchTrainings, createTraining, deleteTraining, loading } =
     useTrainingService(token as string);
+
+  const [page, setPage] = useState<number>(agentData?.paginatedTrainings?.meta?.page || 1);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -58,30 +67,40 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
     'all' | 'TEXT' | 'WEBSITE' | 'DOCUMENT'
   >('all');
 
-  const [trainingData, setTrainingData] = useState<TrainingDto[]>([]);
+  const [trainingData, setTrainingData] = useState<PaginatedTrainingsResponseDto>(defaultPaginatedResponse);
 
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleChange =
-    (panel: string) => (_event: React.SyntheticEvent, isExpanded: boolean) => {
+    (panel: string) => (_event: SyntheticEvent, isExpanded: boolean) => {
       setExpanded(isExpanded ? panel : false);
     };
 
-  useEffect(() => {
-    const fetchTrainingData = async (agentId: string) => {
-      const trainings = await fetchTrainings(agentId);
-      return trainings;
-    };
+useEffect(() => {
+  const fetchTrainingData = async (agentId: string) => {
+    const paginatedTrainings = await fetchTrainings(agentId, page);
+    setTrainingData(paginatedTrainings as PaginatedTrainingsResponseDto);
+  };
 
-    if (agentData && agentData.trainings) {
-      setTrainingData(agentData.trainings);
-    } else if (agentData) {
-      fetchTrainingData(agentData.id);
+  if (!agentData) return;
+
+  const paginated = agentData.paginatedTrainings;
+
+  // If data exists and is for the right page, use it
+  if (paginated && paginated.meta.page === page) {
+    if (trainingData !== paginated) {
+      setTrainingData(paginated);
     }
-  }, [agentData?.trainings]);
+  } else {
+    // Fetch from API
+    console.log({paginatedPage: paginated?.meta?.page, page})
+    fetchTrainingData(agentData.id);
+  }
+}, [agentData?.paginatedTrainings?.data, page]);
+
 
   const handleMenuClick = (
-    event: React.MouseEvent<HTMLElement>,
+    event: MouseEvent<HTMLElement>,
     item: TrainingDto
   ) => {
     setAnchorEl(event.currentTarget);
@@ -206,7 +225,11 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
     createTraining(agentData?.id as string, training);
   };
 
-  const filteredData = trainingData.filter((item) => {
+  const handlePageChange = (_: ChangeEvent<unknown>, value: number) => {
+    setPage(value);
+  };
+
+  const filteredData = trainingData.data.filter((item) => {
     const matchesSearch = getDisplayText(item)
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
@@ -215,26 +238,25 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
   });
 
   const tabCounts = {
-    all: trainingData.length,
-    TEXT: trainingData.filter((item) => item.type === 'TEXT').length,
-    WEBSITE: trainingData.filter((item) => item.type === 'WEBSITE').length,
-    DOCUMENT: trainingData.filter((item) => item.type === 'DOCUMENT').length,
+    all: trainingData.data.length,
+    TEXT: trainingData.data.filter((item) => item.type === 'TEXT').length,
+    WEBSITE: trainingData.data.filter((item) => item.type === 'WEBSITE').length,
+    DOCUMENT: trainingData.data.filter((item) => item.type === 'DOCUMENT').length,
   };
 
   if (!agentData) return null;
 
   return (
-    <Box sx={{ p: 3, minHeight: '100vh' }}>
+    <Box sx={{ p: 3 }}>
       {/* Header */}
       <Box
         sx={{
-          mb: 3,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
         }}
       >
-        <Typography variant="h5" fontWeight="600" color="text.primary">
+        <Typography variant="h6" gutterBottom>
           Training material
         </Typography>
         <Button
@@ -251,7 +273,7 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
       </Box>
 
       {/* Search Bar */}
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mt: 3, mb: 3 }}>
         <TextField
           fullWidth
           placeholder="Search for training material..."
@@ -270,6 +292,8 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
             borderRadius: 2,
             '& .MuiOutlinedInput-root': {
               borderRadius: 2,
+              color: resolvedMode == 'dark' ? 'white' : 'dark',
+              fontWeight: 800
             },
           }}
         />
@@ -301,18 +325,13 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
                 },
               }}
             >
-              {tab === 'all' ? 'Todos' : tab.toLowerCase()}
+              {tab === 'all' ? 'All' : tab.toLowerCase()}
               <Chip
                 label={tabCounts[tab]}
                 size="small"
                 sx={{
                   ml: 1,
                   height: 20,
-                  backgroundColor:
-                    activeTab === tab
-                      ? 'rgba(255,255,255,0.2)'
-                      : 'rgba(99, 102, 241, 0.1)',
-                  color: activeTab === tab ? 'white' : '#6366f1',
                   fontSize: '0.75rem',
                 }}
               />
@@ -508,6 +527,19 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
               </AccordionDetails>
             </Accordion>
           ))}
+
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 4 }}>
+            <Typography sx={{ mr: 2 }}>
+              Total: {filteredData.length} training material{filteredData.length > 1 ? 's' : ''}
+            </Typography>
+            <Pagination
+              count={trainingData.meta.totalPages}
+              page={page}
+              onChange={handlePageChange}
+              color="primary"
+            />
+          </Box>
+
           <LoadingBackdrop open={loading} />
         </Stack>
       )}

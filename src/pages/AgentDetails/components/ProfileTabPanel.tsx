@@ -129,7 +129,6 @@ export default function ProfileTabPanel({
               }
               id="agent-name"
               name="agent-name"
-              autoFocus
               required
               fullWidth
               variant="outlined"

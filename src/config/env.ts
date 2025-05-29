@@ -1,4 +1,5 @@
 interface EnvConfig {
+  SOCKET_SERVER_URL: string;
   API_URL: string;
   AUTH_TIMEOUT: number;
   ENABLE_ANALYTICS: boolean;
@@ -7,6 +8,7 @@ interface EnvConfig {
 
 // Parse environment variables with proper type conversion
 export const env: EnvConfig = {
+  SOCKET_SERVER_URL: import.meta.env.VITE_SOCKET_SERVER_URL as string,
   API_URL: import.meta.env.VITE_API_URL as string,
   AUTH_TIMEOUT: Number(import.meta.env.VITE_AUTH_TIMEOUT || 3600),
   ENABLE_ANALYTICS:

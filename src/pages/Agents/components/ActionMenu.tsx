@@ -17,24 +17,18 @@ import {
   PowerSettingsNew,
   StopCircle,
 } from '@mui/icons-material';
-import {
-  Agent,
-  AgentSettings,
-  useAgents,
-} from '../../../context/AgentsContext';
+import { Agent, useAgents } from '../../../context/AgentsContext';
 import { useNavigate } from 'react-router-dom';
 
 interface ActionMenuProps {
   agent: Agent;
-  settings: AgentSettings;
-  handleOpenSettings: (agentId: string, settings: AgentSettings) => void;
+  handleOpenSettings: (agentId: string) => void;
   handleDelete: (agentId: string) => void;
   theme: any;
 }
 
 export default function ActionMenu({
   agent,
-  settings,
   handleOpenSettings,
   handleDelete,
   theme,
@@ -47,21 +41,23 @@ export default function ActionMenu({
   const open = Boolean(anchorEl);
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
     setAnchorEl(event.currentTarget);
   };
 
-  const handleClose = () => {
+  const handleClose = (event: MouseEvent<HTMLLIElement>) => {
+    event?.stopPropagation();
     setAnchorEl(null);
   };
 
-  const handleMenuItemClick = (action: () => void) => {
-    handleClose();
+  const handleMenuItemClick = (event: MouseEvent<HTMLLIElement>, action: () => void) => {
+    handleClose(event);
     action();
   };
 
-  const handleToggleActive = (agent: Agent) => {
+  const handleToggleActive = (event: MouseEvent<HTMLLIElement>, agent: Agent) => {
     agent.isActive ? deactivateAgent(agent.id) : activateAgent(agent.id);
-    handleClose();
+    handleClose(event);
   };
 
   const handleNavigateToAgentDetails = (agentId: string) => {
@@ -103,8 +99,8 @@ export default function ActionMenu({
           <ListItemText>Edit</ListItemText>
         </MenuItem>
         <MenuItem
-          onClick={() =>
-            handleMenuItemClick(() => handleOpenSettings(agent.id, settings))
+          onClick={(event) =>
+            handleMenuItemClick(event, () => handleOpenSettings(agent.id))
           }
         >
           <ListItemIcon>
@@ -114,16 +110,24 @@ export default function ActionMenu({
         </MenuItem>
         <Divider />
         {!agent.isActive && (
-          <MenuItem onClick={() => handleToggleActive(agent)}>
+          <MenuItem onClick={(event) => handleToggleActive(event, agent)}>
             <ListItemIcon>
               <PowerSettingsNew fontSize="small" />
             </ListItemIcon>
             <ListItemText>Activate</ListItemText>
           </MenuItem>
         )}
+        {agent.isActive && (
+          <MenuItem onClick={(event) => handleToggleActive(event, agent)}>
+            <ListItemIcon>
+              <StopCircle fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Deactivate</ListItemText>
+          </MenuItem>
+        )}
         <MenuItem
-          onClick={() =>
-            handleMenuItemClick(() =>
+          onClick={(event) =>
+            handleMenuItemClick(event, () =>
               navigate(`/agents/${agent.id}?tabName=integrations`)
             )
           }
@@ -133,17 +137,9 @@ export default function ActionMenu({
           </ListItemIcon>
           <ListItemText>Channels</ListItemText>
         </MenuItem>
-        {agent.isActive && (
-          <MenuItem onClick={() => handleToggleActive(agent)}>
-            <ListItemIcon>
-              <StopCircle fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Deactivate</ListItemText>
-          </MenuItem>
-        )}
         <Divider />
         <MenuItem
-          onClick={() => handleMenuItemClick(() => handleDelete(agent.id))}
+          onClick={(event) => handleMenuItemClick(event, () => handleDelete(agent.id))}
         >
           <ListItemIcon>
             <DeleteIcon

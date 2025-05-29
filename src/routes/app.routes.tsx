@@ -10,6 +10,8 @@ import OAuthCallbackPage from '../pages/OAuthCallback';
 import VerifyAccount from '../pages/VerifyAccount';
 import ResetPassword from '../pages/ResetPassword';
 import AgentDetails from '../pages/AgentDetails';
+import ChatComponent from '../components/ChatComponent';
+import Chats from '../pages/Chats';
 
 export default function AppRoutes() {
   return (
@@ -54,15 +56,24 @@ export default function AppRoutes() {
           }
         />
 
-        {/* <Route
+        <Route
+          key="4x"
+          path="/socket"
+          element={
+            <ChatComponent />
+          }
+        />
+
+        <Route
           key="4"
           path="/chats"
           element={
             <AppPageLayout>
-              <Dashboard />
+              <Chats />
             </AppPageLayout>
           }
-        /> */}
+        />
+
         <Route
           key="5"
           path="/auth/oauth-result"

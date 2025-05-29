@@ -9,7 +9,8 @@ import env from '../config/env';
 import { useHttpResponse } from './ResponseNotifier';
 import { useAuth } from './AuthContext';
 import { Channel } from '../services/channelService';
-import { TrainingDto } from '../services/trainingService';
+import { defaultPaginatedResponse, PaginatedTrainingsResponseDto, TrainingDto } from '../services/trainingService';
+import { ChatDto } from '../services/chatService';
 
 export enum AIModel {
   GPT_4 = 'GPT_4',
@@ -17,6 +18,7 @@ export enum AIModel {
   GPT_4_O_MINI = 'GPT_4_O_MINI',
   GPT_4_1_MINI = 'GPT_4_1_MINI',
   GPT_4_1 = 'GPT_4_1',
+  DEEPSEEK_CHAT = 'DEEPSEEK_CHAT'
 }
 
 export enum GroupingTime {
@@ -35,7 +37,7 @@ export interface AgentSettings {
   splitMessages: boolean;
   enabledEmoji: boolean;
   limitSubjects: boolean;
-  messageGroupingTime: GroupingTime;
+  // messageGroupingTime: GroupingTime;
 }
 
 export interface AgentWebhooks {
@@ -70,7 +72,9 @@ export interface Agent {
   jobDescription: string;
   isActive: boolean;
   channels: Channel[];
-  trainings: TrainingDto[];
+  
+  paginatedTrainings: PaginatedTrainingsResponseDto;
+  chats: ChatDto[];
 }
 
 export interface AgentWrapper {
@@ -114,13 +118,17 @@ interface AgentsContextType {
   setPageSize: (pageSize: number) => void;
   setQuery: (query: string) => void;
 
-  createAgentChannel: (agentId: string, newChannel: Channel) => boolean;
-  deleteAgentChannel: (agentId: string, channelId: string) => boolean;
-  disconnectAgentChannel: (agentId: string, channelId: string) => boolean;
+  syncAgentChannelCreation: (agentId: string, newChannel: Channel) => boolean;
+  syncAgentChannelDeletion: (agentId: string, channelId: string) => boolean;
+  syncAgentChannelConnectionUpdate: (
+    agentId: string, channelId: string, connectionStatus: string
+  ) => boolean;
 
-  setAgentTrainings: (agentId: string, trainings: TrainingDto[]) => boolean;
-  createAgentTraining: (agentId: string, newTraining: TrainingDto) => boolean;
-  deleteAgentTraining: (agentId: string, trainingId: string) => boolean;
+  syncAgentTrainings: (agentId: string, trainings: PaginatedTrainingsResponseDto) => boolean;
+  syncAgentTrainingCreation: (agentId: string, newTraining: TrainingDto) => boolean;
+  syncAgentTrainingDeletion: (agentId: string, trainingId: string) => boolean;
+
+  syncAgentChats: (chats: ChatDto[]) => boolean;
 }
 
 interface AgentsProviderProps {
@@ -412,14 +420,20 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       const data = await response.json();
       if (data.error) throw new Error(data.error);
 
-      setPaginatedAgents((prev) => ({
-        ...prev,
-        agents: prev.agents.map((wrapper) =>
-          wrapper.agent.id === id
-            ? { ...wrapper, settings: data.data }
-            : wrapper
-        ),
-      }));
+      console.log('Before setPaginatedAgents:', paginatedAgents.agents.length);
+
+      setPaginatedAgents((prev) => {
+        const updated = {
+          ...prev,
+          agents: prev.agents.map((wrapper) =>
+            wrapper.agent.id === id
+              ? { ...wrapper, settings: data.data }
+              : wrapper
+          ),
+        };
+        console.log('After setPaginatedAgents:', updated.agents.length);
+        return updated;
+      });
 
       notify('Settings updated successfully!', 'success');
       return true;
@@ -431,7 +445,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     }
   };
 
-  const createAgentChannel = (
+  const syncAgentChannelCreation = (
     agentId: string,
     newChannel: Channel
   ): boolean => {
@@ -469,7 +483,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     }
   };
 
-  const deleteAgentChannel = (agentId: string, channelId: string): boolean => {
+  const syncAgentChannelDeletion = (agentId: string, channelId: string): boolean => {
     try {
       setPaginatedAgents((prev) => {
         const updatedAgents = prev.agents.map((wrapper) => {
@@ -503,9 +517,10 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     }
   };
 
-  const disconnectAgentChannel = (
+  const syncAgentChannelConnectionUpdate = (
     agentId: string,
-    channelId: string
+    channelId: string,
+    connectionStatus: string
   ): boolean => {
     try {
       setPaginatedAgents((prev) => {
@@ -518,14 +533,14 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
               return {
                 ...channel,
-                connected: false,
+                connected: connectionStatus === 'WORKING',
                 config: channel.config
                   ? {
                       ...channel.config,
                       wahaApi: channel.config.wahaApi
                         ? {
                             ...channel.config.wahaApi,
-                            status: 'SCAN_QR_CODE',
+                            status: connectionStatus,
                           }
                         : channel.config.wahaApi,
                     }
@@ -551,25 +566,24 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
       return true;
     } catch (error) {
-      console.error('Error disconnecting agent channel locally:', error);
+      console.error('Error updating agent channel connection status locally:', error);
       return false;
     }
   };
 
-  const setAgentTrainings = (
+  const syncAgentTrainings = (
     agentId: string,
-    trainings: TrainingDto[]
+    paginatedTrainings: PaginatedTrainingsResponseDto
   ): boolean => {
     try {
       setPaginatedAgents((prev) => {
         const updatedAgents = prev.agents.map((wrapper) => {
           if (wrapper.agent.id === agentId) {
-            // Create a new training array immutably
             return {
               ...wrapper,
               agent: {
                 ...wrapper.agent,
-                trainings,
+                paginatedTrainings,
               },
             };
           }
@@ -585,12 +599,12 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
       return true; // Return true on successful state update
     } catch (error) {
-      console.error('Error adding agent training locally:', error);
+      console.error('Error updating agent trainings locally:', error);
       return false; // Return false if an error occurred
     }
   };
 
-  const createAgentTraining = (
+  const syncAgentTrainingCreation = (
     agentId: string,
     newTraining: TrainingDto
   ): boolean => {
@@ -598,16 +612,29 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       setPaginatedAgents((prev) => {
         const updatedAgents = prev.agents.map((wrapper) => {
           if (wrapper.agent.id === agentId) {
-            // Create a new training array immutably
+            const currentPaginatedTrainings = wrapper.agent.paginatedTrainings || defaultPaginatedResponse;
+            
+            // Create updated trainings array
             const updatedTrainings = [
-              ...(wrapper.agent.trainings || []),
+              ...currentPaginatedTrainings.data,
               newTraining,
             ];
+            
+            // Update pagination meta
+            const updatedMeta = {
+              ...currentPaginatedTrainings.meta,
+              total: currentPaginatedTrainings.meta.total + 1,
+              itemCount: updatedTrainings.length,
+            };
+
             return {
               ...wrapper,
               agent: {
                 ...wrapper.agent,
-                trainings: updatedTrainings,
+                paginatedTrainings: {
+                  data: updatedTrainings,
+                  meta: updatedMeta,
+                },
               },
             };
           }
@@ -628,7 +655,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     }
   };
 
-  const deleteAgentTraining = (
+  const syncAgentTrainingDeletion = (
     agentId: string,
     trainingId: string
   ): boolean => {
@@ -636,15 +663,28 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       setPaginatedAgents((prev) => {
         const updatedAgents = prev.agents.map((wrapper) => {
           if (wrapper.agent.id === agentId) {
+            const currentPaginatedTrainings = wrapper.agent.paginatedTrainings || defaultPaginatedResponse;
+            
             // Remove deleted training from array immutably
-            const updatedTrainings = wrapper.agent.trainings.filter(
-              (training) => training.id != trainingId
+            const updatedTrainings = currentPaginatedTrainings.data.filter(
+              (training) => training.id !== trainingId
             );
+            
+            // Update pagination meta
+            const updatedMeta = {
+              ...currentPaginatedTrainings.meta,
+              total: Math.max(0, currentPaginatedTrainings.meta.total - 1),
+              itemCount: updatedTrainings.length,
+            };
+
             return {
               ...wrapper,
               agent: {
                 ...wrapper.agent,
-                trainings: updatedTrainings,
+                paginatedTrainings: {
+                  data: updatedTrainings,
+                  meta: updatedMeta,
+                },
               },
             };
           }
@@ -662,6 +702,63 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     } catch (error) {
       console.error('Error deleting agent training locally:', error);
       return false; // Return false if an error occurred
+    }
+  };
+
+  const syncAgentChats = (chats: ChatDto[]): boolean => {
+    try {
+      setPaginatedAgents((prev) => {
+        const updatedAgents = prev.agents.map((wrapper) => {
+          const agentId = wrapper.agent.id;
+
+          // Get all new chats for this agent
+          const newChatsForAgent = chats.filter(chat => chat.agentId === agentId);
+
+          if (newChatsForAgent.length === 0) {
+            // No new chats for this agent, return as is
+            return {
+              ...wrapper,
+              agent: {
+                ...wrapper.agent
+              },
+            };
+          }
+
+          const existingChats = wrapper.agent.chats || [];
+
+          // Create a map for quick lookup of new chats by id
+          const newChatsMap = new Map(newChatsForAgent.map(chat => [chat.id, chat]));
+
+          // Replace existing chats with matching new ones, keep others
+          const updatedChats = existingChats.map(chat => 
+            newChatsMap.has(chat.id) ? newChatsMap.get(chat.id)! : chat
+          );
+
+          // Add new chats that didn't exist before
+          const existingChatIds = new Set(existingChats.map(chat => chat.id));
+          const newChatsToAdd = newChatsForAgent.filter(chat => !existingChatIds.has(chat.id));
+
+          const mergedChats = [...updatedChats, ...newChatsToAdd];
+
+          return {
+            ...wrapper,
+            agent: {
+              ...wrapper.agent,
+              chats: mergedChats
+            },
+          };
+        });
+
+        return {
+          ...prev,
+          agents: updatedAgents,
+        };
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error updating agent chats locally:', error);
+      return false;
     }
   };
 
@@ -687,13 +784,15 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     setPageSize,
     setQuery,
 
-    createAgentChannel,
-    deleteAgentChannel,
-    disconnectAgentChannel,
+    syncAgentChannelCreation,
+    syncAgentChannelDeletion,
+    syncAgentChannelConnectionUpdate,
 
-    createAgentTraining,
-    deleteAgentTraining,
-    setAgentTrainings,
+    syncAgentTrainingCreation,
+    syncAgentTrainingDeletion,
+    syncAgentTrainings,
+
+    syncAgentChats
   };
 
   return (

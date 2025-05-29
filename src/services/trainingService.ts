@@ -42,11 +42,10 @@ export interface PaginationDto {
 }
 
 export interface PaginationMetaDto {
-  totalItems: number;
-  itemCount: number;
-  itemsPerPage: number;
+  page: number;
+  pageSize: number;
+  total: number;
   totalPages: number;
-  currentPage: number;
 }
 
 export interface PaginatedTrainingsResponseDto {
@@ -55,14 +54,13 @@ export interface PaginatedTrainingsResponseDto {
 }
 
 // // Default empty response for findAll error case
-const defaultPaginatedResponse: PaginatedTrainingsResponseDto = {
+export const defaultPaginatedResponse: PaginatedTrainingsResponseDto = {
   data: [],
   meta: {
-    totalItems: 0,
-    itemCount: 0,
-    itemsPerPage: 0,
-    totalPages: 0,
-    currentPage: 0,
+    page: 0,
+    pageSize: 0,
+    total: 0,
+    totalPages: 0
   },
 };
 

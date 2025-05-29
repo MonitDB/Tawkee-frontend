@@ -6,7 +6,7 @@ import { useAgents } from '../context/AgentsContext';
 
 export const useChannelService = (token: string) => {
   const { notify } = useHttpResponse();
-  const { createAgentChannel, deleteAgentChannel, disconnectAgentChannel } =
+  const { syncAgentChannelCreation, syncAgentChannelDeletion, syncAgentChannelConnectionUpdate } =
     useAgents();
 
   const [loading, setLoading] = useState(false);
@@ -25,7 +25,7 @@ export const useChannelService = (token: string) => {
           name,
           type
         )) as Channel;
-        createAgentChannel(agentId, newChannel);
+        syncAgentChannelCreation(agentId, newChannel);
 
         notify('Channel created successfully!', 'success');
         return newChannel;
@@ -39,7 +39,7 @@ export const useChannelService = (token: string) => {
         setLoading(false);
       }
     },
-    [service, createAgentChannel, notify]
+    [service, syncAgentChannelCreation, notify]
   );
 
   const getQRCode = useCallback(
@@ -70,7 +70,7 @@ export const useChannelService = (token: string) => {
       try {
         const success = await service.disconnectChannel(channelId);
         if (success) {
-          disconnectAgentChannel(agentId, channelId);
+          syncAgentChannelConnectionUpdate(agentId, channelId, 'SCAN_QR_CODE');
           notify('Channel disconnected!', 'success');
         }
         return success;
@@ -93,7 +93,7 @@ export const useChannelService = (token: string) => {
       try {
         const success = await service.deleteChannel(channelId);
         if (success) {
-          deleteAgentChannel(agentId, channelId);
+          syncAgentChannelDeletion(agentId, channelId);
           notify('Channel deleted!', 'success');
         }
         return success;
@@ -107,7 +107,7 @@ export const useChannelService = (token: string) => {
         setLoading(false);
       }
     },
-    [service, deleteAgentChannel, notify]
+    [service, syncAgentChannelDeletion, notify]
   );
 
   return {

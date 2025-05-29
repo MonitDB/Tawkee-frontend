@@ -1,9 +1,6 @@
-import { Dispatch, SetStateAction, useState } from 'react';
+import { ChangeEvent, SyntheticEvent, useState } from 'react';
 import {
   useAgents,
-  AgentSettings,
-  AIModel,
-  GroupingTime,
   AgentCommunicationType,
   AgentType,
 } from '../../context/AgentsContext';
@@ -23,7 +20,6 @@ import {
   Avatar,
   Tabs,
   Tab,
-  MenuItem,
   useTheme,
   styled,
   Chip,
@@ -31,14 +27,12 @@ import {
   CardContent,
   Tooltip,
   useColorScheme,
-  Menu,
   Pagination,
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import { useNavigate } from 'react-router-dom';
 import CreateAgentDialog from './components/CreateAgentDialog';
-import AgentSettingsDialog from './components/AgentSettingsDialog';
 import { Channel } from '../../services/channelService';
 
 const StyledTabs = styled(Tabs)(({ theme }) => ({
@@ -51,55 +45,6 @@ const StyledTabs = styled(Tabs)(({ theme }) => ({
     padding: '8px 16px',
   },
 }));
-
-const modelDescriptions: Record<AIModel, string> = {
-  [AIModel.GPT_4]: 'GPT-4: General-purpose large language model.',
-  [AIModel.GPT_4_O]: 'GPT-4o: Multimodal model (vision, text, audio).',
-  [AIModel.GPT_4_O_MINI]: 'GPT-4o-mini: Lightweight version of GPT-4o.',
-  [AIModel.GPT_4_1_MINI]: 'GPT-4.1-mini: Efficient GPT-4.1 variant.',
-  [AIModel.GPT_4_1]: 'GPT-4.1: Enhanced version with better reasoning.',
-};
-
-const groupingDescriptions: Record<GroupingTime, string> = {
-  [GroupingTime.NO_GROUP]: 'No grouping applied — raw data points.',
-  [GroupingTime.FIVE_SEC]: 'Group data by 5-second intervals.',
-  [GroupingTime.TEN_SEC]: 'Group data by 10-second intervals.',
-  [GroupingTime.THIRD_SEC]:
-    'Group data by 1/3 second intervals — high frequency.',
-  [GroupingTime.ONE_MINUTE]:
-    'Group data by 1-minute intervals — good for summaries.',
-};
-
-const settingsOptions = [
-  {
-    key: 'enabledHumanTransfer',
-    label: 'Enable Human Transfer',
-    description:
-      'Allows the AI to transfer the conversation to a human agent when needed.',
-  },
-  {
-    key: 'enabledReminder',
-    label: 'Enable Reminder',
-    description:
-      'Sends automated reminder messages after a period of user inactivity.',
-  },
-  {
-    key: 'splitMessages',
-    label: 'Split Messages',
-    description:
-      'Breaks long messages into smaller parts to improve readability.',
-  },
-  {
-    key: 'enabledEmoji',
-    label: 'Enable Emoji',
-    description: 'Allows the use of emojis in the conversation.',
-  },
-  {
-    key: 'limitSubjects',
-    label: 'Limit Subjects',
-    description: 'Restricts user input to a predefined set of topics.',
-  },
-];
 
 export const agentCommunicationDescriptions: Record<
   AgentCommunicationType,
@@ -134,15 +79,14 @@ export default function Agents() {
   const [tab, setTab] = useState(0);
   const {
     deleteAgent,
-    updateAgentSettings,
-    loading,
     paginatedAgents,
     setPage,
+    loading
   } = useAgents();
 
   const { agents, meta } = paginatedAgents;
 
-  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_: SyntheticEvent, newValue: number) => {
     setTab(newValue);
   };
 
@@ -152,16 +96,12 @@ export default function Agents() {
     return true;
   });
 
-  const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
+  const handlePageChange = (_: ChangeEvent<unknown>, value: number) => {
     setPage(value);
   };
 
   const [open, setOpen] = useState(false);
 
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [selectedSettings, setSelectedSettings] =
-    useState<AgentSettings | null>(null);
-  const [settingsAgentId, setSettingsAgentId] = useState<string | null>(null);
 
   const handleOpenModal = () => {
     setOpen(true);
@@ -175,24 +115,8 @@ export default function Agents() {
     deleteAgent(id);
   };
 
-  const handleOpenSettings = (agentId: string, settings: AgentSettings) => {
-    setSettingsAgentId(agentId);
-    setSelectedSettings(settings);
-    setSettingsOpen(true);
-  };
-
-  const handleCloseSettings = () => {
-    setSettingsOpen(false);
-    setSelectedSettings(null);
-    setSettingsAgentId(null);
-  };
-
-  const handleSaveSettings = () => {
-    if (!selectedSettings || settingsAgentId === null) return;
-
-    updateAgentSettings(settingsAgentId, selectedSettings);
-
-    handleCloseSettings();
+  const handleOpenSettings = (agentId: string) => {
+    navigate(`/agents/${agentId}?tabName=settings`);
   };
 
   function TruncatedText({
@@ -216,26 +140,6 @@ export default function Agents() {
   const { mode, systemMode } = useColorScheme();
 
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
-
-  // Estado para o Menu de verificação
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const openMenu = Boolean(anchorEl);
-
-  const handleMenuClick = (
-    event: React.MouseEvent<HTMLElement>,
-    agentId: string
-  ) => {
-    setSettingsAgentId(agentId);
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleNavigateToAgentDetails = () => {
-    navigate(`/agents/${settingsAgentId}`);
-  };
 
   return (
     <Card variant="outlined" sx={{ margin: '0 auto', width: '100%' }}>
@@ -294,7 +198,7 @@ export default function Agents() {
           </StyledTabs>
 
           <List>
-            {filteredAgents.map(({ agent, settings }) => (
+            {filteredAgents.map(({ agent }) => (
               <Card
                 key={agent.id}
                 sx={{
@@ -305,7 +209,9 @@ export default function Agents() {
                         ? theme.palette.action.hover
                         : theme.palette.action.focus,
                   },
+                  cursor: 'pointer'
                 }}
+                onClick={() => navigate(`/agents/${agent.id}`)}
               >
                 <>
                   <CardContent>
@@ -316,7 +222,6 @@ export default function Agents() {
                         </Avatar>
                       </ListItemAvatar>
                       <ListItemText
-                        onClick={(event) => handleMenuClick(event, agent.id)}
                         sx={{ cursor: 'pointer' }}
                         primary={
                           <Box
@@ -398,34 +303,12 @@ export default function Agents() {
                       />
                       <ActionMenu
                         agent={agent}
-                        settings={settings}
                         handleDelete={handleDelete}
                         handleOpenSettings={handleOpenSettings}
                         theme={theme}
                       />
                     </ListItem>
                   </CardContent>
-                  <Menu
-                    id="edit-menu"
-                    anchorEl={anchorEl}
-                    open={openMenu}
-                    onClose={handleMenuClose}
-                    anchorOrigin={{
-                      vertical: 'bottom',
-                      horizontal: 'center',
-                    }}
-                    transformOrigin={{
-                      vertical: 'top',
-                      horizontal: 'left',
-                    }}
-                  >
-                    <MenuItem
-                      onClick={handleNavigateToAgentDetails}
-                      sx={{ fontSize: '0.875rem' }}
-                    >
-                      Edit Agent
-                    </MenuItem>
-                  </Menu>
                 </>
               </Card>
             ))}
@@ -439,7 +322,7 @@ export default function Agents() {
               No agent found.
             </Typography>
           ) : (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 4 }}>
               <Typography sx={{ mr: 2 }}>
                 Total: {filteredAgents.length} agents
               </Typography>
@@ -456,19 +339,6 @@ export default function Agents() {
             open={open}
             onClose={handleCloseModal}
             agentTypeDescriptions={agentTypeDescriptions}
-          />
-
-          <AgentSettingsDialog
-            open={settingsOpen}
-            onClose={handleCloseSettings}
-            onSave={handleSaveSettings}
-            settings={selectedSettings as AgentSettings}
-            setSettings={
-              setSelectedSettings as Dispatch<SetStateAction<AgentSettings>>
-            }
-            modelDescriptions={modelDescriptions}
-            groupingDescriptions={groupingDescriptions}
-            settingsOptions={settingsOptions}
           />
 
           <LoadingBackdrop open={loading} />

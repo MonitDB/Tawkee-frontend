@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, FormEvent } from 'react';
 
 import { useHttpResponse } from '../../../context/ResponseNotifier';
 
@@ -65,7 +65,7 @@ export default function ForgotPassword({
       slotProps={{
         paper: {
           component: 'form',
-          onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
+          onSubmit: (event: FormEvent<HTMLFormElement>) => {
             event.preventDefault();
             handleClose();
           },
