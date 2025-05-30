@@ -9,8 +9,18 @@ import env from '../config/env';
 import { useHttpResponse } from './ResponseNotifier';
 import { useAuth } from './AuthContext';
 import { Channel } from '../services/channelService';
-import { defaultPaginatedResponse, PaginatedTrainingsResponseDto, TrainingDto } from '../services/trainingService';
-import { ChatDto } from '../services/chatService';
+import {
+  defaultPaginatedResponse,
+  PaginatedTrainingsResponseDto,
+  TrainingDto,
+} from '../services/trainingService';
+import {
+  ChatDto,
+  InteractionWithMessagesDto,
+  PaginatedInteractionsWithMessagesResponseDto,
+  PaginatedResult,
+} from '../services/chatService';
+import { InteractionStatus } from '../services/chatService';
 
 export enum AIModel {
   GPT_4 = 'GPT_4',
@@ -18,7 +28,7 @@ export enum AIModel {
   GPT_4_O_MINI = 'GPT_4_O_MINI',
   GPT_4_1_MINI = 'GPT_4_1_MINI',
   GPT_4_1 = 'GPT_4_1',
-  DEEPSEEK_CHAT = 'DEEPSEEK_CHAT'
+  DEEPSEEK_CHAT = 'DEEPSEEK_CHAT',
 }
 
 export enum GroupingTime {
@@ -72,9 +82,9 @@ export interface Agent {
   jobDescription: string;
   isActive: boolean;
   channels: Channel[];
-  
+
   paginatedTrainings: PaginatedTrainingsResponseDto;
-  chats: ChatDto[];
+  paginatedChats: PaginatedResult<ChatDto>;
 }
 
 export interface AgentWrapper {
@@ -121,14 +131,34 @@ interface AgentsContextType {
   syncAgentChannelCreation: (agentId: string, newChannel: Channel) => boolean;
   syncAgentChannelDeletion: (agentId: string, channelId: string) => boolean;
   syncAgentChannelConnectionUpdate: (
-    agentId: string, channelId: string, connectionStatus: string
+    agentId: string,
+    channelId: string,
+    connectionStatus: string
   ) => boolean;
 
-  syncAgentTrainings: (agentId: string, trainings: PaginatedTrainingsResponseDto) => boolean;
-  syncAgentTrainingCreation: (agentId: string, newTraining: TrainingDto) => boolean;
+  syncAgentTrainings: (
+    agentId: string,
+    trainings: PaginatedTrainingsResponseDto
+  ) => boolean;
+  syncAgentTrainingCreation: (
+    agentId: string,
+    newTraining: TrainingDto
+  ) => boolean;
   syncAgentTrainingDeletion: (agentId: string, trainingId: string) => boolean;
 
-  syncAgentChats: (chats: ChatDto[]) => boolean;
+  syncAgentChats: (chats: PaginatedResult<ChatDto>) => boolean;
+  syncAgentChatFinishStatus: (chatId: string, isFinished: boolean) => boolean;
+  syncAgentChatRead: (chatId: string) => boolean;
+  syncAgentChatHumanTalkStatus: (
+    chatId: string,
+    isHumanTalk: boolean
+  ) => boolean;
+  syncAgentChatDeletion: (chatId: string) => boolean;
+
+  syncAgentChatInteractions: (
+    chatId: string,
+    interactions: PaginatedInteractionsWithMessagesResponseDto
+  ) => boolean;
 }
 
 interface AgentsProviderProps {
@@ -483,7 +513,10 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     }
   };
 
-  const syncAgentChannelDeletion = (agentId: string, channelId: string): boolean => {
+  const syncAgentChannelDeletion = (
+    agentId: string,
+    channelId: string
+  ): boolean => {
     try {
       setPaginatedAgents((prev) => {
         const updatedAgents = prev.agents.map((wrapper) => {
@@ -566,7 +599,10 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
       return true;
     } catch (error) {
-      console.error('Error updating agent channel connection status locally:', error);
+      console.error(
+        'Error updating agent channel connection status locally:',
+        error
+      );
       return false;
     }
   };
@@ -612,14 +648,15 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       setPaginatedAgents((prev) => {
         const updatedAgents = prev.agents.map((wrapper) => {
           if (wrapper.agent.id === agentId) {
-            const currentPaginatedTrainings = wrapper.agent.paginatedTrainings || defaultPaginatedResponse;
-            
+            const currentPaginatedTrainings =
+              wrapper.agent.paginatedTrainings || defaultPaginatedResponse;
+
             // Create updated trainings array
             const updatedTrainings = [
               ...currentPaginatedTrainings.data,
               newTraining,
             ];
-            
+
             // Update pagination meta
             const updatedMeta = {
               ...currentPaginatedTrainings.meta,
@@ -663,13 +700,14 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       setPaginatedAgents((prev) => {
         const updatedAgents = prev.agents.map((wrapper) => {
           if (wrapper.agent.id === agentId) {
-            const currentPaginatedTrainings = wrapper.agent.paginatedTrainings || defaultPaginatedResponse;
-            
+            const currentPaginatedTrainings =
+              wrapper.agent.paginatedTrainings || defaultPaginatedResponse;
+
             // Remove deleted training from array immutably
             const updatedTrainings = currentPaginatedTrainings.data.filter(
               (training) => training.id !== trainingId
             );
-            
+
             // Update pagination meta
             const updatedMeta = {
               ...currentPaginatedTrainings.meta,
@@ -705,46 +743,465 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     }
   };
 
-  const syncAgentChats = (chats: ChatDto[]): boolean => {
+  const syncAgentChats = (
+    paginatedChats: PaginatedResult<ChatDto>
+  ): boolean => {
     try {
       setPaginatedAgents((prev) => {
+        const chats = paginatedChats.data;
+        const inputMeta = paginatedChats.meta;
+
+        // Group incoming chats by agent ID
+        const chatsByAgentId = chats.reduce(
+          (acc, chat) => {
+            if (!acc[chat.agentId]) {
+              acc[chat.agentId] = [];
+            }
+            acc[chat.agentId].push(chat);
+            return acc;
+          },
+          {} as Record<string, ChatDto[]>
+        );
+
+        // Create a map of existing agents by ID for quick lookup
+        const existingAgentsMap = new Map(
+          prev.agents.map((wrapper) => [wrapper.agent.id, wrapper])
+        );
+
+        // Update existing agents
         const updatedAgents = prev.agents.map((wrapper) => {
           const agentId = wrapper.agent.id;
+          const newChatsForAgent = chatsByAgentId[agentId] || [];
 
-          // Get all new chats for this agent
-          const newChatsForAgent = chats.filter(chat => chat.agentId === agentId);
+          // Get existing chats for the agent, default to empty array if not present
+          const existingChats = wrapper.agent.paginatedChats?.data || [];
 
+          // If no new chats for this agent, and we assume no meta update is needed if no data change,
+          // return the wrapper as is. If meta should always update, adjust this.
           if (newChatsForAgent.length === 0) {
-            // No new chats for this agent, return as is
-            return {
-              ...wrapper,
-              agent: {
-                ...wrapper.agent
-              },
-            };
+            return wrapper;
           }
 
-          const existingChats = wrapper.agent.chats || [];
-
           // Create a map for quick lookup of new chats by id
-          const newChatsMap = new Map(newChatsForAgent.map(chat => [chat.id, chat]));
+          const newChatsMap = new Map(
+            newChatsForAgent.map((chat) => [chat.id, chat])
+          );
 
           // Replace existing chats with matching new ones, keep others
-          const updatedChats = existingChats.map(chat => 
+          const updatedExistingChats = existingChats.map((chat) =>
             newChatsMap.has(chat.id) ? newChatsMap.get(chat.id)! : chat
           );
 
           // Add new chats that didn't exist before
-          const existingChatIds = new Set(existingChats.map(chat => chat.id));
-          const newChatsToAdd = newChatsForAgent.filter(chat => !existingChatIds.has(chat.id));
+          const existingChatIds = new Set(existingChats.map((chat) => chat.id));
+          const newChatsToAdd = newChatsForAgent.filter(
+            (chat) => !existingChatIds.has(chat.id)
+          );
 
-          const mergedChats = [...updatedChats, ...newChatsToAdd];
+          const mergedChats = [...updatedExistingChats, ...newChatsToAdd];
 
           return {
             ...wrapper,
             agent: {
               ...wrapper.agent,
-              chats: mergedChats
+              paginatedChats: {
+                data: mergedChats,
+                meta: inputMeta, // Store the meta from the input PaginatedResult
+              },
+            },
+          };
+        });
+
+        // Create new agents for any remaining chat agents that don't exist yet
+        const newAgentWrappers: AgentWrapper[] = [];
+        Object.keys(chatsByAgentId).forEach((agentId) => {
+          if (!existingAgentsMap.has(agentId)) {
+            // This agent doesn't exist yet, create it
+            const agentChats = chatsByAgentId[agentId];
+
+            // Get agent name from first chat (assuming all chats for same agent have same name)
+            const agentName = agentChats[0]?.agentName || `Agent ${agentId}`;
+            const workspaceId = user?.workspaceId || '';
+
+            // Create default agent with paginatedChats
+            const newAgent: Omit<Agent, 'chats'> & {
+              paginatedChats: PaginatedResult<ChatDto>;
+            } = {
+              id: agentId,
+              workspaceId: workspaceId,
+              name: agentName,
+              avatar: undefined,
+              behavior: '',
+              communicationType: AgentCommunicationType.NORMAL,
+              type: AgentType.SUPPORT,
+              jobName: '',
+              jobSite: '',
+              jobDescription: '',
+              isActive: true,
+              channels: [],
+              paginatedTrainings: {
+                data: [],
+                meta: {
+                  page: 1,
+                  pageSize: 10,
+                  total: 0,
+                  totalPages: 1,
+                },
+              },
+              // Initialize paginatedChats for the new agent
+              paginatedChats: {
+                data: agentChats,
+                meta: inputMeta, // Store the meta from the input PaginatedResult
+              },
+            };
+
+            // Create default settings
+            const defaultSettings: AgentSettings = {
+              preferredModel: 'GPT4' as AIModel,
+              timezone: '(GMT+00:00) London',
+              enabledHumanTransfer: false,
+              enabledReminder: false,
+              splitMessages: false,
+              enabledEmoji: false,
+              limitSubjects: false,
+            };
+
+            // Create default webhooks
+            const defaultWebhooks: AgentWebhooks = {
+              onNewMessage: null,
+              onLackKnowLedge: null,
+              onTransfer: null,
+              onFinishAttendance: null,
+            };
+
+            newAgentWrappers.push({
+              agent: newAgent as Agent, // Cast needed because Agent type might still include 'chats'
+              settings: defaultSettings,
+              webhooks: defaultWebhooks,
+            });
+          }
+        });
+
+        // Combine updated existing agents with new agents
+        const allAgents = [...updatedAgents, ...newAgentWrappers];
+
+        return {
+          ...prev,
+          agents: allAgents,
+        };
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error updating agent chats locally:', error);
+      return false;
+    }
+  };
+
+  const syncAgentChatFinishStatus = (
+    chatId: string,
+    isFinished: boolean
+  ): boolean => {
+    try {
+      setPaginatedAgents((prev) => {
+        const updatedAgents = prev.agents.map((agentWrapper) => {
+          const updatedPaginatedChats = {
+            ...agentWrapper.agent.paginatedChats,
+            data: agentWrapper.agent.paginatedChats?.data.map((chat) => {
+              if (chat.id === chatId) {
+                return {
+                  ...chat,
+                  finished: isFinished,
+                  read: isFinished,
+                };
+              }
+              return chat;
+            }),
+          };
+
+          const updatedAgent = {
+            ...agentWrapper.agent,
+            paginatedChats: updatedPaginatedChats,
+          };
+
+          return {
+            ...agentWrapper,
+            agent: updatedAgent,
+          };
+        });
+
+        return {
+          ...prev,
+          agents: updatedAgents,
+        };
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error updating chat resolved status locally:', error);
+      return false;
+    }
+  };
+
+  const syncAgentChatRead = (chatId: string): boolean => {
+    try {
+      setPaginatedAgents((prev) => {
+        const updatedAgents = prev.agents.map((agentWrapper) => {
+          const updatedPaginatedChats = {
+            ...agentWrapper.agent.paginatedChats,
+            data: agentWrapper.agent.paginatedChats?.data.map((chat) => {
+              if (chat.id === chatId) {
+                return {
+                  ...chat,
+                  read: true,
+                  unReadCount: 0,
+                };
+              }
+              return chat;
+            }),
+          };
+
+          const updatedAgent = {
+            ...agentWrapper.agent,
+            paginatedChats: updatedPaginatedChats,
+          };
+
+          return {
+            ...agentWrapper,
+            agent: updatedAgent,
+          };
+        });
+
+        return {
+          ...prev,
+          agents: updatedAgents,
+        };
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error updating chat resolved status locally:', error);
+      return false;
+    }
+  };
+
+  const syncAgentChatHumanTalkStatus = (
+    chatId: string,
+    isHumanTalk: boolean
+  ): boolean => {
+    try {
+      setPaginatedAgents((prev) => {
+        const updatedAgents = prev.agents.map((agentWrapper) => {
+          const updatedPaginatedChats = {
+            ...agentWrapper.agent.paginatedChats,
+            data: agentWrapper.agent.paginatedChats?.data.map((chat) => {
+              if (chat.id === chatId) {
+                return {
+                  ...chat,
+                  humanTalk: isHumanTalk,
+                  finished: false,
+                  // Atualiza também a interação mais recente
+                  paginatedInteractions: chat.paginatedInteractions
+                    ? {
+                        ...chat.paginatedInteractions,
+                        data: chat.paginatedInteractions.data.map(
+                          (interaction, index, arr) => {
+                            if (interaction.chatId === chatId) {
+                              // Atualiza a mais recente: a última no array ou por startAt mais recente.
+                              const isMostRecent =
+                                index === arr.length - 1 ||
+                                interaction.startAt ===
+                                  Math.max(
+                                    ...arr.map((i) =>
+                                      new Date(i.startAt).getTime()
+                                    )
+                                  ).toString();
+                              if (isMostRecent) {
+                                return {
+                                  ...interaction,
+                                  status: 'WAITING' as InteractionStatus,
+                                };
+                              }
+                            }
+                            return interaction;
+                          }
+                        ),
+                      }
+                    : chat.paginatedInteractions,
+                };
+              }
+              return chat;
+            }),
+          };
+
+          const updatedAgent = {
+            ...agentWrapper.agent,
+            paginatedChats: updatedPaginatedChats,
+          };
+
+          return {
+            ...agentWrapper,
+            agent: updatedAgent,
+          };
+        });
+
+        return {
+          ...prev,
+          agents: updatedAgents,
+        };
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error updating chat resolved status locally:', error);
+      return false;
+    }
+  };
+
+  const syncAgentChatDeletion = (chatId: string): boolean => {
+    try {
+      setPaginatedAgents((prev) => {
+        // Map through each agent wrapper in the previous state
+        const updatedAgents = prev.agents.map((agentWrapper) => {
+          // Check if paginatedChats and its data array exist for the current agent
+          if (!agentWrapper.agent.paginatedChats?.data) {
+            // If not, return the agent wrapper unchanged
+            return agentWrapper;
+          }
+
+          // Filter the chats: keep only those whose ID does NOT match the chatId to be deleted
+          const filteredChats = agentWrapper.agent.paginatedChats.data.filter(
+            (chat) => chat.id !== chatId
+          );
+
+          // If the length of the filtered array is the same as the original,
+          // it means the chat wasn't found in this agent's list, so no update needed for this agent.
+          if (
+            filteredChats.length ===
+            agentWrapper.agent.paginatedChats.data.length
+          ) {
+            return agentWrapper;
+          }
+
+          // Create the updated paginatedChats object with the filtered data
+          const updatedPaginatedChats = {
+            ...agentWrapper.agent.paginatedChats,
+            data: filteredChats,
+            meta: {
+              ...agentWrapper.agent.paginatedChats.meta,
+              total: agentWrapper.agent.paginatedChats.meta.total - 1,
+            },
+          };
+
+          // Create the updated agent object with the modified paginatedChats
+          const updatedAgent = {
+            ...agentWrapper.agent,
+            paginatedChats: updatedPaginatedChats,
+          };
+
+          // Return the updated agent wrapper
+          return {
+            ...agentWrapper,
+            agent: updatedAgent,
+          };
+        });
+
+        // Return the updated state object with the modified agents list
+        return {
+          ...prev,
+          agents: updatedAgents,
+        };
+      });
+
+      // Indicate that the operation likely succeeded (state update was dispatched)
+      return true;
+    } catch (error) {
+      // Log any error that occurred during the process and indicate failure
+      console.error('Error removing chat locally:', error);
+      return false;
+    }
+  };
+
+  const syncAgentChatInteractions = (
+    chatId: string,
+    paginatedInteractions: PaginatedInteractionsWithMessagesResponseDto
+  ): boolean => {
+    try {
+      setPaginatedAgents((prev) => {
+        const interactions = paginatedInteractions.data;
+        const inputMeta = paginatedInteractions.meta;
+
+        // Update existing agents
+        const updatedAgents = prev.agents.map((wrapper) => {
+          // Ensure we are working with the adjusted agent structure
+          const agent = wrapper.agent;
+
+          // Find the chat within this agent that matches the chatId
+          const existingChats = agent?.paginatedChats?.data || [];
+          const chatIndex =
+            existingChats?.findIndex((chat) => chat.id === chatId) || -1;
+
+          // If this agent doesn't have the chat we're looking for, return as is
+          if (chatIndex === -1) {
+            return wrapper;
+          }
+
+          const targetChat = existingChats[chatIndex];
+          // Get existing interactions from the paginated structure
+          const existingInteractions =
+            targetChat.paginatedInteractions?.data || [];
+
+          // Create a map for quick lookup of new interactions by id
+          const newInteractionsMap = new Map(
+            interactions.map((interaction) => [interaction.id, interaction])
+          );
+
+          // Replace existing interactions with matching new ones, keep others
+          const updatedExistingInteractions = existingInteractions.map(
+            (interaction) =>
+              newInteractionsMap.has(interaction.id)
+                ? newInteractionsMap.get(interaction.id)!
+                : interaction
+          );
+
+          // Add new interactions that didn't exist before
+          const existingInteractionIds = new Set(
+            existingInteractions.map((interaction) => interaction.id)
+          );
+          const newInteractionsToAdd = interactions.filter(
+            (interaction) => !existingInteractionIds.has(interaction.id)
+          );
+
+          const mergedInteractionsData = [
+            ...updatedExistingInteractions,
+            ...newInteractionsToAdd,
+          ];
+
+          // Create the new paginatedInteractions object for the chat
+          const newPaginatedInteractions: PaginatedResult<InteractionWithMessagesDto> =
+            {
+              data: mergedInteractionsData,
+              meta: inputMeta, // Store the meta from the input
+            };
+
+          // Update the specific chat with the new paginatedInteractions structure
+          const updatedChats = [...existingChats];
+          updatedChats[chatIndex] = {
+            ...targetChat,
+            paginatedInteractions: newPaginatedInteractions,
+          };
+
+          // Update the agent's paginatedChats data
+          const updatedAgentPaginatedChats: PaginatedResult<ChatDto> = {
+            ...agent.paginatedChats,
+            data: updatedChats,
+          };
+
+          return {
+            ...wrapper,
+            agent: {
+              ...agent,
+              paginatedChats: updatedAgentPaginatedChats,
             },
           };
         });
@@ -757,7 +1214,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
       return true;
     } catch (error) {
-      console.error('Error updating agent chats locally:', error);
+      console.error('Error updating agent chat interactions locally:', error);
       return false;
     }
   };
@@ -792,7 +1249,13 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     syncAgentTrainingDeletion,
     syncAgentTrainings,
 
-    syncAgentChats
+    syncAgentChats,
+    syncAgentChatRead,
+    syncAgentChatFinishStatus,
+    syncAgentChatHumanTalkStatus,
+    syncAgentChatDeletion,
+
+    syncAgentChatInteractions,
   };
 
   return (

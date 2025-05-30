@@ -6,13 +6,18 @@ import { useAgents } from '../context/AgentsContext';
 
 export const useChatService = (token: string) => {
   const { notify } = useHttpResponse();
-  const { syncAgentChats } = useAgents();
+  const {
+    syncAgentChats,
+    syncAgentChatFinishStatus,
+    syncAgentChatRead,
+    syncAgentChatHumanTalkStatus,
+    syncAgentChatDeletion,
+
+    syncAgentChatInteractions,
+  } = useAgents();
 
   const [chatLoading, setChatLoading] = useState<boolean>(false);
-  const [totalChats, setTotalChats] = useState<number>(0);
-
   const [interactionLoading, setInteractionLoading] = useState<boolean>(false);
-  const [totalInteractions, setTotalInteractions] = useState<number>(0);
 
   const service = useMemo(
     () => new ChatService({ token, apiUrl: env.API_URL }),
@@ -23,11 +28,145 @@ export const useChatService = (token: string) => {
     async (workspaceId: string, page: number) => {
       try {
         setChatLoading(true);
-        const response = await service.findAll({ workspaceId, page, pageSize: 3 });
-        setTotalChats(response.meta.total);
-        syncAgentChats(response.data);
+        const response = await service.findAll({
+          workspaceId,
+          page,
+          pageSize: 3,
+        });
+        syncAgentChats(response);
 
-        return response.data;
+        return response;
+      } catch (error) {
+        notify(
+          error instanceof Error ? error.message : 'Unknown error',
+          'error'
+        );
+        return null;
+      } finally {
+        setChatLoading(false);
+      }
+    },
+    [service, notify]
+  );
+
+  const finishChat = useCallback(
+    async (chatId: string) => {
+      try {
+        setChatLoading(true);
+        const response = await service.finishChat(chatId);
+        syncAgentChatFinishStatus(chatId, true);
+
+        notify('Chat marked as finished!', 'info');
+        return response;
+      } catch (error) {
+        notify(
+          error instanceof Error ? error.message : 'Unknown error',
+          'error'
+        );
+        return null;
+      } finally {
+        setChatLoading(false);
+      }
+    },
+    [service, notify]
+  );
+
+  const unfinishChat = useCallback(
+    async (chatId: string) => {
+      try {
+        setChatLoading(true);
+        const response = await service.unfinishChat(chatId);
+        syncAgentChatFinishStatus(chatId, false);
+
+        notify('Chat marked as unread!', 'info');
+        return response;
+      } catch (error) {
+        notify(
+          error instanceof Error ? error.message : 'Unknown error',
+          'error'
+        );
+        return null;
+      } finally {
+        setChatLoading(false);
+      }
+    },
+    [service, notify]
+  );
+
+  const readChat = useCallback(
+    async (chatId: string) => {
+      try {
+        setChatLoading(true);
+        const response = await service.readChat(chatId);
+        syncAgentChatRead(chatId);
+
+        return response;
+      } catch (error) {
+        notify(
+          error instanceof Error ? error.message : 'Unknown error',
+          'error'
+        );
+        return null;
+      } finally {
+        setChatLoading(false);
+      }
+    },
+    [service, notify]
+  );
+
+  const startChatHumanAttendance = useCallback(
+    async (chatId: string) => {
+      try {
+        setChatLoading(true);
+        const response = await service.startHumanAttendanceChat(chatId);
+        syncAgentChatHumanTalkStatus(chatId, true);
+
+        notify('Started human attendance in chat!', 'info');
+        return response;
+      } catch (error) {
+        notify(
+          error instanceof Error ? error.message : 'Unknown error',
+          'error'
+        );
+        return null;
+      } finally {
+        setChatLoading(false);
+      }
+    },
+    [service, notify]
+  );
+
+  const stopChatHumanAttendance = useCallback(
+    async (chatId: string) => {
+      try {
+        setChatLoading(true);
+        const response = await service.stopHumanAttendanceChat(chatId);
+        syncAgentChatHumanTalkStatus(chatId, false);
+
+        notify('Stopped human attendance in chat!', 'info');
+        return response;
+      } catch (error) {
+        notify(
+          error instanceof Error ? error.message : 'Unknown error',
+          'error'
+        );
+        return null;
+      } finally {
+        setChatLoading(false);
+      }
+    },
+    [service, notify]
+  );
+
+  const deleteChat = useCallback(
+    async (chatId: string) => {
+      try {
+        setChatLoading(true);
+        const response = await service.deleteChat(chatId);
+        syncAgentChatDeletion(chatId);
+
+        notify('Chat deleted successfully!', 'success');
+        return response;
       } catch (error) {
         notify(
           error instanceof Error ? error.message : 'Unknown error',
@@ -42,14 +181,17 @@ export const useChatService = (token: string) => {
   );
 
   const fetchInteractionsWithMessagesOfChat = useCallback(
-    async (chatId: string, page: number) => {
+    async ({ chatId, page }: { chatId: string; page: number }) => {
       try {
         setInteractionLoading(true);
-        const response = await service.findInteractionsWithMessages({ chatId, page, pageSize: 3 });
-        setTotalInteractions(response.meta.total);
-        // syncAgentChats(response.data);
+        const response = await service.findInteractionsWithMessages({
+          chatId,
+          page,
+          pageSize: 1,
+        });
+        syncAgentChatInteractions(chatId, response);
 
-        return response.data;
+        return response;
       } catch (error) {
         notify(
           error instanceof Error ? error.message : 'Unknown error',
@@ -65,11 +207,15 @@ export const useChatService = (token: string) => {
 
   return {
     fetchChats,
-    totalChats,
+    finishChat,
+    unfinishChat,
+    readChat,
+    startChatHumanAttendance,
+    stopChatHumanAttendance,
+    deleteChat,
     chatLoading,
 
     fetchInteractionsWithMessagesOfChat,
-    totalInteractions,
-    interactionLoading
+    interactionLoading,
   };
 };

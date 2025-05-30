@@ -1,4 +1,11 @@
-import { useState, useEffect, useCallback, ChangeEvent, KeyboardEvent, FocusEvent } from 'react';
+import {
+  useState,
+  useEffect,
+  useCallback,
+  ChangeEvent,
+  KeyboardEvent,
+  FocusEvent,
+} from 'react';
 import { io, Socket } from 'socket.io-client';
 
 // Tipos para as mensagens
@@ -36,7 +43,8 @@ interface ClientNotification {
 }
 
 // Configura a URL do seu servidor Socket.IO
-const SOCKET_SERVER_URL: string = import.meta.env.VITE_SOCKET_SERVER_URL || 'http://localhost:3000';
+const SOCKET_SERVER_URL: string =
+  import.meta.env.VITE_SOCKET_SERVER_URL || 'http://localhost:3000';
 
 let socket: Socket;
 
@@ -50,7 +58,10 @@ export default function ChatComponent() {
   const [notifications, setNotifications] = useState<ClientNotification[]>([]);
 
   const addNotification = useCallback((text: string) => {
-    setNotifications(prev => [...prev, { text, time: new Date().toLocaleTimeString() }]);
+    setNotifications((prev) => [
+      ...prev,
+      { text, time: new Date().toLocaleTimeString() },
+    ]);
   }, []);
 
   useEffect(() => {
@@ -78,21 +89,25 @@ export default function ChatComponent() {
     });
 
     socket.on('newMessageInChat', (message: ChatMessage) => {
-      addNotification(`Nova mensagem no chat ${message.chatId} de ${message.senderId || 'desconhecido'}: ${message.content}`);
+      addNotification(
+        `Nova mensagem no chat ${message.chatId} de ${message.senderId || 'desconhecido'}: ${message.content}`
+      );
       // Adicionar a mensagem apenas se for do chat atual que o usuário está visualizando
       // Ou você pode ter uma lógica mais complexa para armazenar mensagens de múltiplos chats
       // Usando uma função de callback para setCurrentChatId para pegar o valor mais recente
-      setCurrentChatId(prevCurrentChatId => {
+      setCurrentChatId((prevCurrentChatId) => {
         if (message.chatId === prevCurrentChatId) {
-          setChatMessages(prevMessages => [...prevMessages, message]);
+          setChatMessages((prevMessages) => [...prevMessages, message]);
         }
         return prevCurrentChatId;
       });
     });
 
     socket.on('directMessage', (message: DirectMessage) => {
-      addNotification(`Mensagem direta de ${message.senderId || 'desconhecido'}: ${message.content}`);
-      setDirectMessages(prevMessages => [...prevMessages, message]);
+      addNotification(
+        `Mensagem direta de ${message.senderId || 'desconhecido'}: ${message.content}`
+      );
+      setDirectMessages((prevMessages) => [...prevMessages, message]);
     });
 
     socket.on('joinedChat', (data: ChatNotification) => {
@@ -146,7 +161,10 @@ export default function ChatComponent() {
       addNotification('Não conectado, não está em um chat ou mensagem vazia.');
       return;
     }
-    socket.emit('sendMessageToChat', { chatId: currentChatId, content: messageInput });
+    socket.emit('sendMessageToChat', {
+      chatId: currentChatId,
+      content: messageInput,
+    });
     addNotification(`Enviando para ${currentChatId}: ${messageInput}`);
     setMessageInput('');
   };
@@ -173,9 +191,18 @@ export default function ChatComponent() {
 
       <div>
         <h2>Notificações / Logs do Cliente</h2>
-        <ul style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid #ccc', padding: '10px' }}>
+        <ul
+          style={{
+            maxHeight: '150px',
+            overflowY: 'auto',
+            border: '1px solid #ccc',
+            padding: '10px',
+          }}
+        >
           {notifications.map((notif, index) => (
-            <li key={index}><em>{notif.time}:</em> {notif.text}</li>
+            <li key={index}>
+              <em>{notif.time}:</em> {notif.text}
+            </li>
           ))}
         </ul>
       </div>
@@ -191,18 +218,37 @@ export default function ChatComponent() {
           defaultValue={currentChatId} // Considerar controlar este input se precisar de mais flexibilidade
         />
         {currentChatId && (
-          <button onClick={handleLeaveChat} style={{ marginLeft: '10px' }}>Sair do Chat ({currentChatId})</button>
+          <button onClick={handleLeaveChat} style={{ marginLeft: '10px' }}>
+            Sair do Chat ({currentChatId})
+          </button>
         )}
       </div>
 
       {currentChatId && (
         <div>
           <h3>Mensagens do Chat: {currentChatId}</h3>
-          <div style={{ height: '200px', overflowY: 'scroll', border: '1px solid #eee', padding: '10px', marginBottom: '10px' }}>
-            {chatMessages.length === 0 && <p>Nenhuma mensagem neste chat ainda.</p>}
+          <div
+            style={{
+              height: '200px',
+              overflowY: 'scroll',
+              border: '1px solid #eee',
+              padding: '10px',
+              marginBottom: '10px',
+            }}
+          >
+            {chatMessages.length === 0 && (
+              <p>Nenhuma mensagem neste chat ainda.</p>
+            )}
             {chatMessages.map((msg, index) => (
               <div key={index}>
-                <strong>{msg.senderId === clientId ? 'Você' : (msg.senderId || 'Desconhecido')}:</strong> {msg.content} (<em>{new Date(msg.timestamp).toLocaleTimeString()}</em>)
+                <strong>
+                  {msg.senderId === clientId
+                    ? 'Você'
+                    : msg.senderId || 'Desconhecido'}
+                  :
+                </strong>{' '}
+                {msg.content} (
+                <em>{new Date(msg.timestamp).toLocaleTimeString()}</em>)
               </div>
             ))}
           </div>
@@ -216,17 +262,30 @@ export default function ChatComponent() {
           <button onClick={handleSendMessageToChat}>Enviar Mensagem</button>
         </div>
       )}
-      {!currentChatId && <p>Entre em um chat para enviar e receber mensagens.</p>}
+      {!currentChatId && (
+        <p>Entre em um chat para enviar e receber mensagens.</p>
+      )}
 
       <hr />
 
       <div>
         <h3>Mensagens Diretas Recebidas</h3>
-        <div style={{ height: '150px', overflowY: 'scroll', border: '1px solid #eee', padding: '10px' }}>
-          {directMessages.length === 0 && <p>Nenhuma mensagem direta recebida.</p>}
+        <div
+          style={{
+            height: '150px',
+            overflowY: 'scroll',
+            border: '1px solid #eee',
+            padding: '10px',
+          }}
+        >
+          {directMessages.length === 0 && (
+            <p>Nenhuma mensagem direta recebida.</p>
+          )}
           {directMessages.map((msg, index) => (
             <div key={index}>
-              <strong>De: {msg.senderId || 'Desconhecido'}:</strong> {msg.content} (<em>{new Date(msg.timestamp).toLocaleTimeString()}</em>)
+              <strong>De: {msg.senderId || 'Desconhecido'}:</strong>{' '}
+              {msg.content} (
+              <em>{new Date(msg.timestamp).toLocaleTimeString()}</em>)
             </div>
           ))}
         </div>

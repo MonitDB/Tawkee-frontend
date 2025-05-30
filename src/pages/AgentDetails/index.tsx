@@ -93,7 +93,8 @@ export default function AgentDetails() {
 
   const [currentTab, setCurrentTab] = useState(0);
   const [agentData, setAgentData] = useState<Agent | null>(null);
-  const [agentSettingsData, setAgentSettingsData] = useState<AgentSettings | null>(null);
+  const [agentSettingsData, setAgentSettingsData] =
+    useState<AgentSettings | null>(null);
 
   const [QRCode, setQRCode] = useState<string | undefined>(undefined);
 

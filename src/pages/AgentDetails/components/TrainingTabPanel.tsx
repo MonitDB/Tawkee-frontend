@@ -1,4 +1,10 @@
-import { useState, useEffect, SyntheticEvent, MouseEvent, ChangeEvent } from 'react';
+import {
+  useState,
+  useEffect,
+  SyntheticEvent,
+  MouseEvent,
+  ChangeEvent,
+} from 'react';
 import {
   Box,
   Typography,
@@ -18,7 +24,7 @@ import {
   AccordionDetails,
   LinearProgress,
   useColorScheme,
-  Pagination
+  Pagination,
 } from '@mui/material';
 import {
   MoreVert as MoreVertIcon,
@@ -56,7 +62,9 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
   const { fetchTrainings, createTraining, deleteTraining, loading } =
     useTrainingService(token as string);
 
-  const [page, setPage] = useState<number>(agentData?.paginatedTrainings?.meta?.page || 1);
+  const [page, setPage] = useState<number>(
+    agentData?.paginatedTrainings?.meta?.page || 1
+  );
 
   const [searchQuery, setSearchQuery] = useState('');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -67,7 +75,8 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
     'all' | 'TEXT' | 'WEBSITE' | 'DOCUMENT'
   >('all');
 
-  const [trainingData, setTrainingData] = useState<PaginatedTrainingsResponseDto>(defaultPaginatedResponse);
+  const [trainingData, setTrainingData] =
+    useState<PaginatedTrainingsResponseDto>(defaultPaginatedResponse);
 
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -76,28 +85,27 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
       setExpanded(isExpanded ? panel : false);
     };
 
-useEffect(() => {
-  const fetchTrainingData = async (agentId: string) => {
-    const paginatedTrainings = await fetchTrainings(agentId, page);
-    setTrainingData(paginatedTrainings as PaginatedTrainingsResponseDto);
-  };
+  useEffect(() => {
+    const fetchTrainingData = async (agentId: string) => {
+      const paginatedTrainings = await fetchTrainings(agentId, page);
+      setTrainingData(paginatedTrainings as PaginatedTrainingsResponseDto);
+    };
 
-  if (!agentData) return;
+    if (!agentData) return;
 
-  const paginated = agentData.paginatedTrainings;
+    const paginated = agentData.paginatedTrainings;
 
-  // If data exists and is for the right page, use it
-  if (paginated && paginated.meta.page === page) {
-    if (trainingData !== paginated) {
-      setTrainingData(paginated);
+    // If data exists and is for the right page, use it
+    if (paginated && paginated.meta.page === page) {
+      if (trainingData !== paginated) {
+        setTrainingData(paginated);
+      }
+    } else {
+      // Fetch from API
+      console.log({ paginatedPage: paginated?.meta?.page, page });
+      fetchTrainingData(agentData.id);
     }
-  } else {
-    // Fetch from API
-    console.log({paginatedPage: paginated?.meta?.page, page})
-    fetchTrainingData(agentData.id);
-  }
-}, [agentData?.paginatedTrainings?.data, page]);
-
+  }, [agentData?.paginatedTrainings?.data, page]);
 
   const handleMenuClick = (
     event: MouseEvent<HTMLElement>,
@@ -241,7 +249,8 @@ useEffect(() => {
     all: trainingData.data.length,
     TEXT: trainingData.data.filter((item) => item.type === 'TEXT').length,
     WEBSITE: trainingData.data.filter((item) => item.type === 'WEBSITE').length,
-    DOCUMENT: trainingData.data.filter((item) => item.type === 'DOCUMENT').length,
+    DOCUMENT: trainingData.data.filter((item) => item.type === 'DOCUMENT')
+      .length,
   };
 
   if (!agentData) return null;
@@ -293,7 +302,7 @@ useEffect(() => {
             '& .MuiOutlinedInput-root': {
               borderRadius: 2,
               color: resolvedMode == 'dark' ? 'white' : 'dark',
-              fontWeight: 800
+              fontWeight: 800,
             },
           }}
         />
@@ -527,10 +536,17 @@ useEffect(() => {
               </AccordionDetails>
             </Accordion>
           ))}
-
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 4 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mt: 4,
+            }}
+          >
             <Typography sx={{ mr: 2 }}>
-              Total: {filteredData.length} training material{filteredData.length > 1 ? 's' : ''}
+              Total: {filteredData.length} training material
+              {filteredData.length > 1 ? 's' : ''}
             </Typography>
             <Pagination
               count={trainingData.meta.totalPages}
@@ -539,7 +555,6 @@ useEffect(() => {
               color="primary"
             />
           </Box>
-
           <LoadingBackdrop open={loading} />
         </Stack>
       )}

@@ -60,7 +60,7 @@ export const defaultPaginatedResponse: PaginatedTrainingsResponseDto = {
     page: 0,
     pageSize: 0,
     total: 0,
-    totalPages: 0
+    totalPages: 0,
   },
 };
 

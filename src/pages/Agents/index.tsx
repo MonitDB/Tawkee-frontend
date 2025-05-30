@@ -26,7 +26,6 @@ import {
   Card,
   CardContent,
   Tooltip,
-  useColorScheme,
   Pagination,
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
@@ -77,12 +76,7 @@ export default function Agents() {
   const navigate = useNavigate();
 
   const [tab, setTab] = useState(0);
-  const {
-    deleteAgent,
-    paginatedAgents,
-    setPage,
-    loading
-  } = useAgents();
+  const { deleteAgent, paginatedAgents, setPage, loading } = useAgents();
 
   const { agents, meta } = paginatedAgents;
 
@@ -101,7 +95,6 @@ export default function Agents() {
   };
 
   const [open, setOpen] = useState(false);
-
 
   const handleOpenModal = () => {
     setOpen(true);
@@ -135,11 +128,6 @@ export default function Agents() {
       </Tooltip>
     );
   }
-
-  // Add these inside your Agents component
-  const { mode, systemMode } = useColorScheme();
-
-  const resolvedMode = (systemMode || mode) as 'light' | 'dark';
 
   return (
     <Card variant="outlined" sx={{ margin: '0 auto', width: '100%' }}>
@@ -201,15 +189,13 @@ export default function Agents() {
             {filteredAgents.map(({ agent }) => (
               <Card
                 key={agent.id}
+                variant="outlined"
                 sx={{
                   margin: `${theme.spacing(2)} 0`,
                   '&:hover': {
-                    backgroundColor:
-                      resolvedMode == 'dark'
-                        ? theme.palette.action.hover
-                        : theme.palette.action.focus,
+                    backgroundColor: 'action.hover',
                   },
-                  cursor: 'pointer'
+                  cursor: 'pointer',
                 }}
                 onClick={() => navigate(`/agents/${agent.id}`)}
               >
@@ -322,7 +308,14 @@ export default function Agents() {
               No agent found.
             </Typography>
           ) : (
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 4 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mt: 4,
+              }}
+            >
               <Typography sx={{ mr: 2 }}>
                 Total: {filteredAgents.length} agents
               </Typography>

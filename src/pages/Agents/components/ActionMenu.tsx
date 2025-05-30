@@ -50,12 +50,18 @@ export default function ActionMenu({
     setAnchorEl(null);
   };
 
-  const handleMenuItemClick = (event: MouseEvent<HTMLLIElement>, action: () => void) => {
+  const handleMenuItemClick = (
+    event: MouseEvent<HTMLLIElement>,
+    action: () => void
+  ) => {
     handleClose(event);
     action();
   };
 
-  const handleToggleActive = (event: MouseEvent<HTMLLIElement>, agent: Agent) => {
+  const handleToggleActive = (
+    event: MouseEvent<HTMLLIElement>,
+    agent: Agent
+  ) => {
     agent.isActive ? deactivateAgent(agent.id) : activateAgent(agent.id);
     handleClose(event);
   };
@@ -139,7 +145,9 @@ export default function ActionMenu({
         </MenuItem>
         <Divider />
         <MenuItem
-          onClick={(event) => handleMenuItemClick(event, () => handleDelete(agent.id))}
+          onClick={(event) =>
+            handleMenuItemClick(event, () => handleDelete(agent.id))
+          }
         >
           <ListItemIcon>
             <DeleteIcon

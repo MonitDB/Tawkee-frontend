@@ -39,7 +39,7 @@ export default function MenuContent() {
 
   const routeKeyMap: Record<number, string> = {
     0: '/',
-    1: '/chats'
+    1: '/chats',
   };
 
   return (

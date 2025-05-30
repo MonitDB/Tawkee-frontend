@@ -6,8 +6,11 @@ import { useAgents } from '../context/AgentsContext';
 
 export const useChannelService = (token: string) => {
   const { notify } = useHttpResponse();
-  const { syncAgentChannelCreation, syncAgentChannelDeletion, syncAgentChannelConnectionUpdate } =
-    useAgents();
+  const {
+    syncAgentChannelCreation,
+    syncAgentChannelDeletion,
+    syncAgentChannelConnectionUpdate,
+  } = useAgents();
 
   const [loading, setLoading] = useState(false);
 

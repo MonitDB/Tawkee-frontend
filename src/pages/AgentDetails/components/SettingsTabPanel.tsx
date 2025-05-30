@@ -1,5 +1,9 @@
 import { useState, ChangeEvent, Fragment, ReactNode } from 'react';
-import { AgentSettings, AIModel, useAgents } from '../../../context/AgentsContext';
+import {
+  AgentSettings,
+  AIModel,
+  useAgents,
+} from '../../../context/AgentsContext';
 import {
   Box,
   Typography,
@@ -14,7 +18,7 @@ import {
   Tooltip,
   Grid,
   useTheme,
-  useColorScheme
+  useColorScheme,
 } from '@mui/material';
 import {
   // PersonAdd,
@@ -23,7 +27,7 @@ import {
   // SplitscreenOutlined,
   // Memory,
   Schedule,
-  SmartToy
+  SmartToy,
 } from '@mui/icons-material';
 
 const modelDescriptions: Record<AIModel, string> = {
@@ -32,7 +36,8 @@ const modelDescriptions: Record<AIModel, string> = {
   [AIModel.GPT_4_O_MINI]: 'GPT-4o-mini: Lightweight version of GPT-4o.',
   [AIModel.GPT_4_1_MINI]: 'GPT-4.1-mini: Efficient GPT-4.1 variant.',
   [AIModel.GPT_4_1]: 'GPT-4.1: Enhanced version with better reasoning.',
-  [AIModel.DEEPSEEK_CHAT]: 'DeepSeek-Chat: Open-source large language model optimized for conversational tasks.'
+  [AIModel.DEEPSEEK_CHAT]:
+    'DeepSeek-Chat: Open-source large language model optimized for conversational tasks.',
 };
 
 const timezones = [
@@ -60,13 +65,24 @@ const timezones = [
   '(GMT+09:00) Tokyo',
   '(GMT+10:00) Sydney',
   '(GMT+11:00) Noumea',
-  '(GMT+12:00) Auckland'
+  '(GMT+12:00) Auckland',
 ];
 
 const settingsOptions = [
   // { key: 'enabledHumanTransfer', label: 'Request Human Assistance', description: 'Enable this so the agent can transfer the interaction to a human team.', icon: <PersonAdd /> },
-  { key: 'enabledEmoji', label: 'Use Emojis in Responses', description: 'Defines whether the agent can use emojis in its responses.', icon: <EmojiEmotions /> },
-  { key: 'limitSubjects', label: 'Restrict Allowed Topics', description: 'Check this option to prevent the agent from discussing unrelated topics.', icon: <FilterList /> },
+  {
+    key: 'enabledEmoji',
+    label: 'Use Emojis in Responses',
+    description: 'Defines whether the agent can use emojis in its responses.',
+    icon: <EmojiEmotions />,
+  },
+  {
+    key: 'limitSubjects',
+    label: 'Restrict Allowed Topics',
+    description:
+      'Check this option to prevent the agent from discussing unrelated topics.',
+    icon: <FilterList />,
+  },
   // { key: 'splitMessages', label: 'Split Response into Parts', description: 'If the message becomes too long, the agent can split it into multiple messages.', icon: <SplitscreenOutlined /> },
   // { key: 'enabledReminder', label: 'Allow Setting Reminders', description: 'Enable this so the agent can set reminders for the user.', icon: <Memory /> },
 ];
@@ -76,8 +92,14 @@ interface SettingsTabPanelProps {
   agentSettingsData: AgentSettings | null;
 }
 
-export default function SettingsTabPanel({ agentId, agentSettingsData }: SettingsTabPanelProps) {
-  console.log('SettingsTabPanel received agentSettingsData:', agentSettingsData);
+export default function SettingsTabPanel({
+  agentId,
+  agentSettingsData,
+}: SettingsTabPanelProps) {
+  console.log(
+    'SettingsTabPanel received agentSettingsData:',
+    agentSettingsData
+  );
 
   const theme = useTheme();
 
@@ -90,7 +112,7 @@ export default function SettingsTabPanel({ agentId, agentSettingsData }: Setting
   const getInitialState = (settingsData: any) => {
     // Handle nested structure: {updatedSettingsDto: {...}} or direct structure
     const actualSettings = settingsData?.updatedSettingsDto || settingsData;
-    
+
     return {
       enabledHumanTransfer: actualSettings?.enabledHumanTransfer ?? false,
       enabledEmoji: actualSettings?.enabledEmoji ?? false,
@@ -98,25 +120,29 @@ export default function SettingsTabPanel({ agentId, agentSettingsData }: Setting
       splitMessages: actualSettings?.splitMessages ?? false,
       enabledReminder: actualSettings?.enabledReminder ?? false,
       timezone: actualSettings?.timezone ?? '(GMT+00:00) London',
-      preferredModel: actualSettings?.preferredModel ?? AIModel.GPT_4_1
+      preferredModel: actualSettings?.preferredModel ?? AIModel.GPT_4_1,
     };
   };
 
-  const [formState, setFormState] = useState(() => getInitialState(agentSettingsData));
+  const [formState, setFormState] = useState(() =>
+    getInitialState(agentSettingsData)
+  );
 
-  const handleToggleChange = (key: string) => (event: ChangeEvent<HTMLInputElement>) => {
-    setFormState(prev => ({
-      ...prev,
-      [key]: event.target.checked,
-    }));
-  };
+  const handleToggleChange =
+    (key: string) => (event: ChangeEvent<HTMLInputElement>) => {
+      setFormState((prev) => ({
+        ...prev,
+        [key]: event.target.checked,
+      }));
+    };
 
-  const handleSelectChange = (key: keyof typeof formState) => (event: SelectChangeEvent<string>) => {
-    setFormState(prev => ({
-      ...prev,
-      [key]: event.target.value,
-    }));
-  };
+  const handleSelectChange =
+    (key: keyof typeof formState) => (event: SelectChangeEvent<string>) => {
+      setFormState((prev) => ({
+        ...prev,
+        [key]: event.target.value,
+      }));
+    };
 
   const handleSave = () => {
     updateAgentSettings(agentId, formState);
@@ -140,35 +166,71 @@ export default function SettingsTabPanel({ agentId, agentSettingsData }: Setting
           <Stack spacing={3} flexGrow={1}>
             {settingsOptions.map((option, index) => (
               <Fragment key={option.key}>
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', py: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', flex: 1 }}>
-                    <Box sx={{ mr: 2, mt: 0.5, p: 0.5, borderRadius: 1, bgcolor: 'rgba(138, 43, 226, 0.2)', color: '#8a2be2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    py: 1,
+                  }}
+                >
+                  <Box
+                    sx={{ display: 'flex', alignItems: 'flex-start', flex: 1 }}
+                  >
+                    <Box
+                      sx={{
+                        mr: 2,
+                        mt: 0.5,
+                        p: 0.5,
+                        borderRadius: 1,
+                        bgcolor: 'rgba(138, 43, 226, 0.2)',
+                        color: '#8a2be2',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
                       {option.icon}
                     </Box>
                     <Box sx={{ flex: 1 }}>
-                      <Typography variant="body1" sx={{ fontWeight: 500, mb: 0.5 }}>
+                      <Typography
+                        variant="body1"
+                        sx={{ fontWeight: 500, mb: 0.5 }}
+                      >
                         {option.label}
                       </Typography>
-                      <Typography variant="body2" sx={{ lineHeight: 1.4, color: 'text.secondary' }}>
+                      <Typography
+                        variant="body2"
+                        sx={{ lineHeight: 1.4, color: 'text.secondary' }}
+                      >
                         {option.description}
                       </Typography>
                     </Box>
                   </Box>
                   <Switch
-                    checked={formState[option.key as keyof typeof formState] as boolean}
+                    checked={
+                      formState[option.key as keyof typeof formState] as boolean
+                    }
                     onChange={handleToggleChange(option.key)}
                     sx={{
                       ml: 2,
-                      '& .MuiSwitch-switchBase.Mui-checked': { color: '#8a2be2' },
-                      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#8a2be2' },
-                      '& .MuiSwitch-switchBase': { color: resolvedMode == 'dark'
-                        ? theme.palette.grey[100]
-                        : theme.palette.grey[900] 
-                      }
+                      '& .MuiSwitch-switchBase.Mui-checked': {
+                        color: '#8a2be2',
+                      },
+                      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track':
+                        { backgroundColor: '#8a2be2' },
+                      '& .MuiSwitch-switchBase': {
+                        color:
+                          resolvedMode == 'dark'
+                            ? theme.palette.grey[100]
+                            : theme.palette.grey[900],
+                      },
                     }}
                   />
                 </Box>
-                {index < settingsOptions.length - 1 && <Divider sx={{ bgcolor: '#333', opacity: 0.3 }} />}
+                {index < settingsOptions.length - 1 && (
+                  <Divider sx={{ bgcolor: '#333', opacity: 0.3 }} />
+                )}
               </Fragment>
             ))}
 
@@ -213,8 +275,6 @@ export default function SettingsTabPanel({ agentId, agentSettingsData }: Setting
           </Box>
         </Grid>
       </Grid>
-
-
     </Box>
   );
 }
@@ -229,29 +289,67 @@ interface SelectFieldProps {
   onChange: (event: SelectChangeEvent<string>) => void;
 }
 
-function SelectField({ icon, label, description, value, options, optionDescriptions, onChange }: SelectFieldProps) {
+function SelectField({
+  icon,
+  label,
+  description,
+  value,
+  options,
+  optionDescriptions,
+  onChange,
+}: SelectFieldProps) {
   return (
-    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', py: 1 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+        py: 1,
+      }}
+    >
       <Box sx={{ display: 'flex', alignItems: 'flex-start', flex: 1 }}>
-        <Box sx={{ mr: 2, mt: 0.5, p: 0.5, borderRadius: 1, bgcolor: 'rgba(138, 43, 226, 0.2)', color: '#8a2be2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box
+          sx={{
+            mr: 2,
+            mt: 0.5,
+            p: 0.5,
+            borderRadius: 1,
+            bgcolor: 'rgba(138, 43, 226, 0.2)',
+            color: '#8a2be2',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
           {icon}
         </Box>
         <Box sx={{ flex: 1 }}>
           <Typography variant="body1" sx={{ fontWeight: 500, mb: 0.5 }}>
             {label}
           </Typography>
-          <Typography variant="body2" sx={{ lineHeight: 1.4, color: 'text.secondary' }}>
+          <Typography
+            variant="body2"
+            sx={{ lineHeight: 1.4, color: 'text.secondary' }}
+          >
             {description}
           </Typography>
         </Box>
       </Box>
-      <FormControl size="small" sx={{
-        minWidth: 200, ml: 2,
-        '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#404040' }, '&:hover fieldset': { borderColor: '#8a2be2' }, '&.Mui-focused fieldset': { borderColor: '#8a2be2' } },
-        '& .MuiSelect-icon': { color: '#a0a0a0' }
-      }}>
+      <FormControl
+        size="small"
+        sx={{
+          minWidth: 200,
+          ml: 2,
+          '& .MuiOutlinedInput-root': {
+            '& fieldset': { borderColor: '#404040' },
+            '&:hover fieldset': { borderColor: '#8a2be2' },
+            '&.Mui-focused fieldset': { borderColor: '#8a2be2' },
+          },
+          '& .MuiSelect-icon': { color: '#a0a0a0' },
+        }}
+      >
         <Select value={value} onChange={onChange} displayEmpty>
-          {options.map(option => (
+          {options.map((option) => (
             <MenuItem key={option} value={option}>
               <Tooltip title={optionDescriptions?.[option]}>
                 <Typography>{option}</Typography>

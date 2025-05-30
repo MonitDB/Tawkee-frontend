@@ -10,7 +10,11 @@ import { useAgents } from '../context/AgentsContext';
 
 export const useTrainingService = (token: string) => {
   const { notify } = useHttpResponse();
-  const { syncAgentTrainings, syncAgentTrainingCreation, syncAgentTrainingDeletion } = useAgents();
+  const {
+    syncAgentTrainings,
+    syncAgentTrainingCreation,
+    syncAgentTrainingDeletion,
+  } = useAgents();
 
   const [loading, setLoading] = useState(false);
 
@@ -25,7 +29,7 @@ export const useTrainingService = (token: string) => {
         setLoading(true);
         const response = await service.findAll(agentId, {
           page,
-          pageSize: 10
+          pageSize: 10,
         });
         syncAgentTrainings(agentId, response);
 
@@ -97,6 +101,6 @@ export const useTrainingService = (token: string) => {
     fetchTrainings,
     createTraining,
     deleteTraining,
-    loading
+    loading,
   };
 };

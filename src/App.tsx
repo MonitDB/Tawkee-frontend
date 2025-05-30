@@ -11,7 +11,7 @@ export default function App() {
       <AuthProvider>
         <AgentsProvider>
           <SocketProvider>
-              <Routes />
+            <Routes />
           </SocketProvider>
         </AgentsProvider>
       </AuthProvider>

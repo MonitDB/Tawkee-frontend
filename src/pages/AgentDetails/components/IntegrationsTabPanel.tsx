@@ -43,8 +43,8 @@ export default function IntegrationsTabPanel({
 
   if (!agentData) return null;
 
-  const disconnectedChannel = useMemo(() => 
-    agentData.channels?.find((channel: Channel) => !channel.connected),
+  const disconnectedChannel = useMemo(
+    () => agentData.channels?.find((channel: Channel) => !channel.connected),
     [agentData.channels]
   );
 

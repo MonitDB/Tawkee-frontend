@@ -1,10 +1,25 @@
-import { SyntheticEvent, useEffect, useRef, useState, useDeferredValue, useMemo } from 'react';
+import {
+  SyntheticEvent,
+  useEffect,
+  useRef,
+  useState,
+  useDeferredValue,
+  useMemo,
+  MouseEvent,
+  Dispatch,
+  SetStateAction,
+} from 'react';
 
 import { useAuth } from '../../context/AuthContext';
 
 import { useChatService } from '../../hooks/useChatService';
 
-import { ChatDto, InteractionStatus, InteractionWithMessagesDto } from '../../services/chatService';
+import {
+  ChatDto,
+  InteractionStatus,
+  InteractionWithMessagesDto,
+  PaginatedInteractionsWithMessagesResponseDto,
+} from '../../services/chatService';
 
 import {
   Box,
@@ -30,6 +45,11 @@ import {
   Stack,
   Button,
   LinearProgress,
+  useMediaQuery,
+  Tooltip,
+  Menu,
+  MenuItem,
+  ListItemIcon,
 } from '@mui/material';
 import {
   Chat as ChatIcon,
@@ -42,8 +62,9 @@ import {
   CheckCircle as CheckCircleIcon,
   Schedule as ScheduleIcon,
   Error as ErrorIcon,
+  Delete as DeleteIcon,
 } from '@mui/icons-material';
-import { useAgents } from '../../context/AgentsContext';
+import { Agent, useAgents } from '../../context/AgentsContext';
 
 const InteractionDivider = styled(Divider)(({ theme }) => ({
   margin: theme.spacing(2, 0),
@@ -52,178 +73,13 @@ const InteractionDivider = styled(Divider)(({ theme }) => ({
   },
 }));
 
-// Mock data
-// const mockChats: ChatDto[] = [
-//   {
-//     id: '1',
-//     title: 'Customer Support',
-//     name: 'João Silva',
-//     contextId: 'ctx-1',
-//     userName: 'João Silva',
-//     userPicture: null,
-//     whatsappPhone: '+55 11 99999-9999',
-//     humanTalk: false,
-//     read: true,
-//     finished: false,
-//     unReadCount: 2,
-//     workspaceId: 'ws-1',
-//     agentId: 'agent-1',
-//     createdAt: '2024-05-28T10:00:00Z',
-//     updatedAt: '2024-05-28T15:30:00Z',
-//     agent: {
-//       id: 'agent-1',
-//       name: 'Support Agent',
-//       avatar: null,
-//     },
-//     interactions: [
-//       {
-//         id: 'int-1',
-//         status: 'RESOLVED',
-//         startAt: '2024-05-28T10:00:00Z',
-//         resolvedAt: '2024-05-28T10:45:00Z',
-//         messages: [
-//           {
-//             id: 'msg-1',
-//             text: 'Hello, I need help with my order',
-//             role: 'user',
-//             userName: 'João Silva',
-//             createdAt: '2024-05-28T10:00:00Z',
-//           },
-//           {
-//             id: 'msg-2',
-//             text: 'Hi! I\'d be happy to help you with your order. Could you please provide your order number?',
-//             role: 'assistant',
-//             createdAt: '2024-05-28T10:01:00Z',
-//           },
-//           {
-//             id: 'msg-3',
-//             text: 'It\'s #12345',
-//             role: 'user',
-//             userName: 'João Silva',
-//             createdAt: '2024-05-28T10:02:00Z',
-//           },
-//           {
-//             id: 'msg-4',
-//             text: 'Perfect! I can see your order here. It was shipped yesterday and should arrive tomorrow. Here\'s your tracking number: ABC123456789',
-//             role: 'assistant',
-//             createdAt: '2024-05-28T10:03:00Z',
-//           },
-//         ]
-//       },
-//       {
-//         id: 'int-2',
-//         status: 'RUNNING',
-//         startAt: '2024-05-28T15:00:00Z',
-//         messages: [
-//           {
-//             id: 'msg-5',
-//             text: 'Hi again, I have another question',
-//             role: 'user',
-//             userName: 'João Silva',
-//             createdAt: '2024-05-28T15:00:00Z',
-//           },
-//           {
-//             id: 'msg-6',
-//             text: 'Hello again! I\'m here to help. What can I assist you with?',
-//             role: 'assistant',
-//             createdAt: '2024-05-28T15:01:00Z',
-//           },
-//         ]
-//       }
-//     ]
-//   },
-//   {
-//     id: '2',
-//     title: 'Product Inquiry',
-//     name: 'Maria Santos',
-//     contextId: 'ctx-2',
-//     userName: 'Maria Santos',
-//     userPicture: null,
-//     whatsappPhone: '+55 11 88888-8888',
-//     humanTalk: true,
-//     read: false,
-//     finished: true,
-//     unReadCount: 0,
-//     workspaceId: 'ws-1',
-//     agentId: 'agent-2',
-//     createdAt: '2024-05-28T09:00:00Z',
-//     updatedAt: '2024-05-28T14:00:00Z',
-//     agent: {
-//       id: 'agent-2',
-//       name: 'Sales Agent',
-//       avatar: null,
-//     },
-//     interactions: [
-//       {
-//         id: 'int-3',
-//         status: 'TRANSFERRED',
-//         startAt: '2024-05-28T09:00:00Z',
-//         transferAt: '2024-05-28T09:30:00Z',
-//         messages: [
-//           {
-//             id: 'msg-7',
-//             text: 'I\'m interested in your premium package',
-//             role: 'user',
-//             userName: 'Maria Santos',
-//             createdAt: '2024-05-28T09:00:00Z',
-//           },
-//           {
-//             id: 'msg-8',
-//             text: 'Great! Let me connect you with a human specialist who can provide detailed information about our premium package.',
-//             role: 'assistant',
-//             createdAt: '2024-05-28T09:01:00Z',
-//           },
-//         ]
-//       }
-//     ]
-//   },
-//   {
-//     id: '3',
-//     title: 'Technical Issue',
-//     name: 'Pedro Costa',
-//     contextId: 'ctx-3',
-//     userName: 'Pedro Costa',
-//     userPicture: null,
-//     whatsappPhone: '+55 11 77777-7777',
-//     humanTalk: false,
-//     read: true,
-//     finished: false,
-//     unReadCount: 1,
-//     workspaceId: 'ws-1',
-//     agentId: 'agent-1',
-//     createdAt: '2024-05-28T08:00:00Z',
-//     updatedAt: '2024-05-28T16:00:00Z',
-//     agent: {
-//       id: 'agent-1',
-//       name: 'Support Agent',
-//       avatar: null,
-//     },
-//     interactions: [
-//       {
-//         id: 'int-4',
-//         status: 'RUNNING',
-//         startAt: '2024-05-28T16:00:00Z',
-//         messages: [
-//           {
-//             id: 'msg-9',
-//             text: 'The app is crashing when I try to login',
-//             role: 'user',
-//             userName: 'Pedro Costa',
-//             createdAt: '2024-05-28T16:00:00Z',
-//           },
-//         ]
-//       }
-//     ]
-//   },
-// ];
-
 const getInteractionStatusIcon = (status: InteractionStatus) => {
   switch (status) {
     case 'RESOLVED':
       return <CheckCircleIcon sx={{ fontSize: 16, color: 'success.main' }} />;
     case 'RUNNING':
       return <ScheduleIcon sx={{ fontSize: 16, color: 'warning.main' }} />;
-    case 'TRANSFERRED':
+    case 'WAITING':
       return <ErrorIcon sx={{ fontSize: 16, color: 'info.main' }} />;
     default:
       return <ScheduleIcon sx={{ fontSize: 16, color: 'grey.500' }} />;
@@ -236,7 +92,7 @@ const getInteractionStatusColor = (status: InteractionStatus) => {
       return 'success';
     case 'RUNNING':
       return 'warning';
-    case 'TRANSFERRED':
+    case 'WAITING':
       return 'info';
     default:
       return 'default';
@@ -248,352 +104,152 @@ const formatDate = (date: number) => {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   }).format(new Date(date));
 };
 
 interface ChatDetailsProps {
   selectedChat: ChatDto;
-  totalInteractions: number,
-  interactionLoading: boolean
+  setSelectedChat: Dispatch<SetStateAction<ChatDto | null>>;
+  totalInteractions: number;
+  interactionLoading: boolean;
+  onScrollToTop?: () => void;
 }
 
-function ChatDetails({selectedChat, totalInteractions, interactionLoading}: ChatDetailsProps) {
+interface ChatMenuProps {
+  chat: ChatDto;
+  handleMarkChatResolution: (chatId: string, chatFinished: boolean) => void;
+  handleDelete: (chatId: string) => void;
+}
+
+function ChatMenu({
+  chat,
+  handleMarkChatResolution,
+  handleDelete,
+}: ChatMenuProps) {
   const theme = useTheme();
-  
-  const [newMessage, setNewMessage] = useState('');
-  const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      // This would normally send the message
-      setNewMessage('');
-    }
+
+  const [anchorEl, setAnchorEl] = useState<EventTarget | null>(null);
+
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
   };
 
-  const [visibleInteraction, setVisibleInteraction] = useState<number>(0);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const interactionRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
-  
-  // Format date and time separately
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const messageDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    
-    const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    if (messageDate.getTime() === today.getTime()) {
-      return { date: 'Today', time: timeString };
-    } else if (messageDate.getTime() === today.getTime() - 86400000) {
-      return { date: 'Yesterday', time: timeString };
-    } else {
-      return { 
-        date: date.toLocaleDateString([], { 
-          weekday: 'short', 
-          month: 'short', 
-          day: 'numeric',
-          year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
-        }), 
-        time: timeString 
-      };
-    }
+  const handleClose = (event: MouseEvent<HTMLLIElement>) => {
+    event?.stopPropagation();
+    setAnchorEl(null);
   };
 
-  // Track visible interaction while scrolling
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!messagesContainerRef.current) return;
-      
-      const container = messagesContainerRef.current;
-      const containerTop = container.scrollTop;
-      const containerHeight = container.clientHeight;
-      const viewportTop = containerTop;
-      const viewportBottom = containerTop + containerHeight;
-      
-      let currentInteractionIndex = 0;
-      
-      // Find the interaction that is most visible in the viewport
-      Object.entries(interactionRefs.current).forEach(([index, element]) => {
-        if (element) {
-          const elementTop = element.offsetTop - container.offsetTop;
-          const elementBottom = elementTop + element.offsetHeight;
-          
-          // Check if this interaction is visible in the viewport
-          if (elementTop <= viewportBottom && elementBottom >= viewportTop) {
-            // Calculate how much of this interaction is visible
-            const visibleTop = Math.max(elementTop, viewportTop);
-            const visibleBottom = Math.min(elementBottom, viewportBottom);
-            const visibleHeight = visibleBottom - visibleTop;
-            
-            // If more than 50% of the interaction is visible, or if the interaction
-            // takes up more than 50% of the viewport, consider it the current one
-            const elementHeight = element.offsetHeight;
-            const visibilityRatio = visibleHeight / elementHeight;
-            const viewportFillRatio = visibleHeight / containerHeight;
-            
-            if (visibilityRatio > 0.5 || viewportFillRatio > 0.5) {
-              currentInteractionIndex = parseInt(index);
-            }
-          }
-        }
-      });
-      
-      setVisibleInteraction(currentInteractionIndex);
-    };
-    
-    const container = messagesContainerRef.current;
-    if (container) {
-      container.addEventListener('scroll', handleScroll);
-      handleScroll(); // Initial call
-      
-      return () => container.removeEventListener('scroll', handleScroll);
-    }
-  }, [selectedChat.interactions]);
-
-  // Get current date for floating indicator
-  const getCurrentDate = () => {
-    if (!selectedChat.interactions || selectedChat.interactions.length === 0) return '';
-    
-    const currentInteraction = selectedChat.interactions[visibleInteraction];
-    if (!currentInteraction || !currentInteraction.messages || currentInteraction.messages.length === 0) return '';
-    
-    // Get the first message's date from the current interaction
-    const firstMessage = currentInteraction.messages[0];
-    const { date } = formatDateTime(firstMessage.createdAt);
-    return date;
+  const handleMenuItemClick = (
+    event: MouseEvent<HTMLLIElement>,
+    action: () => void
+  ) => {
+    handleClose(event);
+    action();
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-      {/* Chat Header */}
-      <Paper sx={{ p: 2, borderRadius: 0, borderBottom: 1, borderColor: 'divider' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Avatar src={selectedChat.userPicture || undefined} alt={selectedChat.userName}>
-            {selectedChat.userName?.[0] || <PersonIcon />}
-          </Avatar>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h6">{selectedChat.userName || selectedChat.title}</Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <PhoneIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
-              <Typography variant="body2" color="text.secondary">
-                {selectedChat.whatsappPhone}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                • Attended by Agent {selectedChat?.interactions?.[0]?.agentName}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                • {totalInteractions} interaction{totalInteractions > 1 ? 's' : ''}
-              </Typography>
-            </Box>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            {selectedChat.humanTalk && (
-              <Chip size="small" label="Human Talk" color="warning" />
-            )}
-            {selectedChat.finished && (
-              <Chip size="small" label="Finished" color="success" />
-            )}
-          </Box>
-        </Box>
-      </Paper>
-
-      {/* Floating Date and Interaction Indicator */}
-      {selectedChat.interactions && selectedChat.interactions.length > 0 && (
-        <Paper
-          sx={{
-            position: 'absolute',
-            top: 140,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 1000,
-            px: 2,
-            py: 1.5,
-            borderRadius: 2,
-            boxShadow: 2,
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(8px)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 1,
-          }}
+    <>
+      <Tooltip title="Actions">
+        <IconButton
+          aria-label="more"
+          aria-controls={open ? 'chat-menu' : undefined}
+          aria-haspopup="true"
+          aria-expanded={open ? 'true' : undefined}
+          onClick={handleClick}
+          size="small"
         >
-          {/* Date */}
-          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, fontSize: '0.875rem' }}>
-            {getCurrentDate()}
-          </Typography>
-          
-          {/* Interaction Chip */}
-          {selectedChat.interactions.length > 1 && (
-            <Chip
-              size="small"
-              icon={getInteractionStatusIcon(selectedChat.interactions[visibleInteraction]?.status)}
-              label={`Interaction ${visibleInteraction + 1} - ${selectedChat.interactions[visibleInteraction]?.status}`}
-              color={getInteractionStatusColor(selectedChat.interactions[visibleInteraction]?.status)}
-              sx={{ backgroundColor: 'background.paper' }}
-            />
-          )}
-        </Paper>
-      )}
-
-      {/* Messages Area */}
-      {interactionLoading && <LinearProgress color='secondary' sx={{ width: '100%' }} />}
-      <Box 
-        ref={messagesContainerRef}
-        sx={{ flex: 1, overflow: 'auto', p: 2 }}
+          <MoreVertIcon />
+        </IconButton>
+      </Tooltip>
+      <Menu
+        id="chat-menu"
+        anchorEl={anchorEl as Element}
+        open={open}
+        onClose={handleClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
       >
-        {selectedChat.interactions && selectedChat.interactions.map((interaction, interactionIndex) => (
-          <Box 
-            key={interaction.id}
-            ref={(el: HTMLDivElement | null) => {
-              interactionRefs.current[interactionIndex] = el;
-            }}
-          >
-            {/* Interaction Header */}
-            <InteractionDivider>
-              <Chip
-                size="small"
-                icon={getInteractionStatusIcon(interaction.status)}
-                label={`Interaction ${interactionIndex + 1} - ${interaction.status}`}
-                color={getInteractionStatusColor(interaction.status)}
-                sx={{ backgroundColor: 'background.paper' }}
-              />
-            </InteractionDivider>
+        <MenuItem
+          onClick={(event) =>
+            handleMenuItemClick(event, () =>
+              handleMarkChatResolution(chat.id, chat.finished)
+            )
+          }
+        >
+          <ListItemIcon>
+            {chat.finished ? (
+              <ScheduleIcon fontSize="small" />
+            ) : (
+              <CheckCircleIcon fontSize="small" />
+            )}
+          </ListItemIcon>
+          <ListItemText>
+            Mark as {chat.finished ? 'Unread' : 'Finished'}
+          </ListItemText>
+        </MenuItem>
+        <Divider />
+        <MenuItem
+          onClick={(event) =>
+            handleMenuItemClick(event, () => handleDelete(chat.id))
+          }
+        >
+          <ListItemIcon>
+            <DeleteIcon
+              sx={{ color: theme.palette.error.main }}
+              fontSize="small"
+            />
+          </ListItemIcon>
+          <ListItemText>Delete</ListItemText>
+        </MenuItem>
+      </Menu>
+    </>
+  );
+}
 
-            {/* Messages in this interaction */}
-            <Stack spacing={1} sx={{ mb: 3 }}>
-              {interaction.messages.map((message, messageIndex) => {
-                const isUser: boolean = message.role === 'user';
-                const { date, time } = formatDateTime(message.createdAt);
-                
-                // Show date separator for first message of the day
-                const showDateSeparator = messageIndex === 0 || 
-                  (messageIndex > 0 && 
-                   formatDateTime(interaction.messages[messageIndex - 1].createdAt).date !== date);
+interface ChatListProps {
+  selectedChat: ChatDto | null;
+  setSelectedChat: Dispatch<SetStateAction<ChatDto | null>>;
+}
 
-                return (
-                  <Box key={message.id}>
-                    {/* Date Separator */}
-                    {showDateSeparator && (
-                      <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
-                        <Chip
-                          label={date}
-                          size="small"
-                          sx={{
-                            backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                            color: 'text.secondary',
-                            fontSize: '0.75rem',
-                          }}
-                        />
-                      </Box>
-                    )}
-                    
-                    {/* Message */}
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        flexDirection: message.role === 'user' ? 'row-reverse' : 'row',
-                        alignItems: 'flex-start',
-                        gap: 1,
-                      }}
-                    >
-                      <Avatar
-                        sx={{ width: 32, height: 32 }}
-                        src={message.role === 'user' ? selectedChat.userPicture || undefined : selectedChat.avatar || undefined}
-                      >
-                        {message.role === 'user' ? (
-                          <PersonIcon sx={{ fontSize: 18 }} />
-                        ) : (
-                          <BotIcon sx={{ fontSize: 18 }} />
-                        )}
-                      </Avatar>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: message.role === 'user' ? 'flex-end' : 'flex-start' }}>
-                        <Box sx={{
-                            maxWidth: '70%',
-                            padding: theme.spacing(1, 2),
-                            borderRadius: theme.spacing(2),
-                            marginBottom: theme.spacing(0.5),
-                            alignSelf: isUser ? 'flex-end' : 'flex-start',
-                            backgroundColor: isUser 
-                                ? theme.palette.primary.main 
-                                : theme.palette.grey[100],
-                            color: isUser 
-                                ? '' 
-                                : theme.palette.text.primary,
-                            wordBreak: 'break-word',                        
-                        }}>
-                          <Typography variant="body2">{message.text}</Typography>
-                        </Box>
-                        <Typography variant="caption" color="text.secondary" sx={{ px: 1 }}>
-                          {time}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Box>
-                );
-              })}
-            </Stack>
-          </Box>
-        ))}
-      </Box>
+function ChatList({ selectedChat, setSelectedChat }: ChatListProps) {
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('md')); // or 'md', 'lg', etc.
 
-      {/* Message Input */}
-      <Paper sx={{ p: 2, borderRadius: 0, borderTop: 1, borderColor: 'divider' }}>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <TextField
-            fullWidth
-            placeholder="Type a message..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
-            multiline
-            maxRows={4}
-          />
-          <IconButton
-            color="primary"
-            onClick={handleSendMessage}
-            disabled={!newMessage.trim()}
-          >
-            <SendIcon />
-          </IconButton>
-        </Box>
-      </Paper>
-    </Box>
-  ); 
-};
-
-export default function Chats() {
   const { token, user } = useAuth();
   const { paginatedAgents } = useAgents();
 
   const { agents } = paginatedAgents;
 
-  const { 
+  const {
     fetchChats,
-    totalChats,
+    finishChat,
+    unfinishChat,
+    readChat,
+    deleteChat,
     chatLoading,
 
     fetchInteractionsWithMessagesOfChat,
-    totalInteractions,
-    interactionLoading
   } = useChatService(token as string);
-  
-  const theme = useTheme();
 
   const [tab, setTab] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
-  const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const [chats, setChats] = useState<ChatDto[]>([]);
-  const [selectedChat, setSelectedChat] = useState<ChatDto | null>(null);
+  const [totalChats, setTotalChats] = useState<number>(0);
+
   const [chatPage, setChatPage] = useState<number>(1);
 
-  const [interactioPage, setInteractionPage] = useState<number>(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const handleTabChange = (_: SyntheticEvent, newValue: number) => {
     setTab(newValue);
@@ -602,10 +258,15 @@ export default function Chats() {
 
   const filteredChats = useMemo(() => {
     return chats.filter((chat) => {
-      const matchesSearch = !deferredSearchQuery || 
-        chat.userName?.toLowerCase().includes(deferredSearchQuery.toLowerCase()) ||
+      const matchesSearch =
+        !deferredSearchQuery ||
+        chat.userName
+          ?.toLowerCase()
+          .includes(deferredSearchQuery.toLowerCase()) ||
         chat.title?.toLowerCase().includes(deferredSearchQuery.toLowerCase()) ||
-        chat.agentName?.toLowerCase().includes(deferredSearchQuery.toLowerCase());
+        chat.agentName
+          ?.toLowerCase()
+          .includes(deferredSearchQuery.toLowerCase());
 
       if (tab === 1) return matchesSearch && !chat.read;
       if (tab === 2) return matchesSearch && chat.humanTalk;
@@ -615,18 +276,90 @@ export default function Chats() {
   }, [chats, tab, deferredSearchQuery]);
 
   const handleChatSelect = async (chat: ChatDto) => {
-    const interactionData = await fetchInteractionsWithMessagesOfChat(chat.id, interactioPage);
+    const agentOfChat = agents.find(
+      (wrapper) => wrapper.agent.id == chat.agentId
+    )?.agent as Agent;
 
-    const chatWithInteractions = {
-      ...chat,
-      interactions: interactionData as InteractionWithMessagesDto[]
-    };
+    const paginatedInteractions = agentOfChat.paginatedChats.data.find(
+      (existingChat) => existingChat.id == chat.id
+    )?.paginatedInteractions as PaginatedInteractionsWithMessagesResponseDto;
+
+    let chatWithInteractions;
+    if ((paginatedInteractions?.data?.length || 0) > 0) {
+      chatWithInteractions = {
+        ...chat,
+        paginatedInteractions,
+      };
+    } else {
+      const response = await fetchInteractionsWithMessagesOfChat({
+        chatId: chat.id,
+        page: 1,
+      });
+      await readChat(chat.id);
+
+      chatWithInteractions = {
+        ...chat,
+        paginatedInteractions:
+          response as PaginatedInteractionsWithMessagesResponseDto,
+      };
+    }
 
     setSelectedChat(chatWithInteractions);
   };
 
-  const renderChatList = () => (
-    <Box sx={{ height: '83vh', display: 'flex', flexDirection: 'column' }}>
+  const handleMarkChatResolution = (chatId: string, chatFinished: boolean) => {
+    {
+      chatFinished ? unfinishChat(chatId) : finishChat(chatId);
+    }
+  };
+
+  const handleDelete = (chatId: string) => {
+    deleteChat(chatId);
+  };
+
+  useEffect(() => {
+    async function fetchChatList() {
+      const response = await fetchChats(user?.workspaceId as string, chatPage);
+      setChats(response?.data as ChatDto[]);
+      setTotalChats(response?.meta?.total as number);
+    }
+
+    const chats = agents.flatMap(
+      (wrapper) => wrapper.agent?.paginatedChats?.data || []
+    );
+    const totalChatAmount = agents.reduce((sum, wrapper) => {
+      const total = wrapper.agent?.paginatedChats?.meta?.total;
+      return sum + (typeof total === 'number' ? total : 0);
+    }, 0);
+
+    if (chats.length > 0) {
+      setChats(chats);
+      setTotalChats(totalChatAmount);
+    } else {
+      fetchChatList();
+    }
+  }, [fetchChats, agents]);
+
+  useEffect(() => {
+    if (chatPage == 1) return;
+
+    async function fetchChatList() {
+      const response = await fetchChats(user?.workspaceId as string, chatPage);
+      setChats(response?.data as ChatDto[]);
+      setTotalChats(response?.meta.total as number);
+    }
+
+    fetchChatList();
+  }, [fetchChats, chatPage]);
+
+  return (
+    <Box
+      sx={{
+        height: 'calc(100% - 50px)',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       <Box sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
         <Typography
           variant="h4"
@@ -653,44 +386,51 @@ export default function Chats() {
           Chats
         </Typography>
 
-        <TextField
-          fullWidth
-          placeholder="Search chats..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-          sx={{ mb: 2 }}
-        />
+        {!isSmallScreen && (
+          <TextField
+            fullWidth
+            placeholder="Search chats by phone, client or agent..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ mb: 2 }}
+          />
+        )}
 
         <Tabs
-            value={tab}
-            onChange={handleTabChange}
-            sx={{
-                borderBottom: `1px solid ${theme.palette.divider}`,
-                marginBottom: theme.spacing(3),
-                '& .MuiTab-root': {
-                    textTransform: 'none',
-                    minWidth: 100,
-                    fontSize: '0.9rem',
-                    padding: '8px 16px',
-                },            
-            }}
+          value={tab}
+          onChange={handleTabChange}
+          sx={{
+            borderBottom: `1px solid ${theme.palette.divider}`,
+            marginBottom: theme.spacing(3),
+            '& .MuiTab-root': {
+              textTransform: 'none',
+              minWidth: 100,
+              fontSize: '0.9rem',
+              padding: '8px 16px',
+            },
+          }}
         >
           <Tab label="All" />
           <Tab label="Unread" />
           <Tab label="Human" />
           <Tab label="Finished" />
-
         </Tabs>
       </Box>
 
-      { chatLoading && <LinearProgress color='secondary' sx={{ width: '100%', mt: 1, mb: 1 }} /> }
+      {chatLoading && (
+        <LinearProgress
+          color="secondary"
+          sx={{ width: '100%', mt: 1, mb: 1 }}
+        />
+      )}
+
       <Box sx={{ flex: 1, overflow: 'auto' }}>
         <List sx={{ p: 0 }}>
           {filteredChats.map((chat) => (
@@ -703,7 +443,10 @@ export default function Chats() {
                 '&:hover': {
                   backgroundColor: 'action.hover',
                 },
-                backgroundColor: selectedChat?.id === chat.id ? 'action.selected' : 'transparent',
+                backgroundColor:
+                  selectedChat?.id === chat.id
+                    ? 'action.selected'
+                    : 'transparent',
               }}
               onClick={() => handleChatSelect(chat)}
             >
@@ -711,22 +454,34 @@ export default function Chats() {
                 <Badge
                   badgeContent={chat.unReadCount}
                   color="error"
-                  invisible={chat.unReadCount === 0}
+                  invisible={chat.unReadCount === 0 || chat.finished}
                 >
-                  <Avatar src={chat.userPicture || undefined} alt={chat.userName}>
+                  <Avatar
+                    src={chat.userPicture || undefined}
+                    alt={chat.userName}
+                  >
                     {chat.userName?.[0] || <PersonIcon />}
                   </Avatar>
                 </Badge>
               </ListItemAvatar>
               <ListItemText
                 primary={
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent:'space-between', gap: 1 }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 1,
+                    }}
+                  >
                     <Typography variant="subtitle1" noWrap>
                       {chat.userName || chat.title}
                     </Typography>
-                    <Typography variant='subtitle2' noWrap>
-                      {chat.agentName}
-                    </Typography>
+                    {!isSmallScreen && (
+                      <Typography variant="subtitle2" noWrap>
+                        {chat.agentName}
+                      </Typography>
+                    )}
                     {chat.humanTalk && (
                       <Chip size="small" label="Human" color="warning" />
                     )}
@@ -740,21 +495,34 @@ export default function Chats() {
                     <Typography variant="body2" color="text.secondary" noWrap>
                       {chat.latestMessage?.text || 'No messages'}
                     </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                      <PhoneIcon sx={{ fontSize: 12, color: 'text.secondary' }} />
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        mt: 0.5,
+                      }}
+                    >
+                      <PhoneIcon
+                        sx={{ fontSize: 12, color: 'text.secondary' }}
+                      />
                       <Typography variant="caption" color="text.secondary">
                         {chat.whatsappPhone}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        • {formatDate(chat.createdAt)}
-                      </Typography>                      
+                      {!isSmallScreen && (
+                        <Typography variant="caption" color="text.secondary">
+                          • {formatDate(chat.createdAt)}
+                        </Typography>
+                      )}
                     </Box>
                   </Box>
                 }
               />
-              <IconButton size="small">
-                <MoreVertIcon />
-              </IconButton>
+              <ChatMenu
+                chat={chat}
+                handleMarkChatResolution={handleMarkChatResolution}
+                handleDelete={handleDelete}
+              />
             </ListItem>
           ))}
         </List>
@@ -767,102 +535,812 @@ export default function Chats() {
           </Box>
         )}
 
-        <Box sx={{ padding: 1, width: '100%', display: 'flex', justifyContent: 'center' }}>
+        <Box
+          sx={{
+            padding: 1,
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+          }}
+        >
           <Button
             variant={chats.length === totalChats ? 'text' : 'outlined'}
-            onClick={() => setChatPage(prevState => prevState + 1)}
+            onClick={() => setChatPage((prevState) => prevState + 1)}
             disabled={chats.length === totalChats}
           >
-            {chats.length === totalChats ? 'No more data to fetch' : 'Fetch more...'}
+            {chats.length === totalChats
+              ? 'No more data to fetch'
+              : 'Fetch more...'}
           </Button>
         </Box>
       </Box>
     </Box>
   );
+}
 
-  const renderEmptyState = () => (
-    <Box
-      sx={{
-        height: '83vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        textAlign: 'center',
-        p: 4,
-      }}
-    >
-      <Box
-        sx={{
-          width: 200,
-          height: 200,
-          borderRadius: '50%',
-          backgroundColor: 'primary.light',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          mb: 3,
-          opacity: 0.7,
-        }}
-      >
-        <ChatIcon sx={{ fontSize: 80 }} />
-      </Box>
-      <Typography variant="h5" gutterBottom>
-        Chat Moderation
-      </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 400 }}>
-        Monitor in real time the responses that your agents are sending to your clients,
-        take over the conversation if necessary, or wait for an agent to request your help.
-      </Typography>
-    </Box>
+function ChatDetails({
+  selectedChat,
+  setSelectedChat,
+  totalInteractions,
+  interactionLoading,
+  onScrollToTop,
+}: ChatDetailsProps) {
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('md')); // or 'md', 'lg', etc.
+  const isLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
+
+  const { token } = useAuth();
+  const { startChatHumanAttendance, chatLoading } = useChatService(
+    token as string
   );
 
-  useEffect(() => {
-    async function fetchChatList() {
-      const chatData = await fetchChats(user?.workspaceId as string, chatPage);
-      setChats(chatData as ChatDto[]);
+  const [newMessage, setNewMessage] = useState('');
+  const deferredNewMessage = useDeferredValue(newMessage);
+
+  const handleSendMessage = () => {
+    if (deferredNewMessage.trim()) {
+      // This would normally send the message
+      setNewMessage('');
     }
+  };
 
-    const chats = agents.flatMap(wrapper => wrapper.agent?.chats || []);
+  const handleStartHumanAttendance = async (chatId: string) => {
+    await startChatHumanAttendance(chatId);
 
-    if (chats.length > 0) {
-        setChats(chats);
+    setSelectedChat((prevState) => {
+      if (prevState === null) return null;
+
+      const updatedPaginatedInteractions = prevState.paginatedInteractions
+        ? {
+            ...prevState.paginatedInteractions,
+            data: prevState.paginatedInteractions.data.map(
+              (interaction, index) => {
+                if (
+                  index ===
+                  (prevState.paginatedInteractions?.data.length || 0) - 1
+                ) {
+                  return {
+                    ...interaction,
+                    status: 'WAITING' as InteractionStatus,
+                  };
+                }
+                return interaction;
+              }
+            ),
+          }
+        : prevState.paginatedInteractions;
+
+      return {
+        ...prevState,
+        humanTalk: true,
+        finished: false,
+        paginatedInteractions: updatedPaginatedInteractions,
+      };
+    });
+  };
+
+  const [visibleInteraction, setVisibleInteraction] = useState<number>(0);
+  const [showFloatingIndicator, setShowFloatingIndicator] =
+    useState<boolean>(false);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const interactionRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
+  const scrollTimeoutRef = useRef<number | null>(null);
+
+  const [hasTriggeredTopCallback, setHasTriggeredTopCallback] = useState(false);
+
+  // Scroll preservation state
+  const preservationRef = useRef({
+    interactionIndex: 0,
+    relativeScrollOffset: 0,
+    shouldPreserve: false,
+  });
+  const prevInteractionsLength = useRef(
+    selectedChat.paginatedInteractions?.data?.length || 0
+  );
+
+  // Format date and time separately
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const messageDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
+
+    const timeString = date.toLocaleTimeString(['en-US'], {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    if (messageDate.getTime() === today.getTime()) {
+      return { date: 'Today', time: timeString };
+    } else if (messageDate.getTime() === today.getTime() - 86400000) {
+      return { date: 'Yesterday', time: timeString };
     } else {
-        fetchChatList();
+      return {
+        date: date.toLocaleDateString(['en-US'], {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+          year:
+            date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+        }),
+        time: timeString,
+      };
+    }
+  };
+
+  // Handle scroll preservation when interactions change
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container || !selectedChat.paginatedInteractions?.data) return;
+
+    const currentLength = selectedChat.paginatedInteractions?.data.length;
+    const lengthDifference = currentLength - prevInteractionsLength.current;
+
+    if (lengthDifference > 0 && preservationRef.current.shouldPreserve) {
+      // New interactions were added, restore scroll position
+      const targetInteractionIndex =
+        preservationRef.current.interactionIndex + lengthDifference;
+      const targetInteractionElement =
+        interactionRefs.current[targetInteractionIndex];
+
+      if (targetInteractionElement) {
+        const targetTop =
+          targetInteractionElement.offsetTop - container.offsetTop;
+        const newScrollPosition =
+          targetTop - preservationRef.current.relativeScrollOffset;
+
+        // Restore scroll position
+        container.scrollTop = Math.max(0, newScrollPosition);
+      }
+
+      // Reset preservation flag
+      preservationRef.current.shouldPreserve = false;
     }
 
-  }, [fetchChats, agents])
+    prevInteractionsLength.current = currentLength;
+  }, [selectedChat.paginatedInteractions?.data]);
+
+  // Track visible interaction while scrolling and detect whether the user reached the top of container
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!messagesContainerRef.current) return;
+
+      const container = messagesContainerRef.current;
+      const containerTop = container.scrollTop;
+      const containerHeight = container.clientHeight;
+      const viewportTop = containerTop;
+      const viewportBottom = containerTop + containerHeight;
+
+      // Show floating indicator on scroll
+      setShowFloatingIndicator(true);
+
+      // Clear existing timeout
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+
+      // Set timeout to hide indicator after 2 seconds of no scrolling
+      scrollTimeoutRef.current = setTimeout(() => {
+        setShowFloatingIndicator(false);
+      }, 2000);
+
+      // Check if scrolled to top
+      const isAtTop = containerTop <= 5;
+
+      // Store scroll preservation data when near the top
+      if (isAtTop || containerTop < 100) {
+        // Preserve when close to top
+        const currentElement = interactionRefs.current[visibleInteraction];
+        if (currentElement) {
+          preservationRef.current = {
+            interactionIndex: visibleInteraction,
+            relativeScrollOffset:
+              currentElement.offsetTop - container.offsetTop - containerTop,
+            shouldPreserve: true,
+          };
+        }
+      }
+
+      // Trigger callback only once when reaching the top
+      if (isAtTop && !hasTriggeredTopCallback && onScrollToTop) {
+        setHasTriggeredTopCallback(true);
+        onScrollToTop();
+      } else if (!isAtTop && hasTriggeredTopCallback) {
+        // Reset the flag when user scrolls away from top
+        setHasTriggeredTopCallback(false);
+      }
+
+      // Find currently visible interaction
+      let currentInteractionIndex = 0;
+
+      Object.entries(interactionRefs.current).forEach(([index, element]) => {
+        if (element) {
+          const elementTop = element.offsetTop - container.offsetTop;
+          const elementBottom = elementTop + element.offsetHeight;
+
+          if (elementTop <= viewportBottom && elementBottom >= viewportTop) {
+            const visibleTop = Math.max(elementTop, viewportTop);
+            const visibleBottom = Math.min(elementBottom, viewportBottom);
+            const visibleHeight = visibleBottom - visibleTop;
+
+            const elementHeight = element.offsetHeight;
+            const visibilityRatio = visibleHeight / elementHeight;
+            const viewportFillRatio = visibleHeight / containerHeight;
+
+            if (visibilityRatio > 0.5 || viewportFillRatio > 0.5) {
+              currentInteractionIndex = parseInt(index);
+            }
+          }
+        }
+      });
+
+      setVisibleInteraction(currentInteractionIndex);
+    };
+
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      handleScroll(); // Initial call
+
+      return () => {
+        container.removeEventListener('scroll', handleScroll);
+        // Clear timeout on cleanup
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+      };
+    }
+  }, [
+    selectedChat.paginatedInteractions?.data,
+    onScrollToTop,
+    hasTriggeredTopCallback,
+    visibleInteraction,
+  ]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
-    if (chatPage == 1) return;
-
-    async function fetchChatList() {
-      const chatData = await fetchChats(user?.workspaceId as string, chatPage);
-      setChats(chatData as ChatDto[]);
+    if (
+      messagesContainerRef.current &&
+      selectedChat.paginatedInteractions?.data &&
+      selectedChat.paginatedInteractions?.data.length > 0
+    ) {
+      const container = messagesContainerRef.current;
+      container.scrollTop = container.scrollHeight;
     }
+  }, [selectedChat.id]);
 
-    fetchChatList();
+  // Get current date for floating indicator
+  const getCurrentDate = () => {
+    if (
+      !selectedChat.paginatedInteractions?.data ||
+      selectedChat.paginatedInteractions?.data.length === 0
+    )
+      return '';
 
-  }, [fetchChats, chatPage])
+    const currentInteraction =
+      selectedChat.paginatedInteractions?.data[visibleInteraction];
+    if (
+      !currentInteraction ||
+      !currentInteraction.messages ||
+      currentInteraction.messages.length === 0
+    )
+      return '';
+
+    // Get the first message's date from the current interaction
+    const firstMessage = currentInteraction.messages[0];
+    const { date } = formatDateTime(firstMessage.createdAt);
+    return date;
+  };
 
   return (
-    <Card variant="outlined" sx={{ margin: '0 auto', width: '100%', height: '83vh' }}>
-      <CardContent sx={{ p: 0, height: '100%', '&:last-child': { pb: 0 } }}>
+    <Box
+      sx={{
+        height: 'calc(100% - 50px)',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+      }}
+    >
+      {/* Chat Header */}
+      <Paper
+        sx={{ p: 2, borderRadius: 0, borderBottom: 1, borderColor: 'divider' }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar
+            src={selectedChat.userPicture || undefined}
+            alt={selectedChat.userName}
+          >
+            {selectedChat.userName?.[0] || <PersonIcon />}
+          </Avatar>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="h6">
+              {selectedChat.userName || selectedChat.title}
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <PhoneIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+              <Typography variant="body2" color="text.secondary">
+                {selectedChat.whatsappPhone}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                • Agent {selectedChat.agentName}
+              </Typography>
+              {!isSmallScreen && (
+                <Typography variant="body2" color="text.secondary">
+                  • {totalInteractions} interaction
+                  {totalInteractions > 1 ? 's' : ''}
+                </Typography>
+              )}
+            </Box>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            {selectedChat.humanTalk && (
+              <Chip size="small" label="Human Talk" color="warning" />
+            )}
+            {selectedChat.finished && (
+              <Chip size="small" label="Finished" color="success" />
+            )}
+          </Box>
+        </Box>
+      </Paper>
+
+      {/* Floating Date and Interaction Indicator */}
+      {selectedChat.paginatedInteractions?.data &&
+        selectedChat.paginatedInteractions?.data.length > 0 && (
+          <Paper
+            sx={{
+              position: 'absolute',
+              top: '75%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 1000,
+              px: 2,
+              py: 1.5,
+              borderRadius: 2,
+              boxShadow: 2,
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 1,
+              opacity: showFloatingIndicator ? 1 : 0,
+              transition: 'opacity 0.3s ease-in-out',
+              pointerEvents: showFloatingIndicator ? 'auto' : 'none',
+            }}
+          >
+            {/* Date */}
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontWeight: 500, fontSize: '0.875rem' }}
+            >
+              {getCurrentDate()}
+            </Typography>
+
+            {/* Interaction Chip */}
+            <Chip
+              size="small"
+              icon={getInteractionStatusIcon(
+                selectedChat.paginatedInteractions?.data[visibleInteraction]
+                  ?.status
+              )}
+              label={`Interaction #${selectedChat.paginatedInteractions.meta.total - ((selectedChat?.paginatedInteractions?.data?.length || 0) - 1 - visibleInteraction)} - ${selectedChat.paginatedInteractions?.data[visibleInteraction]?.status}`}
+              color={getInteractionStatusColor(
+                selectedChat.paginatedInteractions?.data[visibleInteraction]
+                  ?.status
+              )}
+              sx={{ backgroundColor: 'background.paper' }}
+            />
+          </Paper>
+        )}
+
+      {/* Messages Area */}
+      {interactionLoading && (
+        <LinearProgress color="secondary" sx={{ width: '100%' }} />
+      )}
+      <Box ref={messagesContainerRef} sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+        {selectedChat.paginatedInteractions?.data &&
+          selectedChat.paginatedInteractions?.data.map(
+            (interaction, interactionIndex) => (
+              <Box
+                key={interaction.id}
+                ref={(el: HTMLDivElement | null) => {
+                  interactionRefs.current[interactionIndex] = el;
+                }}
+              >
+                {/* Interaction Header */}
+                <InteractionDivider>
+                  <Chip
+                    size="small"
+                    icon={getInteractionStatusIcon(interaction.status)}
+                    label={`Interaction #${(selectedChat?.paginatedInteractions?.meta?.total || 0) - ((selectedChat?.paginatedInteractions?.data?.length || 0) - 1 - interactionIndex)} - ${interaction.status}`}
+                    color={getInteractionStatusColor(interaction.status)}
+                    sx={{ backgroundColor: 'background.paper' }}
+                  />
+                </InteractionDivider>
+
+                {/* Messages in this interaction */}
+                <Stack spacing={1} sx={{ mb: 3 }}>
+                  {interaction.messages.map((message, messageIndex) => {
+                    const isUser: boolean = message.role === 'user';
+                    const { date, time } = formatDateTime(message.createdAt);
+
+                    // Show date separator for first message of the day
+                    const showDateSeparator =
+                      messageIndex === 0 ||
+                      (messageIndex > 0 &&
+                        formatDateTime(
+                          interaction.messages[messageIndex - 1].createdAt
+                        ).date !== date);
+
+                    return (
+                      <Box key={message.id}>
+                        {/* Date Separator */}
+                        {showDateSeparator && (
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              justifyContent: 'center',
+                              my: 2,
+                            }}
+                          >
+                            <Chip
+                              label={date}
+                              size="small"
+                              sx={{
+                                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                color: 'text.secondary',
+                                fontSize: '0.75rem',
+                              }}
+                            />
+                          </Box>
+                        )}
+
+                        {/* Message */}
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            flexDirection:
+                              message.role === 'user' ? 'row-reverse' : 'row',
+                            alignItems: 'flex-start',
+                            gap: 1,
+                          }}
+                        >
+                          <Avatar
+                            sx={{ width: 32, height: 32 }}
+                            src={
+                              message.role === 'user'
+                                ? selectedChat.userPicture || undefined
+                                : selectedChat.avatar || undefined
+                            }
+                          >
+                            {message.role === 'user' ? (
+                              <PersonIcon sx={{ fontSize: 18 }} />
+                            ) : (
+                              <BotIcon sx={{ fontSize: 18 }} />
+                            )}
+                          </Avatar>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems:
+                                message.role === 'user'
+                                  ? 'flex-end'
+                                  : 'flex-start',
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                maxWidth: '70%',
+                                padding: theme.spacing(1, 2),
+                                borderRadius: theme.spacing(2),
+                                marginBottom: theme.spacing(0.5),
+                                alignSelf: isUser ? 'flex-end' : 'flex-start',
+                                backgroundColor: isUser
+                                  ? theme.palette.primary.main
+                                  : theme.palette.grey[100],
+                                color: isUser ? '' : theme.palette.text.primary,
+                                wordBreak: 'break-word',
+                              }}
+                            >
+                              <Typography variant="body2">
+                                {message.text}
+                              </Typography>
+                            </Box>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ px: 1 }}
+                            >
+                              {time}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              </Box>
+            )
+          )}
+      </Box>
+
+      {/* Message Input */}
+      <Paper
+        sx={{
+          p: 2,
+          borderRadius: 0,
+          borderTop: 1,
+          borderColor: 'divider',
+          display: 'flex',
+          gap: 1,
+          flexDirection: 'column',
+        }}
+      >
+        {chatLoading && (
+          <LinearProgress color="secondary" sx={{ width: '100%' }} />
+        )}
+
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 1,
+          }}
+        >
+          {selectedChat.humanTalk ? (
+            <>
+              <TextField
+                fullWidth
+                placeholder="Type a message..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+                multiline
+                maxRows={4}
+              />
+              <IconButton
+                color="primary"
+                onClick={handleSendMessage}
+                disabled={!newMessage.trim()}
+              >
+                <SendIcon />
+              </IconButton>
+            </>
+          ) : (
+            <>
+              {!isLargeScreen && (
+                <Typography>
+                  Chat held by Agent {selectedChat.agentName}
+                </Typography>
+              )}
+              <Button
+                variant="outlined"
+                onClick={() => handleStartHumanAttendance(selectedChat.id)}
+                disabled={chatLoading}
+              >
+                {!isSmallScreen
+                  ? chatLoading
+                    ? 'Wait a moment...'
+                    : 'Start Human Attendance'
+                  : chatLoading
+                    ? 'Wait...'
+                    : 'Start attendance'}
+              </Button>
+            </>
+          )}
+        </Box>
+      </Paper>
+    </Box>
+  );
+}
+
+export default function Chats() {
+  const { token } = useAuth();
+  const { interactionLoading, fetchInteractionsWithMessagesOfChat } =
+    useChatService(token as string);
+
+  const [selectedChat, setSelectedChat] = useState<ChatDto | null>(null);
+
+  const handleFetchMoreInteractions = async (selectedChat: ChatDto) => {
+    // Get current pagination metadata from the selected chat
+    const currentMeta = selectedChat?.paginatedInteractions?.meta;
+    const currentPage = currentMeta?.page || 0; // Use current page from meta
+    const totalPages = currentMeta?.totalPages;
+
+    // console.log(`handleFetchMoreInteractions called. Current page in meta: ${currentPage}, Total pages: ${totalPages}`);
+
+    // Check if we are already on the last page based on totalPages
+    if (totalPages !== undefined && currentPage >= totalPages) {
+      // console.log("Already fetched all pages.");
+      return;
+    }
+
+    // Determine the next page number to fetch.
+    // Based on user confirmation, we use the interactionPage state + 1.
+    // This implies interactionPage state likely holds the number of the *last successfully fetched page*.
+    const pageToFetch = currentPage + 1;
+    // console.log(`Attempting to fetch page: ${pageToFetch}`);
+
+    // Fetch the next page of interactions
+    const response = await fetchInteractionsWithMessagesOfChat({
+      chatId: selectedChat.id,
+      page: pageToFetch,
+    });
+
+    // Check if the response is valid
+    if (!response || !response.data || !response.meta) {
+      console.error(
+        `Failed to fetch interactions for page ${pageToFetch} or response format is invalid.`
+      );
+      // Consider how to handle this - maybe reset interactionPage state if the call failed?
+      return;
+    }
+
+    // --- Update State and Merge Data ---
+    const newInteractionsData = response.data;
+    const newMeta = response.meta; // Use the meta from the latest response
+    const existingInteractionsData =
+      selectedChat.paginatedInteractions?.data || [];
+
+    // --- Data Merging Logic ---
+    // Merge strategy: Update existing items if IDs match in new data, add truly new items, keep old items not in new data.
+
+    // 1. Create a map of new interactions for efficient lookup
+    const newInteractionsMap = new Map(
+      newInteractionsData.map((interaction) => [interaction.id, interaction])
+    );
+
+    // 2. Create a set of existing IDs for efficient lookup
+    const existingInteractionIds = new Set(
+      existingInteractionsData.map((interaction) => interaction.id)
+    );
+
+    // 3. Build the merged list
+    const mergedInteractionsData: InteractionWithMessagesDto[] = [];
+    const processedNewIds = new Set<string>();
+
+    // Iterate through existing interactions
+    existingInteractionsData.forEach((existingInteraction) => {
+      if (newInteractionsMap.has(existingInteraction.id)) {
+        // If exists in new data, use the new version (update)
+        mergedInteractionsData.push(
+          newInteractionsMap.get(existingInteraction.id)!
+        );
+        processedNewIds.add(existingInteraction.id);
+      } else {
+        // If not in new data, keep the existing version
+        mergedInteractionsData.push(existingInteraction);
+      }
+    });
+
+    // Add any remaining new interactions that weren't used for updates (truly new)
+    newInteractionsData.forEach((newInteraction) => {
+      if (!existingInteractionIds.has(newInteraction.id)) {
+        mergedInteractionsData.push(newInteraction);
+      }
+    });
+    // --- End of Data Merging Logic ---
+
+    // Prepare the updated chat object with merged data and new meta
+    const updatedChat: ChatDto = {
+      ...selectedChat,
+      paginatedInteractions: {
+        data: mergedInteractionsData,
+        meta: newMeta, // Replace meta completely with the latest response meta
+      },
+    };
+
+    // Update the selected chat state
+    setSelectedChat(updatedChat);
+    // console.log(`Updated chat ${selectedChat.id}. Fetched page ${newMeta.page}. Total interactions now: ${mergedInteractionsData.length}. Meta updated.`);
+  };
+
+  const renderEmptyState = () => (
+    <>
+      {interactionLoading && (
+        <LinearProgress color="secondary" sx={{ width: '100%' }} />
+      )}
+      <Box
+        sx={{
+          height: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          p: 4,
+        }}
+      >
+        <Box
+          sx={{
+            width: 200,
+            height: 200,
+            borderRadius: '50%',
+            backgroundColor: 'primary.light',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            mb: 3,
+            opacity: 0.7,
+          }}
+        >
+          <ChatIcon sx={{ fontSize: 80 }} />
+        </Box>
+        <Typography variant="h5" gutterBottom>
+          Chat Moderation
+        </Typography>
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          sx={{ maxWidth: 400 }}
+        >
+          Monitor in real time the responses that your agents are sending to
+          your clients, take over the conversation if necessary, or wait for an
+          agent to request your help.
+        </Typography>
+      </Box>
+    </>
+  );
+
+  return (
+    <Card
+      variant="outlined"
+      sx={{ margin: '0 auto', width: '100%', height: 'calc(100vh - 110px)' }}
+    >
+      <CardContent
+        sx={{ p: 0, height: 'calc(100vh - 110px)', '&:last-child': { pb: 0 } }}
+      >
         <Box sx={{ display: 'flex', height: '100%' }}>
           {/* Chat List */}
-          <Box sx={{ width: 400, borderRight: 1, borderColor: 'divider' }}>
-            {renderChatList()}
+          <Box
+            sx={{
+              minWidth: 100,
+              maxWidth: '30vw',
+              borderRight: 1,
+              borderColor: 'divider',
+            }}
+          >
+            <ChatList
+              selectedChat={selectedChat}
+              setSelectedChat={setSelectedChat}
+            />
           </Box>
-          
+
           {/* Chat Detail or Empty State */}
           <Box sx={{ flex: 1 }}>
-            {selectedChat
-              ? <ChatDetails
-                  selectedChat={selectedChat}
-                  totalInteractions={totalInteractions}
-                  interactionLoading={interactionLoading}
-                />
-              : renderEmptyState()}
+            {selectedChat ? (
+              <ChatDetails
+                selectedChat={selectedChat}
+                setSelectedChat={setSelectedChat}
+                totalInteractions={
+                  selectedChat.paginatedInteractions?.meta?.total || 0
+                }
+                interactionLoading={interactionLoading}
+                onScrollToTop={() => handleFetchMoreInteractions(selectedChat)}
+              />
+            ) : (
+              renderEmptyState()
+            )}
           </Box>
         </Box>
       </CardContent>

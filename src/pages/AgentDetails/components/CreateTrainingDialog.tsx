@@ -76,10 +76,7 @@ export default function CreateTrainingDialog({
   const TEXT_CHARS_LIMIT = 1028;
 
   // Função para lidar com a mudança de aba
-  const handleTabChange = (
-    _event: SyntheticEvent,
-    newValue: TrainingType
-  ) => {
+  const handleTabChange = (_event: SyntheticEvent, newValue: TrainingType) => {
     setActiveTab(newValue);
     setFormData({ ...formData, type: newValue });
   };

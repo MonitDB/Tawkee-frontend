@@ -56,13 +56,7 @@ export default function AppRoutes() {
           }
         />
 
-        <Route
-          key="4x"
-          path="/socket"
-          element={
-            <ChatComponent />
-          }
-        />
+        <Route key="4x" path="/socket" element={<ChatComponent />} />
 
         <Route
           key="4"

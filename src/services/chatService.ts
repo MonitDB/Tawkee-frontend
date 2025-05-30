@@ -21,7 +21,7 @@ export interface PaginatedResult<T> {
 }
 
 // Status possíveis para uma interação
-export type InteractionStatus = 'RESOLVED' | 'RUNNING' | 'TRANSFERRED' | 'CLOSED'; // Adicionado 'CLOSED' conforme comentário no código original
+export type InteractionStatus = 'RESOLVED' | 'RUNNING' | 'WAITING' | 'CLOSED'; // Adicionado 'CLOSED' conforme comentário no código original
 
 // DTO para Mensagem (alinhado com backend dtos/message.dto.ts)
 export interface MessageDto {
@@ -75,7 +75,7 @@ export interface ChatDto {
   unReadCount: number;
   conversation: string;
   latestMessage?: MessageDto;
-  interactions?: InteractionWithMessagesDto[]
+  paginatedInteractions?: PaginatedInteractionsWithMessagesResponseDto;
 }
 
 // Valor padrão para PaginatedResult<ChatDto>
@@ -85,9 +85,9 @@ export const defaultChatDto: PaginatedResult<ChatDto> = {
     total: 0,
     page: 0,
     pageSize: 0,
-    totalPages: 0
-  }
-}
+    totalPages: 0,
+  },
+};
 
 // Parâmetros para buscar todos os chats, estendendo os parâmetros de paginação
 export interface FindAllChatsParams extends PaginationParams {
@@ -103,7 +103,8 @@ export interface FindInteractionsWithMessagesParams extends PaginationParams {
 
 // Resposta paginada para interações com mensagens
 // Reutiliza PaginatedResult e InteractionWithMessagesDto
-export type PaginatedInteractionsWithMessagesResponseDto = PaginatedResult<InteractionWithMessagesDto>;
+export type PaginatedInteractionsWithMessagesResponseDto =
+  PaginatedResult<InteractionWithMessagesDto>;
 
 // Configuração do Serviço de Chat
 interface ChatServiceConfig {
@@ -146,7 +147,7 @@ export class ChatService {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.token}`,
+          Authorization: `Bearer ${this.token}`,
         },
       });
 
@@ -160,7 +161,6 @@ export class ChatService {
       // O tipo de retorno já é PaginatedResult<ChatDto>
       const data: PaginatedResult<ChatDto> = await response.json();
       return data;
-
     } catch (error) {
       console.error('Error fetching chats:', error);
       // Retorna um resultado padrão em caso de erro, conforme o original, ou lança o erro
@@ -174,31 +174,34 @@ export class ChatService {
    */
   async findInteractionsWithMessages(
     params: FindInteractionsWithMessagesParams
-  ): Promise<PaginatedInteractionsWithMessagesResponseDto> { // Tipo de retorno atualizado
+  ): Promise<PaginatedInteractionsWithMessagesResponseDto> {
+    // Tipo de retorno atualizado
     try {
       const { chatId, page = 1, pageSize = 10 } = params;
 
       if (!chatId) {
-        throw new Error("Chat ID is required.");
+        throw new Error('Chat ID is required.');
       }
 
       const searchParams = new URLSearchParams();
-      searchParams.append("page", page.toString());
-      searchParams.append("pageSize", pageSize.toString());
+      searchParams.append('page', page.toString());
+      searchParams.append('pageSize', pageSize.toString());
 
       const url = `${this.apiUrl}/chats/${chatId}/interactions?${searchParams.toString()}`;
 
       const response = await fetch(url, {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${this.token}`,
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.token}`,
         },
       });
 
       if (!response.ok) {
         if (response.status === 404) {
-          console.warn(`No interactions found for chat ${chatId} or chat does not exist.`);
+          console.warn(
+            `No interactions found for chat ${chatId} or chat does not exist.`
+          );
           // Retorna um resultado paginado vazio
           return {
             data: [],
@@ -214,46 +217,114 @@ export class ChatService {
       }
 
       // O tipo de retorno já é PaginatedInteractionsWithMessagesResponseDto
-      const data: PaginatedInteractionsWithMessagesResponseDto = await response.json();
+      const data: PaginatedInteractionsWithMessagesResponseDto =
+        await response.json();
       return data;
-
     } catch (error) {
-      console.error("Error fetching interactions with messages:", error);
+      console.error('Error fetching interactions with messages:', error);
       throw error;
     }
   }
+
+  async finishChat(id: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.apiUrl}/chats/${id}/finish`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${this.token}` } as const,
+      });
+
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+
+      return true;
+    } catch (error) {
+      console.log(error instanceof Error ? error.message : '', 'error');
+      return false;
+    }
+  }
+
+  async unfinishChat(id: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.apiUrl}/chats/${id}/unfinish`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${this.token}` } as const,
+      });
+
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+
+      return true;
+    } catch (error) {
+      console.log(error instanceof Error ? error.message : '', 'error');
+      return false;
+    }
+  }
+
+  async startHumanAttendanceChat(id: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.apiUrl}/chats/${id}/start-human`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${this.token}` } as const,
+      });
+
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+
+      return true;
+    } catch (error) {
+      console.log(error instanceof Error ? error.message : '', 'error');
+      return false;
+    }
+  }
+
+  async stopHumanAttendanceChat(id: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.apiUrl}/chats/${id}/stop-human`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${this.token}` } as const,
+      });
+
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+
+      return true;
+    } catch (error) {
+      console.log(error instanceof Error ? error.message : '', 'error');
+      return false;
+    }
+  }
+
+  async readChat(id: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.apiUrl}/chats/${id}/read`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${this.token}` } as const,
+      });
+
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+
+      return true;
+    } catch (error) {
+      console.log(error instanceof Error ? error.message : '', 'error');
+      return false;
+    }
+  }
+
+  async deleteChat(id: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.apiUrl}/chats/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${this.token}` } as const,
+      });
+
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+
+      return true;
+    } catch (error) {
+      console.log(error instanceof Error ? error.message : '', 'error');
+      return false;
+    }
+  }
 }
-
-// Exemplo de uso (inalterado, mas agora usa os tipos refatorados)
-/*
-const config: ChatServiceConfig = { token: 'your-token', apiUrl: 'https://your-api-domain.com/api' };
-const chatService = new ChatService(config);
-
-// Busca básica
-const chats = await chatService.findAll({ workspaceId: 'workspace-123' });
-
-// Com paginação
-const paginatedChats = await chatService.findAll({
-  workspaceId: 'workspace-123',
-  page: 2,
-  pageSize: 20
-});
-
-// Filtrar por agente
-const agentChats = await chatService.findAll({
-  workspaceId: 'workspace-123',
-  agentId: 'agent-456'
-});
-
-// Busca com query
-const searchResults = await chatService.findAll({
-  workspaceId: 'workspace-123',
-  query: 'support request',
-  page: 1,
-  pageSize: 15
-});
-
-// Busca interações para um chat
-const interactions = await chatService.findInteractionsWithMessages({ chatId: 'chat-789', page: 1, pageSize: 5 });
-*/
-
