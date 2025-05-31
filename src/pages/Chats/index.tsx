@@ -8,6 +8,7 @@ import {
   MouseEvent,
   Dispatch,
   SetStateAction,
+  useCallback,
 } from 'react';
 
 import { useAuth } from '../../context/AuthContext';
@@ -276,13 +277,16 @@ function ChatList({ selectedChat, setSelectedChat }: ChatListProps) {
   }, [chats, tab, deferredSearchQuery]);
 
   const handleChatSelect = async (chat: ChatDto) => {
+    console.log('handling Chat selection...')
     const agentOfChat = agents.find(
       (wrapper) => wrapper.agent.id == chat.agentId
     )?.agent as Agent;
 
-    const paginatedInteractions = agentOfChat.paginatedChats.data.find(
+    const paginatedInteractions = agentOfChat.paginatedChats?.data.find(
       (existingChat) => existingChat.id == chat.id
     )?.paginatedInteractions as PaginatedInteractionsWithMessagesResponseDto;
+
+    console.log(paginatedInteractions);
 
     let chatWithInteractions;
     if ((paginatedInteractions?.data?.length || 0) > 0) {
@@ -566,7 +570,7 @@ function ChatDetails({
   onScrollToTop,
 }: ChatDetailsProps) {
   const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down('md')); // or 'md', 'lg', etc.
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
   const isLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
 
   const { token } = useAuth();
@@ -574,17 +578,17 @@ function ChatDetails({
     token as string
   );
 
+  // Remove useDeferredValue - direct state is faster for input
   const [newMessage, setNewMessage] = useState('');
-  const deferredNewMessage = useDeferredValue(newMessage);
 
-  const handleSendMessage = () => {
-    if (deferredNewMessage.trim()) {
+  const handleSendMessage = useCallback(() => {
+    if (newMessage.trim()) {
       // This would normally send the message
       setNewMessage('');
     }
-  };
+  }, [newMessage]);
 
-  const handleStartHumanAttendance = async (chatId: string) => {
+  const handleStartHumanAttendance = useCallback(async (chatId: string) => {
     await startChatHumanAttendance(chatId);
 
     setSelectedChat((prevState) => {
@@ -617,16 +621,18 @@ function ChatDetails({
         paginatedInteractions: updatedPaginatedInteractions,
       };
     });
-  };
+  }, [startChatHumanAttendance, setSelectedChat]);
 
-  const [visibleInteraction, setVisibleInteraction] = useState<number>(0);
-  const [showFloatingIndicator, setShowFloatingIndicator] =
-    useState<boolean>(false);
+  // Separate scroll-related state to minimize re-renders
+  const [scrollState, setScrollState] = useState({
+    visibleInteraction: 0,
+    showFloatingIndicator: false,
+    hasTriggeredTopCallback: false,
+  });
+
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const interactionRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
   const scrollTimeoutRef = useRef<number | null>(null);
-
-  const [hasTriggeredTopCallback, setHasTriggeredTopCallback] = useState(false);
 
   // Scroll preservation state
   const preservationRef = useRef({
@@ -638,8 +644,8 @@ function ChatDetails({
     selectedChat.paginatedInteractions?.data?.length || 0
   );
 
-  // Format date and time separately
-  const formatDateTime = (dateString: string) => {
+  // Memoize formatDateTime to avoid recreating on every render
+  const formatDateTime = useCallback((dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -670,7 +676,7 @@ function ChatDetails({
         time: timeString,
       };
     }
-  };
+  }, []);
 
   // Handle scroll preservation when interactions change
   useEffect(() => {
@@ -681,7 +687,6 @@ function ChatDetails({
     const lengthDifference = currentLength - prevInteractionsLength.current;
 
     if (lengthDifference > 0 && preservationRef.current.shouldPreserve) {
-      // New interactions were added, restore scroll position
       const targetInteractionIndex =
         preservationRef.current.interactionIndex + lengthDifference;
       const targetInteractionElement =
@@ -693,20 +698,18 @@ function ChatDetails({
         const newScrollPosition =
           targetTop - preservationRef.current.relativeScrollOffset;
 
-        // Restore scroll position
         container.scrollTop = Math.max(0, newScrollPosition);
       }
 
-      // Reset preservation flag
       preservationRef.current.shouldPreserve = false;
     }
 
     prevInteractionsLength.current = currentLength;
   }, [selectedChat.paginatedInteractions?.data]);
 
-  // Track visible interaction while scrolling and detect whether the user reached the top of container
-  useEffect(() => {
-    const handleScroll = () => {
+  // Optimized scroll handler with throttling
+  const handleScroll = useCallback(
+    throttle(() => {
       if (!messagesContainerRef.current) return;
 
       const container = messagesContainerRef.current;
@@ -715,91 +718,89 @@ function ChatDetails({
       const viewportTop = containerTop;
       const viewportBottom = containerTop + containerHeight;
 
-      // Show floating indicator on scroll
-      setShowFloatingIndicator(true);
+      // Batch state updates to minimize re-renders
+      setScrollState(prevState => {
+        const isAtTop = containerTop <= 5;
+        let currentInteractionIndex = prevState.visibleInteraction;
+
+        // Only recalculate visible interaction if needed
+        if (Math.abs(containerTop - (container as any).lastScrollTop || 0) > 50) {
+          Object.entries(interactionRefs.current).forEach(([index, element]) => {
+            if (element) {
+              const elementTop = element.offsetTop - container.offsetTop;
+              const elementBottom = elementTop + element.offsetHeight;
+
+              if (elementTop <= viewportBottom && elementBottom >= viewportTop) {
+                const visibleTop = Math.max(elementTop, viewportTop);
+                const visibleBottom = Math.min(elementBottom, viewportBottom);
+                const visibleHeight = visibleBottom - visibleTop;
+
+                const elementHeight = element.offsetHeight;
+                const visibilityRatio = visibleHeight / elementHeight;
+                const viewportFillRatio = visibleHeight / containerHeight;
+
+                if (visibilityRatio > 0.5 || viewportFillRatio > 0.5) {
+                  currentInteractionIndex = parseInt(index);
+                }
+              }
+            }
+          });
+          (container as any).lastScrollTop = containerTop;
+        }
+
+        // Store scroll preservation data when near the top
+        if (isAtTop || containerTop < 100) {
+          const currentElement = interactionRefs.current[currentInteractionIndex];
+          if (currentElement) {
+            preservationRef.current = {
+              interactionIndex: currentInteractionIndex,
+              relativeScrollOffset:
+                currentElement.offsetTop - container.offsetTop - containerTop,
+              shouldPreserve: true,
+            };
+          }
+        }
+
+        // Handle top callback
+        if (isAtTop && !prevState.hasTriggeredTopCallback && onScrollToTop) {
+          onScrollToTop();
+        }
+
+        return {
+          visibleInteraction: currentInteractionIndex,
+          showFloatingIndicator: true,
+          hasTriggeredTopCallback: isAtTop ? true : false,
+        };
+      });
 
       // Clear existing timeout
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
 
-      // Set timeout to hide indicator after 2 seconds of no scrolling
+      // Set timeout to hide indicator
       scrollTimeoutRef.current = setTimeout(() => {
-        setShowFloatingIndicator(false);
+        setScrollState(prev => ({ ...prev, showFloatingIndicator: false }));
       }, 2000);
+    }, 16), // ~60fps throttling
+    [onScrollToTop]
+  );
 
-      // Check if scrolled to top
-      const isAtTop = containerTop <= 5;
-
-      // Store scroll preservation data when near the top
-      if (isAtTop || containerTop < 100) {
-        // Preserve when close to top
-        const currentElement = interactionRefs.current[visibleInteraction];
-        if (currentElement) {
-          preservationRef.current = {
-            interactionIndex: visibleInteraction,
-            relativeScrollOffset:
-              currentElement.offsetTop - container.offsetTop - containerTop,
-            shouldPreserve: true,
-          };
-        }
-      }
-
-      // Trigger callback only once when reaching the top
-      if (isAtTop && !hasTriggeredTopCallback && onScrollToTop) {
-        setHasTriggeredTopCallback(true);
-        onScrollToTop();
-      } else if (!isAtTop && hasTriggeredTopCallback) {
-        // Reset the flag when user scrolls away from top
-        setHasTriggeredTopCallback(false);
-      }
-
-      // Find currently visible interaction
-      let currentInteractionIndex = 0;
-
-      Object.entries(interactionRefs.current).forEach(([index, element]) => {
-        if (element) {
-          const elementTop = element.offsetTop - container.offsetTop;
-          const elementBottom = elementTop + element.offsetHeight;
-
-          if (elementTop <= viewportBottom && elementBottom >= viewportTop) {
-            const visibleTop = Math.max(elementTop, viewportTop);
-            const visibleBottom = Math.min(elementBottom, viewportBottom);
-            const visibleHeight = visibleBottom - visibleTop;
-
-            const elementHeight = element.offsetHeight;
-            const visibilityRatio = visibleHeight / elementHeight;
-            const viewportFillRatio = visibleHeight / containerHeight;
-
-            if (visibilityRatio > 0.5 || viewportFillRatio > 0.5) {
-              currentInteractionIndex = parseInt(index);
-            }
-          }
-        }
-      });
-
-      setVisibleInteraction(currentInteractionIndex);
-    };
-
+  // Track visible interaction while scrolling
+  useEffect(() => {
     const container = messagesContainerRef.current;
     if (container) {
-      container.addEventListener('scroll', handleScroll);
+      container.addEventListener('scroll', handleScroll, { passive: true });
       handleScroll(); // Initial call
 
       return () => {
         container.removeEventListener('scroll', handleScroll);
-        // Clear timeout on cleanup
         if (scrollTimeoutRef.current) {
           clearTimeout(scrollTimeoutRef.current);
         }
       };
     }
-  }, [
-    selectedChat.paginatedInteractions?.data,
-    onScrollToTop,
-    hasTriggeredTopCallback,
-    visibleInteraction,
-  ]);
+  }, [handleScroll]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -810,6 +811,7 @@ function ChatDetails({
     };
   }, []);
 
+  // Auto-scroll to bottom on chat change
   useEffect(() => {
     if (
       messagesContainerRef.current &&
@@ -821,8 +823,8 @@ function ChatDetails({
     }
   }, [selectedChat.id]);
 
-  // Get current date for floating indicator
-  const getCurrentDate = () => {
+  // Memoize current date calculation
+  const currentDate = useMemo(() => {
     if (
       !selectedChat.paginatedInteractions?.data ||
       selectedChat.paginatedInteractions?.data.length === 0
@@ -830,7 +832,7 @@ function ChatDetails({
       return '';
 
     const currentInteraction =
-      selectedChat.paginatedInteractions?.data[visibleInteraction];
+      selectedChat.paginatedInteractions?.data[scrollState.visibleInteraction];
     if (
       !currentInteraction ||
       !currentInteraction.messages ||
@@ -838,11 +840,99 @@ function ChatDetails({
     )
       return '';
 
-    // Get the first message's date from the current interaction
     const firstMessage = currentInteraction.messages[0];
     const { date } = formatDateTime(firstMessage.createdAt);
     return date;
-  };
+  }, [
+    selectedChat.paginatedInteractions?.data,
+    scrollState.visibleInteraction,
+    formatDateTime,
+  ]);
+
+  // Memoize message input section to prevent unnecessary re-renders
+  const messageInputSection = useMemo(() => (
+    <Paper
+      sx={{
+        p: 2,
+        borderRadius: 0,
+        borderTop: 1,
+        borderColor: 'divider',
+        display: 'flex',
+        gap: 1,
+        flexDirection: 'column',
+      }}
+    >
+      {chatLoading && (
+        <LinearProgress color="secondary" sx={{ width: '100%' }} />
+      )}
+
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 1,
+        }}
+      >
+        {selectedChat.humanTalk ? (
+          <>
+            <TextField
+              fullWidth
+              placeholder="Type a message..."
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              multiline
+              maxRows={4}
+            />
+            <IconButton
+              color="primary"
+              onClick={handleSendMessage}
+              disabled={!newMessage.trim()}
+            >
+              <SendIcon />
+            </IconButton>
+          </>
+        ) : (
+          <>
+            {!isLargeScreen && (
+              <Typography>
+                Chat held by Agent {selectedChat.agentName}
+              </Typography>
+            )}
+            <Button
+              variant="outlined"
+              onClick={() => handleStartHumanAttendance(selectedChat.id)}
+              disabled={chatLoading}
+            >
+              {!isSmallScreen
+                ? chatLoading
+                  ? 'Wait a moment...'
+                  : 'Start Human Attendance'
+                : chatLoading
+                  ? 'Wait...'
+                  : 'Start attendance'}
+            </Button>
+          </>
+        )}
+      </Box>
+    </Paper>
+  ), [
+    chatLoading,
+    selectedChat.humanTalk,
+    selectedChat.agentName,
+    selectedChat.id,
+    newMessage,
+    handleSendMessage,
+    handleStartHumanAttendance,
+    isLargeScreen,
+    isSmallScreen,
+  ]);
 
   return (
     <Box
@@ -915,30 +1005,28 @@ function ChatDetails({
               flexDirection: 'column',
               alignItems: 'center',
               gap: 1,
-              opacity: showFloatingIndicator ? 1 : 0,
+              opacity: scrollState.showFloatingIndicator ? 1 : 0,
               transition: 'opacity 0.3s ease-in-out',
-              pointerEvents: showFloatingIndicator ? 'auto' : 'none',
+              pointerEvents: scrollState.showFloatingIndicator ? 'auto' : 'none',
             }}
           >
-            {/* Date */}
             <Typography
               variant="body2"
               color="text.secondary"
               sx={{ fontWeight: 500, fontSize: '0.875rem' }}
             >
-              {getCurrentDate()}
+              {currentDate}
             </Typography>
 
-            {/* Interaction Chip */}
             <Chip
               size="small"
               icon={getInteractionStatusIcon(
-                selectedChat.paginatedInteractions?.data[visibleInteraction]
+                selectedChat.paginatedInteractions?.data[scrollState.visibleInteraction]
                   ?.status
               )}
-              label={`Interaction #${selectedChat.paginatedInteractions.meta.total - ((selectedChat?.paginatedInteractions?.data?.length || 0) - 1 - visibleInteraction)} - ${selectedChat.paginatedInteractions?.data[visibleInteraction]?.status}`}
+              label={`Interaction #${selectedChat.paginatedInteractions.meta.total - ((selectedChat?.paginatedInteractions?.data?.length || 0) - 1 - scrollState.visibleInteraction)} - ${selectedChat.paginatedInteractions?.data[scrollState.visibleInteraction]?.status}`}
               color={getInteractionStatusColor(
-                selectedChat.paginatedInteractions?.data[visibleInteraction]
+                selectedChat.paginatedInteractions?.data[scrollState.visibleInteraction]
                   ?.status
               )}
               sx={{ backgroundColor: 'background.paper' }}
@@ -977,7 +1065,6 @@ function ChatDetails({
                     const isUser: boolean = message.role === 'user';
                     const { date, time } = formatDateTime(message.createdAt);
 
-                    // Show date separator for first message of the day
                     const showDateSeparator =
                       messageIndex === 0 ||
                       (messageIndex > 0 &&
@@ -987,7 +1074,6 @@ function ChatDetails({
 
                     return (
                       <Box key={message.id}>
-                        {/* Date Separator */}
                         {showDateSeparator && (
                           <Box
                             sx={{
@@ -1008,7 +1094,6 @@ function ChatDetails({
                           </Box>
                         )}
 
-                        {/* Message */}
                         <Box
                           sx={{
                             display: 'flex',
@@ -1079,79 +1164,24 @@ function ChatDetails({
       </Box>
 
       {/* Message Input */}
-      <Paper
-        sx={{
-          p: 2,
-          borderRadius: 0,
-          borderTop: 1,
-          borderColor: 'divider',
-          display: 'flex',
-          gap: 1,
-          flexDirection: 'column',
-        }}
-      >
-        {chatLoading && (
-          <LinearProgress color="secondary" sx={{ width: '100%' }} />
-        )}
-
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 1,
-          }}
-        >
-          {selectedChat.humanTalk ? (
-            <>
-              <TextField
-                fullWidth
-                placeholder="Type a message..."
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-                multiline
-                maxRows={4}
-              />
-              <IconButton
-                color="primary"
-                onClick={handleSendMessage}
-                disabled={!newMessage.trim()}
-              >
-                <SendIcon />
-              </IconButton>
-            </>
-          ) : (
-            <>
-              {!isLargeScreen && (
-                <Typography>
-                  Chat held by Agent {selectedChat.agentName}
-                </Typography>
-              )}
-              <Button
-                variant="outlined"
-                onClick={() => handleStartHumanAttendance(selectedChat.id)}
-                disabled={chatLoading}
-              >
-                {!isSmallScreen
-                  ? chatLoading
-                    ? 'Wait a moment...'
-                    : 'Start Human Attendance'
-                  : chatLoading
-                    ? 'Wait...'
-                    : 'Start attendance'}
-              </Button>
-            </>
-          )}
-        </Box>
-      </Paper>
+      {messageInputSection}
     </Box>
   );
+}
+
+// Helper function for throttling
+function throttle<T extends (...args: any[]) => any>(
+  func: T,
+  limit: number
+): (...args: Parameters<T>) => void {
+  let inThrottle: boolean;
+  return function (this: any, ...args: Parameters<T>) {
+    if (!inThrottle) {
+      func.apply(this, args);
+      inThrottle = true;
+      setTimeout(() => (inThrottle = false), limit);
+    }
+  };
 }
 
 export default function Chats() {
