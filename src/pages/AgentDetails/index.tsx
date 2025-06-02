@@ -177,9 +177,9 @@ export default function AgentDetails() {
                       <Chip
                         color={
                           agentData.isActive
-                            ? agentData.channels.filter(
+                            ? agentData.channels.find(
                                 (channel: Channel) => channel.connected
-                              ).length > 0
+                              )
                               ? 'success'
                               : 'warning'
                             : 'error'

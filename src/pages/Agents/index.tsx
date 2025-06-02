@@ -200,8 +200,13 @@ export default function Agents() {
                 onClick={() => navigate(`/agents/${agent.id}`)}
               >
                 <>
-                  <CardContent>
-                    <ListItem>
+                  <CardContent sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: theme.spacing(1),
+                  }}>
+                    <ListItem sx={{ width: 'fit-content', whiteSpace: 'nowrap' }}>
                       <ListItemAvatar>
                         <Avatar src={agent.avatar} alt={agent.name}>
                           {agent.name[0]}
@@ -210,96 +215,90 @@ export default function Agents() {
                       <ListItemText
                         sx={{ cursor: 'pointer' }}
                         primary={
-                          <Box
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: theme.spacing(1),
-                            }}
-                          >
+                          <Box>
                             {agent.name}
-                            <Tooltip
-                              title={
-                                agentActivityDescriptions[
-                                  agent.isActive
-                                    ? agent.channels.find(
-                                        (channel: Channel) => channel.connected
-                                      )
-                                      ? 2
-                                      : 1
-                                    : 0
-                                ]
-                              }
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                agent.isActive
-                                  ? deactivateAgent(agent.id)
-                                  : activateAgent(agent.id);
-                              }}
-                            >
-                              <Chip
-                                color={
-                                  agent.isActive
-                                    ? agent.channels.find(
-                                        (channel: Channel) => channel.connected
-                                      )
-                                      ? 'success'
-                                      : 'warning'
-                                    : 'error'
-                                }
-                                label={
-                                  agent.isActive
-                                    ? agent.channels.find(
-                                        (channel: Channel) => channel.connected
-                                      )
-                                      ? 'ACTIVE & CONNECTED'
-                                      : 'ACTIVE BUT DISCONNECTED'
-                                    : 'INACTIVE'
-                                }
-                              />
-                            </Tooltip>
-                            {isMdUp && (
-                              <Tooltip
-                                title={
-                                  agentCommunicationDescriptions[
-                                    agent.communicationType
-                                  ]
-                                }
-                                placement="top"
-                              >
-                                <Chip label={agent.communicationType} />
-                              </Tooltip>
-                            )}
-                            {isMdUp && (
-                              <Tooltip
-                                title={agentTypeDescriptions[agent.type]}
-                                placement="top"
-                              >
-                                <Chip label={agent.type} />
-                              </Tooltip>
-                            )}
-                            {isMdUp && (
-                              <TruncatedText
-                                text={
-                                  agent.behavior
-                                    ? agent.behavior
-                                    : agent.jobDescription
-                                      ? agent.jobDescription
-                                      : ''
-                                }
-                                maxChars={50}
-                              />
-                            )}
                           </Box>
                         }
                       />
-                      <ActionMenu
-                        agent={agent}
-                        handleDelete={handleDelete}
-                        handleOpenSettings={handleOpenSettings}
-                        theme={theme}
-                      />
                     </ListItem>
+                    <Tooltip
+                      title={
+                        agentActivityDescriptions[
+                          agent.isActive
+                            ? agent.channels.find(
+                                (channel: Channel) => channel.connected
+                              )
+                              ? 2
+                              : 1
+                            : 0
+                        ]
+                      }
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        agent.isActive
+                          ? deactivateAgent(agent.id)
+                          : activateAgent(agent.id);
+                      }}
+                    >
+                      <Chip
+                        color={
+                          agent.isActive
+                            ? agent.channels.find(
+                                (channel: Channel) => channel.connected
+                              )
+                              ? 'success'
+                              : 'warning'
+                            : 'error'
+                        }
+                        label={
+                          agent.isActive
+                            ? agent.channels.find(
+                                (channel: Channel) => channel.connected
+                              )
+                              ? 'ACTIVE & CONNECTED'
+                              : 'ACTIVE BUT DISCONNECTED'
+                            : 'INACTIVE'
+                        }
+                      />
+                    </Tooltip>
+                    {isMdUp && (
+                      <Tooltip
+                        title={
+                          agentCommunicationDescriptions[
+                            agent.communicationType
+                          ]
+                        }
+                        placement="top"
+                      >
+                        <Chip label={agent.communicationType} />
+                      </Tooltip>
+                    )}
+                    {isMdUp && (
+                      <Tooltip
+                        title={agentTypeDescriptions[agent.type]}
+                        placement="top"
+                      >
+                        <Chip label={agent.type} />
+                      </Tooltip>
+                    )}
+                    {isMdUp && (
+                      <TruncatedText
+                        text={
+                          agent.behavior
+                            ? agent.behavior
+                            : agent.jobDescription
+                              ? agent.jobDescription
+                              : ''
+                        }
+                        maxChars={50}
+                      />
+                    )}
+                    <ActionMenu
+                      agent={agent}
+                      handleDelete={handleDelete}
+                      handleOpenSettings={handleOpenSettings}
+                      theme={theme}
+                    />
                   </CardContent>
                 </>
               </Card>
