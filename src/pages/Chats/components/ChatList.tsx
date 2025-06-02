@@ -152,7 +152,7 @@ export function ChatList({ selectedChat, setSelectedChat }: ChatListProps) {
       (wrapper) => wrapper.agent?.paginatedChats != undefined
     );
     
-    if (hasPaginatedChats) {
+    if (agents.length == 0 || hasPaginatedChats) {
       const chats = agents.flatMap(
         (wrapper) => wrapper.agent?.paginatedChats?.data || []
       ) || [];

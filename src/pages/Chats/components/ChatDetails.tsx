@@ -353,18 +353,18 @@ export function ChatDetails({
 
   // Auto-scroll to bottom on chat change
   useEffect(() => {
-    console.log("Running useEffect... (1)")
+    // console.log("Running useEffect... (1)")
     if (
       messagesContainerRef.current &&
       selectedChat.paginatedInteractions?.data &&
       selectedChat.paginatedInteractions?.data.length > 0
     ) {
-      console.log("Running useEffect... (2)")
+      // console.log("Running useEffect... (2)")
       const container = messagesContainerRef.current;
       // Only scroll to bottom if not preserving scroll position
       if (!!preservationRef.current.shouldPreserve) {
           container.scrollTop = container.scrollHeight;
-          console.log("Running useEffect... (3)")
+          // console.log("Running useEffect... (3)")
       }
     }
   }, [selectedChat.id, selectedChat.paginatedInteractions?.data]);

@@ -153,8 +153,6 @@ export class ChatService {
         },
       });
 
-      console.log(response)
-
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error('Workspace not found');
