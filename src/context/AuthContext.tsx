@@ -91,6 +91,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setLoading(false);
   }, []);
 
+
   const login = async (credentials: LoginCredentials): Promise<Result> => {
     try {
       setLoading(true);
@@ -127,14 +128,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsAuthenticated(true);
 
       return { success: true };
-    } catch (error) {
-      notify(error instanceof Error ? error.message : '', 'error');
 
-      return {
-        success: false,
-        error:
-          error instanceof Error ? error.message : 'An unknown error occurred',
-      };
+    } catch (error: unknown) {
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+            // Handling network failures or fetch-specific errors
+            if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else {
+                errorMessage = `Error: ${error.message}`;
+            }
+        } else {
+            errorMessage = 'An unknown error occurred.';
+        }
+
+        notify(errorMessage, 'error');
+        return {
+          success: false,
+          error: errorMessage
+        };
     } finally {
       setLoading(false);
     }
@@ -160,7 +174,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       notify(
-        'Successful registration! We sent a verification email to your address. Please check it to enable all functionalities!',
+        'Successful registration! Please check your email inbox!',
         'success'
       );
       const { token: newToken } = data.data;
@@ -180,13 +194,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsAuthenticated(true);
 
       return { success: true };
-    } catch (error) {
-      notify(error instanceof Error ? error.message : '', 'error');
-      return {
-        success: false,
-        error:
-          error instanceof Error ? error.message : 'An unknown error occurred',
-      };
+    } catch (error: unknown) {
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+            // Handling network failures or fetch-specific errors
+            if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else {
+                errorMessage = `Error: ${error.message}`;
+            }
+        } else {
+            errorMessage = 'An unknown error occurred.';
+        }
+
+        notify(errorMessage, 'error');
+        return {
+          success: false,
+          error: errorMessage
+        };
     } finally {
       setLoading(false);
     }
@@ -225,19 +252,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsAuthenticated(true);
 
       return { success: true };
-    } catch (error) {
-      notify(error instanceof Error ? error.message : '', 'error');
-      return {
-        success: false,
-        error:
-          error instanceof Error ? error.message : 'An unknown error occurred',
-      };
+    } catch (error: unknown) {
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+            // Handling network failures or fetch-specific errors
+            if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else {
+                errorMessage = `Error: ${error.message}`;
+            }
+        } else {
+            errorMessage = 'An unknown error occurred.';
+        }
+
+        notify(errorMessage, 'error');
+        return {
+          success: false,
+          error: errorMessage
+        };
     } finally {
       setLoading(false);
     }
   };
 
-  // Logout function - clears token and resets state
   const logout = async (): Promise<Result> => {
     if (!token) {
       notify('You are not logged in!', 'error');
@@ -274,13 +313,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsAuthenticated(false);
 
       return { success: true };
-    } catch (error) {
-      notify(error instanceof Error ? error.message : '', 'error');
-      return {
-        success: false,
-        error:
-          error instanceof Error ? error.message : 'An unknown error occurred',
-      };
+    } catch (error: unknown) {
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+            // Handling network failures or fetch-specific errors
+            if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else {
+                errorMessage = `Error: ${error.message}`;
+            }
+        } else {
+            errorMessage = 'An unknown error occurred.';
+        }
+
+        notify(errorMessage, 'error');
+        return {
+          success: false,
+          error: errorMessage
+        };
     } finally {
       setLoading(false);
     }
@@ -320,13 +372,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       notify(data.message, 'success');
       return { success: true };
-    } catch (error) {
-      notify(error instanceof Error ? error.message : '', 'error');
-      return {
-        success: false,
-        error:
-          error instanceof Error ? error.message : 'An unknown error occurred',
-      };
+    } catch (error: unknown) {
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+            // Handling network failures or fetch-specific errors
+            if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else {
+                errorMessage = `Error: ${error.message}`;
+            }
+        } else {
+            errorMessage = 'An unknown error occurred.';
+        }
+
+        notify(errorMessage, 'error');
+        return {
+          success: false,
+          error: errorMessage
+        };
     } finally {
       setLoading(false);
     }

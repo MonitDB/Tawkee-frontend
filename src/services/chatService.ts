@@ -29,7 +29,7 @@ export interface MessageDto {
   text: string | null;
   role: string;
   userName?: string | null;
-  createdAt: string; // Manter como string se as datas são serializadas como strings
+  createdAt: number; // Manter como string se as datas são serializadas como strings
 }
 
 // DTO para Interação com Mensagens (alinhado com backend dtos/interaction-with-messages.dto.ts)
@@ -49,7 +49,6 @@ export interface InteractionWithMessagesDto {
 }
 
 // DTO para Chat
-// Nenhuma mudança estrutural significativa necessária aqui, mas pode usar Interaction[] atualizado se aplicável
 export interface ChatDto {
   humanTalk: boolean;
   userPicture: string | null;
@@ -110,16 +109,19 @@ export type PaginatedInteractionsWithMessagesResponseDto =
 interface ChatServiceConfig {
   token: string;
   apiUrl: string;
+  userId: string;
 }
 
 // Classe de Serviço Refatorada
 export class ChatService {
   private token: string;
   private apiUrl: string;
+  private userId: string;
 
   constructor(config: ChatServiceConfig) {
     this.token = config.token;
     this.apiUrl = config.apiUrl;
+    this.userId = config.userId;
   }
 
   /**
@@ -151,21 +153,44 @@ export class ChatService {
         },
       });
 
+      console.log(response)
+
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error('Workspace not found');
+        } else if (response.status >= 500) {
+          throw new Error('Internal server error. Please try again later.');
+        } else {
+          const data = await response.json().catch(() => ({}));
+          const errorMessage = data.error || 'A business rule error occurred.';
+          throw new Error(errorMessage);
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      // O tipo de retorno já é PaginatedResult<ChatDto>
-      const data: PaginatedResult<ChatDto> = await response.json();
+      const data: PaginatedResult<ChatDto> = await response
+        .json()
+        .catch(() => {
+          throw new Error('Invalid response from server.');
+        });
+
       return data;
-    } catch (error) {
-      console.error('Error fetching chats:', error);
-      // Retorna um resultado padrão em caso de erro, conforme o original, ou lança o erro
-      // return defaultChatDto; // Descomente se preferir retornar padrão em vez de lançar
-      throw error;
+
+    } catch (error: unknown) {
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+            // Handling network failures or fetch-specific errors
+            if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else {
+                errorMessage = `Error: ${error.message}`;
+            }
+        } else {
+            errorMessage = 'An unknown error occurred.';
+        }
+
+        throw errorMessage;
     }
   }
 
@@ -175,7 +200,6 @@ export class ChatService {
   async findInteractionsWithMessages(
     params: FindInteractionsWithMessagesParams
   ): Promise<PaginatedInteractionsWithMessagesResponseDto> {
-    // Tipo de retorno atualizado
     try {
       const { chatId, page = 1, pageSize = 10 } = params;
 
@@ -202,7 +226,6 @@ export class ChatService {
           console.warn(
             `No interactions found for chat ${chatId} or chat does not exist.`
           );
-          // Retorna um resultado paginado vazio
           return {
             data: [],
             meta: {
@@ -212,85 +235,208 @@ export class ChatService {
               totalPages: 0,
             },
           };
+        } else if (response.status >= 500) {
+          throw new Error('Internal server error. Please try again later.');
+        } else {
+          const data = await response.json().catch(() => ({}));
+          const errorMessage = data.error || 'A business rule error occurred.';
+          throw new Error(errorMessage);
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      // O tipo de retorno já é PaginatedInteractionsWithMessagesResponseDto
-      const data: PaginatedInteractionsWithMessagesResponseDto =
-        await response.json();
+      const data: PaginatedInteractionsWithMessagesResponseDto = await response
+        .json()
+        .catch(() => {
+          throw new Error('Invalid response from server.');
+        });
+
       return data;
-    } catch (error) {
-      console.error('Error fetching interactions with messages:', error);
-      throw error;
+
+    } catch (error: unknown) {
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+            // Handling network failures or fetch-specific errors
+            if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else {
+                errorMessage = `Error: ${error.message}`;
+            }
+        } else {
+            errorMessage = 'An unknown error occurred.';
+        }
+
+        throw errorMessage;
     }
   }
 
   async finishChat(id: string): Promise<boolean> {
     try {
-      const response = await fetch(`${this.apiUrl}/chats/${id}/finish`, {
+      const response = await fetch(`${this.apiUrl}/chats/${id}/finish/${this.userId}`, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${this.token}` } as const,
       });
 
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
+      if (!response.ok) {
+        if (response.status >= 500) {
+          throw new Error('Internal server error. Please try again later.');
+        } else {
+          const data = await response.json().catch(() => ({}));
+          const errorMessage = data.error || 'A business rule error occurred.';
+          throw new Error(errorMessage);
+        }
+      }
+
+      const data = await response.json().catch(() => ({}));
+      if (data.error) {
+        throw new Error(data.error);
+      }
 
       return true;
+
     } catch (error) {
-      console.log(error instanceof Error ? error.message : '', 'error');
-      return false;
+      if (error instanceof TypeError) {
+        // This is probably a network error, e.g., backend down, no internet
+        throw new Error('Connectivity issue. Please check your network.');
+      }
+      if (error instanceof Error) {
+        // Backend or business error, just propagate it
+        throw error;
+      }
+      // fallback
+      throw new Error('An unexpected error occurred.');
     }
   }
 
   async unfinishChat(id: string): Promise<boolean> {
     try {
-      const response = await fetch(`${this.apiUrl}/chats/${id}/unfinish`, {
+      const response = await fetch(`${this.apiUrl}/chats/${id}/unfinish/${this.userId}`, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${this.token}` } as const,
       });
 
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
+      if (!response.ok) {
+        if (response.status >= 500) {
+          throw new Error('Internal server error. Please try again later.');
+        } else {
+          const data = await response.json().catch(() => ({}));
+          const errorMessage = data.error || 'A business rule error occurred.';
+          throw new Error(errorMessage);
+        }
+      }
+
+      const data = await response.json().catch(() => ({}));
+      if (data.error) {
+        throw new Error(data.error);
+      }
 
       return true;
-    } catch (error) {
-      console.log(error instanceof Error ? error.message : '', 'error');
-      return false;
+
+    } catch (error: unknown) {
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+            // Handling network failures or fetch-specific errors
+            if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else {
+                errorMessage = `Error: ${error.message}`;
+            }
+        } else {
+            errorMessage = 'An unknown error occurred.';
+        }
+
+        throw errorMessage;
     }
   }
 
   async startHumanAttendanceChat(id: string): Promise<boolean> {
     try {
-      const response = await fetch(`${this.apiUrl}/chats/${id}/start-human`, {
+      const response = await fetch(`${this.apiUrl}/chats/${id}/start-human/${this.userId}`, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${this.token}` } as const,
       });
 
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
+      if (!response.ok) {
+        if (response.status >= 500) {
+          throw new Error('Internal server error. Please try again later.');
+        } else {
+          const data = await response.json().catch(() => ({}));
+          const errorMessage = data.error || 'A business rule error occurred.';
+          throw new Error(errorMessage);
+        }
+      }
+
+      const data = await response.json().catch(() => ({}));
+      if (data.error) {
+        throw new Error(data.error);
+      }
 
       return true;
-    } catch (error) {
-      console.log(error instanceof Error ? error.message : '', 'error');
-      return false;
+
+    } catch (error: unknown) {
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+            // Handling network failures or fetch-specific errors
+            if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else {
+                errorMessage = `Error: ${error.message}`;
+            }
+        } else {
+            errorMessage = 'An unknown error occurred.';
+        }
+
+        throw errorMessage;
     }
   }
 
   async stopHumanAttendanceChat(id: string): Promise<boolean> {
     try {
-      const response = await fetch(`${this.apiUrl}/chats/${id}/stop-human`, {
+      console.log(`PUT ${this.apiUrl}/chats/${id}/stop-human...`)
+      const response = await fetch(`${this.apiUrl}/chats/${id}/stop-human/${this.userId}`, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${this.token}` } as const,
       });
 
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
+      if (!response.ok) {
+        if (response.status >= 500) {
+          throw new Error('Internal server error. Please try again later.');
+        } else {
+          const data = await response.json().catch(() => ({}));
+          const errorMessage = data.error || 'A business rule error occurred.';
+          throw new Error(errorMessage);
+        }
+      }
+
+      const data = await response.json().catch(() => ({}));
+      console.log(`PUT ${this.apiUrl}/chats/${id}/stop-human... res: ${data}`);
+      if (data.error) {
+        throw new Error(data.error);
+      }
 
       return true;
-    } catch (error) {
-      console.log(error instanceof Error ? error.message : '', 'error');
-      return false;
+
+    } catch (error: unknown) {
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+            // Handling network failures or fetch-specific errors
+            if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else {
+                errorMessage = `Error: ${error.message}`;
+            }
+        } else {
+            errorMessage = 'An unknown error occurred.';
+        }
+
+        throw errorMessage;
     }
   }
 
@@ -301,13 +447,37 @@ export class ChatService {
         headers: { Authorization: `Bearer ${this.token}` } as const,
       });
 
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
+      if (!response.ok) {
+        if (response.status >= 500) {
+          throw new Error('Internal server error. Please try again later.');
+        } else {
+          const data = await response.json().catch(() => ({}));
+          const errorMessage = data.error || 'A business rule error occurred.';
+          throw new Error(errorMessage);
+        }
+      }
 
+      const data = await response.json().catch(() => ({}));
+      if (data.error) {
+        throw new Error(data.error);
+      }
       return true;
-    } catch (error) {
-      console.log(error instanceof Error ? error.message : '', 'error');
-      return false;
+    } catch (error: unknown) {
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+            // Handling network failures or fetch-specific errors
+            if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else {
+                errorMessage = `Error: ${error.message}`;
+            }
+        } else {
+            errorMessage = 'An unknown error occurred.';
+        }
+
+        throw errorMessage;
     }
   }
 
@@ -318,13 +488,39 @@ export class ChatService {
         headers: { Authorization: `Bearer ${this.token}` } as const,
       });
 
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
+      if (!response.ok) {
+        if (response.status >= 500) {
+          throw new Error('Internal server error. Please try again later.');
+        } else {
+          const data = await response.json().catch(() => ({}));
+          const errorMessage = data.error || 'A business rule error occurred.';
+          throw new Error(errorMessage);
+        }
+      }
 
+      const data = await response.json().catch(() => ({}));
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
       return true;
-    } catch (error) {
-      console.log(error instanceof Error ? error.message : '', 'error');
-      return false;
+
+    } catch (error: unknown) {
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+            // Handling network failures or fetch-specific errors
+            if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else {
+                errorMessage = `Error: ${error.message}`;
+            }
+        } else {
+            errorMessage = 'An unknown error occurred.';
+        }
+
+        throw errorMessage;
     }
   }
 }

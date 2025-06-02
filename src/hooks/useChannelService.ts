@@ -33,10 +33,7 @@ export const useChannelService = (token: string) => {
         notify('Channel created successfully!', 'success');
         return newChannel;
       } catch (error) {
-        notify(
-          error instanceof Error ? error.message : 'Unknown error',
-          'error'
-        );
+        notify(error as string, 'error');
         return null;
       } finally {
         setLoading(false);
@@ -55,10 +52,7 @@ export const useChannelService = (token: string) => {
         }
         return result;
       } catch (error) {
-        notify(
-          error instanceof Error ? error.message : 'Unknown error',
-          'error'
-        );
+        notify(error as string, 'error');
         return { qrCode: null };
       } finally {
         setLoading(false);
@@ -78,10 +72,7 @@ export const useChannelService = (token: string) => {
         }
         return success;
       } catch (error) {
-        notify(
-          error instanceof Error ? error.message : 'Unknown error',
-          'error'
-        );
+        notify(error as string, 'error');
         return false;
       } finally {
         setLoading(false);
@@ -101,10 +92,7 @@ export const useChannelService = (token: string) => {
         }
         return success;
       } catch (error) {
-        notify(
-          error instanceof Error ? error.message : 'Unknown error',
-          'error'
-        );
+        notify(error as string, 'error');
         return false;
       } finally {
         setLoading(false);

@@ -28,22 +28,6 @@ export class ChannelService {
     this.apiUrl = config.apiUrl;
   }
 
-  async getChannelsForAgent(agentId: string): Promise<Channel[]> {
-    try {
-      const response = await fetch(`${this.apiUrl}/agent/${agentId}/search`, {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${this.token}` } as const,
-      });
-
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
-
-      return data.data || [];
-    } catch (error) {
-      return [];
-    }
-  }
-
   async createChannel(
     agentId: string,
     name: string,
@@ -62,11 +46,32 @@ export class ChannelService {
         }
       );
 
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
+      }
+
       const data = await response.json();
       if (data.error) throw new Error(data.error);
+
       return data.data || null;
-    } catch {
-      return null;
+    } catch (error: unknown) {
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+            // Handling network failures or fetch-specific errors
+            if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else {
+                errorMessage = `Error: ${error.message}`;
+            }
+        } else {
+            errorMessage = 'An unknown error occurred.';
+        }
+
+        throw errorMessage;
     }
   }
 
@@ -80,11 +85,32 @@ export class ChannelService {
         }
       );
 
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
+      }
+
       const data = await response.json();
       if (data.error) throw new Error(data.error);
+
       return { qrCode: data.data.qrCode || null };
-    } catch {
-      return { qrCode: null };
+    } catch (error: unknown) {
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+            // Handling network failures or fetch-specific errors
+            if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else {
+                errorMessage = `Error: ${error.message}`;
+            }
+        } else {
+            errorMessage = 'An unknown error occurred.';
+        }
+
+        throw errorMessage;
     }
   }
 
@@ -98,11 +124,32 @@ export class ChannelService {
         }
       );
 
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
+      }
+
       const data = await response.json();
       if (data.error) throw new Error(data.error);
+
       return data.success === true;
-    } catch {
-      return false;
+    } catch (error: unknown) {
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+            // Handling network failures or fetch-specific errors
+            if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else {
+                errorMessage = `Error: ${error.message}`;
+            }
+        } else {
+            errorMessage = 'An unknown error occurred.';
+        }
+
+        throw errorMessage;
     }
   }
 
@@ -113,11 +160,33 @@ export class ChannelService {
         headers: { Authorization: `Bearer ${this.token}` } as const,
       });
 
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
+      }
+
       const data = await response.json();
       if (data.error) throw new Error(data.error);
+
       return data.success === true;
-    } catch {
-      return false;
+    } catch (error: unknown) {
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+            // Handling network failures or fetch-specific errors
+            if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else {
+                errorMessage = `Error: ${error.message}`;
+            }
+        } else {
+            errorMessage = 'An unknown error occurred.';
+        }
+
+        throw errorMessage;
     }
   }
+
 }

@@ -78,10 +78,6 @@ export class TrainingService {
     this.apiUrl = config.apiUrl;
   }
 
-  // /**
-  //  * List agent trainings with pagination and optional type filter.
-  //  * GET /agent/:agentId/trainings
-  //  */
   async findAll(
     agentId: string,
     paginationDto: PaginationDto
@@ -100,33 +96,43 @@ export class TrainingService {
         }
       );
 
-      const data = await response.json();
-
-      if (!response.ok || data.error) {
-        console.error(
-          'Error fetching trainings:',
-          data.error || response.statusText
-        );
-        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
       }
 
-      // Ensure the response matches the expected structure
+      const data = await response.json();
+
+      if (data.error) throw new Error(data.error);
+
+      // Validate response structure
       if (data && Array.isArray(data.data) && data.meta) {
         return data as PaginatedTrainingsResponseDto;
       } else {
         console.error('Invalid response structure for findAll:', data);
         return defaultPaginatedResponse;
       }
-    } catch (error) {
-      console.error('Failed to fetch trainings:', error);
-      return defaultPaginatedResponse;
+
+    } catch (error: unknown) {
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+            // Handling network failures or fetch-specific errors
+            if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else {
+                errorMessage = `Error: ${error.message}`;
+            }
+        } else {
+            errorMessage = 'An unknown error occurred.';
+        }
+
+        throw errorMessage;
     }
   }
 
-  /**
-   * Create a new training for an agent.
-   * POST /agent/:agentId/trainings
-   */
   async create(
     agentId: string,
     createTrainingDto: CreateTrainingDto
@@ -144,25 +150,36 @@ export class TrainingService {
         }
       );
 
-      const data = await response.json();
-      if (!response.ok || data.error) {
-        console.error(
-          'Error creating training:',
-          data.error || response.statusText
-        );
-        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
       }
+
+      const data = await response.json();
+
+      if (data.error) throw new Error(data.error);
+
       return data.data;
-    } catch (error) {
-      console.error('Failed to create training:', error);
-      throw error;
+    } catch (error: unknown) {
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+            // Handling network failures or fetch-specific errors
+            if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else {
+                errorMessage = `Error: ${error.message}`;
+            }
+        } else {
+            errorMessage = 'An unknown error occurred.';
+        }
+
+        throw errorMessage;
     }
   }
 
-  /**
-   * Remove a training.
-   * DELETE /training/:trainingId
-   */
   async remove(trainingId: string): Promise<boolean> {
     try {
       const response = await fetch(`${this.apiUrl}/training/${trainingId}`, {
@@ -170,18 +187,33 @@ export class TrainingService {
         headers: { Authorization: `Bearer ${this.token}` } as const,
       });
 
-      const data = await response.json();
-      if (!response.ok || data.error) {
-        console.error(
-          'Error removing training:',
-          data.error || response.statusText
-        );
-        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
       }
+
+      const data = await response.json();
+
+      if (data.error) throw new Error(data.error);
+
       return data.success === true;
-    } catch (error) {
-      console.error('Failed to remove training:', error);
-      return false;
+    } catch (error: unknown) {
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+            // Handling network failures or fetch-specific errors
+            if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else {
+                errorMessage = `Error: ${error.message}`;
+            }
+        } else {
+            errorMessage = 'An unknown error occurred.';
+        }
+
+        throw errorMessage;
     }
   }
 }

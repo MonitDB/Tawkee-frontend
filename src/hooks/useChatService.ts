@@ -3,9 +3,11 @@ import { ChatService } from '../services/chatService';
 import { env } from '../config/env';
 import { useHttpResponse } from '../context/ResponseNotifier';
 import { useAgents } from '../context/AgentsContext';
+import { useAuth } from '../context/AuthContext';
 
 export const useChatService = (token: string) => {
   const { notify } = useHttpResponse();
+  const { user } = useAuth();
   const {
     syncAgentChats,
     syncAgentChatFinishStatus,
@@ -20,7 +22,7 @@ export const useChatService = (token: string) => {
   const [interactionLoading, setInteractionLoading] = useState<boolean>(false);
 
   const service = useMemo(
-    () => new ChatService({ token, apiUrl: env.API_URL }),
+    () => new ChatService({ token, apiUrl: env.API_URL, userId: user?.id as string }),
     [token, env.API_URL]
   );
 
@@ -36,12 +38,8 @@ export const useChatService = (token: string) => {
         syncAgentChats(response);
 
         return response;
-      } catch (error) {
-        notify(
-          error instanceof Error ? error.message : 'Unknown error',
-          'error'
-        );
-        return null;
+      } catch (error: unknown) {
+        notify(error as string, 'error');
       } finally {
         setChatLoading(false);
       }
@@ -58,12 +56,8 @@ export const useChatService = (token: string) => {
 
         notify('Chat marked as finished!', 'info');
         return response;
-      } catch (error) {
-        notify(
-          error instanceof Error ? error.message : 'Unknown error',
-          'error'
-        );
-        return null;
+      } catch (error: unknown) {
+        notify(error as string, 'error');
       } finally {
         setChatLoading(false);
       }
@@ -80,12 +74,8 @@ export const useChatService = (token: string) => {
 
         notify('Chat marked as unread!', 'info');
         return response;
-      } catch (error) {
-        notify(
-          error instanceof Error ? error.message : 'Unknown error',
-          'error'
-        );
-        return null;
+      } catch (error: unknown) {
+        notify(error as string, 'error');
       } finally {
         setChatLoading(false);
       }
@@ -97,17 +87,12 @@ export const useChatService = (token: string) => {
     async (chatId: string) => {
       try {
         setChatLoading(true);
-        console.log('reading chat...')
         const response = await service.readChat(chatId);
         syncAgentChatRead(chatId);
 
         return response;
-      } catch (error) {
-        notify(
-          error instanceof Error ? error.message : 'Unknown error',
-          'error'
-        );
-        return null;
+      } catch (error: unknown) {
+        notify(error as string, 'error');
       } finally {
         setChatLoading(false);
       }
@@ -124,12 +109,8 @@ export const useChatService = (token: string) => {
 
         notify('Started human attendance in chat!', 'info');
         return response;
-      } catch (error) {
-        notify(
-          error instanceof Error ? error.message : 'Unknown error',
-          'error'
-        );
-        return null;
+      } catch (error: unknown) {
+        notify(error as string, 'error');
       } finally {
         setChatLoading(false);
       }
@@ -146,12 +127,8 @@ export const useChatService = (token: string) => {
 
         notify('Stopped human attendance in chat!', 'info');
         return response;
-      } catch (error) {
-        notify(
-          error instanceof Error ? error.message : 'Unknown error',
-          'error'
-        );
-        return null;
+      } catch (error: unknown) {
+        notify(error as string, 'error');
       } finally {
         setChatLoading(false);
       }
@@ -168,12 +145,8 @@ export const useChatService = (token: string) => {
 
         notify('Chat deleted successfully!', 'success');
         return response;
-      } catch (error) {
-        notify(
-          error instanceof Error ? error.message : 'Unknown error',
-          'error'
-        );
-        return null;
+      } catch (error: unknown) {
+        notify(error as string, 'error');
       } finally {
         setChatLoading(false);
       }
@@ -194,12 +167,8 @@ export const useChatService = (token: string) => {
         syncAgentChatInteractions(chatId, response);
 
         return response;
-      } catch (error) {
-        notify(
-          error instanceof Error ? error.message : 'Unknown error',
-          'error'
-        );
-        return null;
+      } catch (error: unknown) {
+        notify(error as string, 'error');
       } finally {
         setInteractionLoading(false);
       }

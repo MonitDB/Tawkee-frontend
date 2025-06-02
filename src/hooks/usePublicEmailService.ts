@@ -22,10 +22,7 @@ export const usePublicEmailService = () => {
 
         return true;
       } catch (error) {
-        notify(
-          error instanceof Error ? error.message : 'Unknown error',
-          'error'
-        );
+        notify(error as string, 'error');
         return false;
       } finally {
         setLoading(false);

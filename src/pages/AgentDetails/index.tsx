@@ -134,7 +134,6 @@ export default function AgentDetails() {
       const tabName = searchParams.get('tabName');
 
       if (agentWrapper?.agent) {
-        console.log('Setting new agentSettingsData:', agentWrapper.settings);
         setAgentData(agentWrapper?.agent);
         setAgentSettingsData(agentWrapper?.settings);
         if (tabName) {

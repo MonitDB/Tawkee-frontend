@@ -19,8 +19,8 @@ export const usePrivateEmailService = (token: string) => {
       const response = await privateService.resendVerification();
       notify(response.message, response.success ? 'success' : 'error');
     } catch (error) {
-      notify(error instanceof Error ? error.message : 'Unknown error', 'error');
-      return [];
+      notify(error as string, 'error');
+      return false;
     } finally {
       setLoading(false);
     }

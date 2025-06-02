@@ -3,7 +3,6 @@ import {
   useEffect,
   useRef,
   ReactNode,
-  useState,
   useContext,
 } from 'react';
 import { io, Socket } from 'socket.io-client';
@@ -11,6 +10,7 @@ import env from '../config/env';
 
 import { useAuth } from './AuthContext';
 import { useAgents } from './AgentsContext';
+import { ChatDto } from '../services/chatService';
 
 interface ConnectionStatusPayload {
   status: string;
@@ -42,19 +42,15 @@ export function SocketProvider({ children }: SocketProviderProps) {
   const socketRef = useRef<Socket | null>(null);
 
   const { user } = useAuth();
-  const { syncAgentChannelConnectionUpdate } = useAgents();
-
-  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const { syncAgentChannelConnectionUpdate, syncAgentMessageChatUpdate } = useAgents();
 
   useEffect(() => {
     const handleSocketConnect = () => {
       console.log('Connected to Socket.IO server!');
-      setIsConnected(true);
     };
 
     const handleSocketDisconnect = () => {
       console.log('Disconnected from Socket.IO server!');
-      setIsConnected(false);
     };
 
     const handleSocketConnectionStatus = (data: ConnectionStatusPayload) => {
@@ -74,9 +70,10 @@ export function SocketProvider({ children }: SocketProviderProps) {
       );
     };
 
-    const handleJoinedChat = (chatId: string) => {
-      console.log(`Joined chat ID: ${chatId}`);
-    };
+    const handleMessageChatUpdate = (data: ChatDto) => {
+      console.log('handlingMessageChatUpdate...', data);
+      syncAgentMessageChatUpdate(data);
+    }
 
     const handleSocketError = (error: ErrorPayload) => {
       console.error('Socket error:', error);
@@ -96,8 +93,8 @@ export function SocketProvider({ children }: SocketProviderProps) {
         'channelConnectionStatusUpdate',
         handleChannelConnectionStatusUpdate
       );
-
-      socketRef.current.on('joinedChat', handleJoinedChat);
+      
+      socketRef.current.on('messageChatUpdate', handleMessageChatUpdate);
 
       socketRef.current.on('error', handleSocketError);
 
@@ -115,7 +112,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
             handleChannelConnectionStatusUpdate
           );
 
-          socketRef.current.off('joinedChat', handleJoinedChat);
+          socketRef.current.off('messageChatUpdate', handleMessageChatUpdate);
 
           socketRef.current.off('error', handleSocketError);
 
@@ -126,20 +123,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
     }
   }, [user?.id]);
 
-  const handleJoinChat = (chatId: string) => {
-    if (!socketRef.current || !isConnected) {
-      console.log(
-        `Not connected to Socket.IO server. Cannot join chat ${chatId}.`
-      );
-      return;
-    }
-
-    socketRef.current.emit('joinChat', { chatId });
-  };
-
-  const contextValue: SocketContextType = {
-    handleJoinChat,
-  };
+  const contextValue: SocketContextType = {};
 
   return (
     <SocketContext.Provider value={contextValue}>

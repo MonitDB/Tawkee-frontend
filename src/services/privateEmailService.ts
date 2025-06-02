@@ -35,13 +35,22 @@ export class PrivateEmailService {
       }
 
       return data;
-    } catch (error: any) {
-      return {
-        success: false,
-        message:
-          error.message ||
-          'An unexpected error occurred while trying to send the verification email.',
-      };
+    } catch (error: unknown) {
+      let errorMessage = 'A unexpected error occurred.';
+
+      // Check if error is an instance of Error to safely access the message
+      if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+              errorMessage = 'Network error. Please check your internet connection.';
+          } else {
+              errorMessage = `Error: ${error.message}`;
+          }
+      } else {
+          errorMessage = 'An unknown error occurred.';
+      }
+
+      throw errorMessage;
     }
   }
 }

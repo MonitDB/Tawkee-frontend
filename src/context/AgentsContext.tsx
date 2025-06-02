@@ -19,6 +19,7 @@ import {
   InteractionWithMessagesDto,
   PaginatedInteractionsWithMessagesResponseDto,
   PaginatedResult,
+  PaginationMeta,
 } from '../services/chatService';
 import { InteractionStatus } from '../services/chatService';
 
@@ -159,6 +160,7 @@ interface AgentsContextType {
     chatId: string,
     interactions: PaginatedInteractionsWithMessagesResponseDto
   ) => boolean;
+  syncAgentMessageChatUpdate: (chat: ChatDto) => boolean;
 }
 
 interface AgentsProviderProps {
@@ -776,29 +778,29 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
           // Get existing chats for the agent, default to empty array if not present
           const existingChats = wrapper.agent.paginatedChats?.data || [];
 
-          // If no new chats for this agent, and we assume no meta update is needed if no data change,
-          // return the wrapper as is. If meta should always update, adjust this.
           if (newChatsForAgent.length === 0) {
-            return wrapper;
+            return {
+              ...wrapper,
+              agent: {
+                ...wrapper.agent,
+                paginatedChats: {
+                  data: existingChats,
+                  meta: wrapper.agent.paginatedChats?.meta || inputMeta
+                },
+              },
+            };
           }
 
-          // Create a map for quick lookup of new chats by id
-          const newChatsMap = new Map(
-            newChatsForAgent.map((chat) => [chat.id, chat])
-          );
-
-          // Replace existing chats with matching new ones, keep others
-          const updatedExistingChats = existingChats.map((chat) =>
-            newChatsMap.has(chat.id) ? newChatsMap.get(chat.id)! : chat
-          );
-
-          // Add new chats that didn't exist before
+          // Create a set of existing chat IDs for quick lookup
           const existingChatIds = new Set(existingChats.map((chat) => chat.id));
+
+          // Filter out new chats that already exist (preserve existing chats)
           const newChatsToAdd = newChatsForAgent.filter(
             (chat) => !existingChatIds.has(chat.id)
           );
 
-          const mergedChats = [...updatedExistingChats, ...newChatsToAdd];
+          // Merge existing chats with only the truly new chats
+          const mergedChats = [...existingChats, ...newChatsToAdd];
 
           return {
             ...wrapper,
@@ -1141,17 +1143,17 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
           // --- Determinar chatIndex manualmente --- 
           let chatIndex = -1;
-          console.log(`DEBUG MAP [Agent: ${agent?.id}]: Iniciando busca manual por chatId: ${chatId}`);
+          // console.log(`DEBUG MAP [Agent: ${agent?.id}]: Iniciando busca manual por chatId: ${chatId}`);
           for (let i = 0; i < existingChats.length; i++) {
             const currentChatId = existingChats[i]?.id;
             // Adicionar trim() para robustez contra espaços ocultos/invisíveis
             if (currentChatId?.trim() === chatId?.trim()) {
               chatIndex = i;
-              console.log(`DEBUG MAP [Agent: ${agent?.id}]: Match encontrado manualmente no índice ${i}`);
+              // console.log(`DEBUG MAP [Agent: ${agent?.id}]: Match encontrado manualmente no índice ${i}`);
               break; // Encontrou, pode parar o loop
             }
           }
-          console.log(`DEBUG MAP [Agent: ${agent?.id}]: Resultado da busca manual: chatIndex = ${chatIndex}`);
+          // console.log(`DEBUG MAP [Agent: ${agent?.id}]: Resultado da busca manual: chatIndex = ${chatIndex}`);
           // --- Fim da busca manual ---
 
           // Remover a linha original do findIndex:
@@ -1159,12 +1161,12 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
           // A lógica continua a partir daqui usando o chatIndex encontrado manualmente
           if (chatIndex === -1) {
-            console.log(`DEBUG MAP [Agent: ${agent?.id}]: chatIndex é -1 (busca manual), retornando wrapper original.`);
+            // console.log(`DEBUG MAP [Agent: ${agent?.id}]: chatIndex é -1 (busca manual), retornando wrapper original.`);
             return wrapper;
           }
 
           // --- ESTA PARTE SÓ SERÁ EXECUTADA SE chatIndex NÃO FOR -1 ---
-          console.log(`DEBUG: Found chat ${chatId} in agent ${agent.id} at index ${chatIndex}`);
+          // console.log(`DEBUG: Found chat ${chatId} in agent ${agent.id} at index ${chatIndex}`);
 
           const targetChat = existingChats[chatIndex];
           const existingInteractions =
@@ -1199,7 +1201,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
               meta: inputMeta,
             };
 
-          console.log(`DEBUG [Agent: ${agent.id}, Chat: ${chatId}]: newPaginatedInteractions a ser atribuído:`, JSON.stringify(newPaginatedInteractions));
+          // console.log(`DEBUG [Agent: ${agent.id}, Chat: ${chatId}]: newPaginatedInteractions a ser atribuído:`, JSON.stringify(newPaginatedInteractions));
 
           const updatedChats = [...existingChats];
           updatedChats[chatIndex] = {
@@ -1207,7 +1209,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
             paginatedInteractions: newPaginatedInteractions,
           };
 
-          console.log(`DEBUG [Agent: ${agent.id}, Chat: ${chatId}]: updatedChats[${chatIndex}] após atribuição:`, JSON.stringify(updatedChats[chatIndex]));
+          // console.log(`DEBUG [Agent: ${agent.id}, Chat: ${chatId}]: updatedChats[${chatIndex}] após atribuição:`, JSON.stringify(updatedChats[chatIndex]));
 
           const updatedAgentPaginatedChats: PaginatedResult<ChatDto> = {
             ...(agent.paginatedChats || {}),
@@ -1215,14 +1217,14 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
             meta: agent.paginatedChats?.meta || { total: updatedChats.length, page: 1, pageSize: updatedChats.length, totalPages: 1 }
           };
 
-          console.log(`DEBUG [Agent: ${agent.id}, Chat: ${chatId}]: updatedAgentPaginatedChats final:`, JSON.stringify(updatedAgentPaginatedChats));
+          // console.log(`DEBUG [Agent: ${agent.id}, Chat: ${chatId}]: updatedAgentPaginatedChats final:`, JSON.stringify(updatedAgentPaginatedChats));
 
           const updatedAgent = {
             ...agent,
             paginatedChats: updatedAgentPaginatedChats,
           };
 
-          console.log(`DEBUG [Agent: ${agent.id}, Chat: ${chatId}]: Agente final a ser retornado pelo map:`, JSON.stringify(updatedAgent));
+          // console.log(`DEBUG [Agent: ${agent.id}, Chat: ${chatId}]: Agente final a ser retornado pelo map:`, JSON.stringify(updatedAgent));
 
           return {
             ...wrapper,
@@ -1232,41 +1234,41 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
         // --- LOGS FINAIS ANTES DE RETORNAR O NOVO ESTADO ---
         // Tentar encontrar os índices novamente para o log final, ciente que findIndex pode falhar
-        const agentIndex = updatedAgents.findIndex(wrapper => wrapper.agent.paginatedChats?.data.some(chat => chat.id === chatId));
-        let finalChatIndex = -1;
-        if (agentIndex !== -1) {
-            finalChatIndex = updatedAgents[agentIndex]?.agent?.paginatedChats?.data.findIndex(chat => chat.id === chatId);
-        }
+        // const agentIndex = updatedAgents.findIndex(wrapper => wrapper.agent.paginatedChats?.data.some(chat => chat.id === chatId));
+        // let finalChatIndex = -1;
+        // if (agentIndex !== -1) {
+        //     finalChatIndex = updatedAgents[agentIndex]?.agent?.paginatedChats?.data.findIndex(chat => chat.id === chatId);
+        // }
 
-        console.log(`FINAL CHECK - Indices encontrados (pós-map): Agent Index: ${agentIndex}, Chat Index: ${finalChatIndex}`);
+        // console.log(`FINAL CHECK - Indices encontrados (pós-map): Agent Index: ${agentIndex}, Chat Index: ${finalChatIndex}`);
 
-        if (agentIndex !== -1 && finalChatIndex !== -1) { // Usar os índices encontrados pós-map para o log final
-          const finalAgentWrapper = updatedAgents[agentIndex];
-          const finalAgentObject = finalAgentWrapper?.agent;
-          const finalPaginatedChats = finalAgentObject?.paginatedChats;
-          const finalChatObject = finalPaginatedChats?.data[finalChatIndex];
+        // if (agentIndex !== -1 && finalChatIndex !== -1) { // Usar os índices encontrados pós-map para o log final
+        //   const finalAgentWrapper = updatedAgents[agentIndex];
+        //   const finalAgentObject = finalAgentWrapper?.agent;
+        //   const finalPaginatedChats = finalAgentObject?.paginatedChats;
+        //   const finalChatObject = finalPaginatedChats?.data[finalChatIndex];
 
-          console.log(
-            'FINAL CHECK [Direto]: Objeto Chat completo antes de retornar:',
-            finalChatObject
-          );
-          console.log(
-            'FINAL CHECK [Direto]: Propriedade paginatedInteractions antes de retornar:',
-            finalChatObject?.paginatedInteractions
-          );
-          console.log(
-            'FINAL CHECK [Stringify]: Propriedade paginatedInteractions antes de retornar:',
-            JSON.stringify(finalChatObject?.paginatedInteractions)
-          );
+        //   console.log(
+        //     'FINAL CHECK [Direto]: Objeto Chat completo antes de retornar:',
+        //     finalChatObject
+        //   );
+        //   console.log(
+        //     'FINAL CHECK [Direto]: Propriedade paginatedInteractions antes de retornar:',
+        //     finalChatObject?.paginatedInteractions
+        //   );
+        //   console.log(
+        //     'FINAL CHECK [Stringify]: Propriedade paginatedInteractions antes de retornar:',
+        //     JSON.stringify(finalChatObject?.paginatedInteractions)
+        //   );
 
-        } else {
-          // Se o findIndex pós-map falhar, tentar logar com base no que *deveria* ter sido atualizado
-          const potentiallyUpdatedAgentWrapper = updatedAgents.find(wrapper => wrapper.agent.id === '71e36e97-1f60-4091-aea5-c48df30ee107'); // Usar ID do agente problemático para log
-          const potentiallyUpdatedChat = potentiallyUpdatedAgentWrapper?.agent?.paginatedChats?.data.find(chat => chat.id === chatId);
-          console.log('FINAL CHECK (Fallback): Agente ou Chat não encontrado via findIndex pós-map. Verificando objeto potencialmente atualizado:', JSON.stringify(potentiallyUpdatedChat?.paginatedInteractions));
-        }
+        // } else {
+        //   // Se o findIndex pós-map falhar, tentar logar com base no que *deveria* ter sido atualizado
+        //   const potentiallyUpdatedAgentWrapper = updatedAgents.find(wrapper => wrapper.agent.id === '71e36e97-1f60-4091-aea5-c48df30ee107'); // Usar ID do agente problemático para log
+        //   const potentiallyUpdatedChat = potentiallyUpdatedAgentWrapper?.agent?.paginatedChats?.data.find(chat => chat.id === chatId);
+        //   console.log('FINAL CHECK (Fallback): Agente ou Chat não encontrado via findIndex pós-map. Verificando objeto potencialmente atualizado:', JSON.stringify(potentiallyUpdatedChat?.paginatedInteractions));
+        // }
 
-        console.log('FINAL CHECK: Estrutura completa (updatedAgents) antes de retornar:', JSON.stringify(updatedAgents));
+        // console.log('FINAL CHECK: Estrutura completa (updatedAgents) antes de retornar:', JSON.stringify(updatedAgents));
 
         return {
           ...prev,
@@ -1277,6 +1279,150 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       return true;
     } catch (error) {
       console.error("Error updating agent chat interactions locally:", error);
+      return false;
+    }
+  };
+
+  const syncAgentMessageChatUpdate = (chat: ChatDto): boolean => {
+    let updateApplied = false;
+    try {
+      setPaginatedAgents((prev) => {
+        const agentId = chat.agentId;
+        const chatId = chat.id;
+
+        const agentIndex = prev.agents.findIndex(wrapper => wrapper.agent.id === agentId);
+
+        if (agentIndex === -1) {
+          console.warn(`Agent with ID ${agentId} not found. Skipping chat update for chat ID ${chatId}.`);
+          updateApplied = false;
+          return prev;
+        }
+
+        const agentWrapper = prev.agents[agentIndex];
+        const existingPaginatedChats = agentWrapper.agent.paginatedChats || { data: [], meta: { page: 1, pageSize: 10, total: 0, totalPages: 1 } };
+        const existingChats = existingPaginatedChats.data;
+        const chatIndex = existingChats.findIndex(c => c.id === chatId);
+
+        let updatedAgentChatsData: ChatDto[];
+        let updatedAgentChatsMeta: PaginationMeta = { ...existingPaginatedChats.meta };
+        const chatPageSize = Math.max(1, updatedAgentChatsMeta.pageSize);
+
+        if (chatIndex !== -1) {
+          // --- Chat exists: Update it --- 
+          // console.log(`Updating existing chat ${chatId} for agent ${agentId}`);
+          const existingChat = existingChats[chatIndex];
+
+          // --- Granular Interaction Update Logic --- 
+          let updatedPaginatedInteractions: PaginatedInteractionsWithMessagesResponseDto | undefined = existingChat.paginatedInteractions;
+
+          // Only perform interaction update if the incoming chat has interactions data
+          
+          if (chat.paginatedInteractions && chat.paginatedInteractions.data && chat.paginatedInteractions.data.length > 0) {
+            const incomingInteractionsData = chat.paginatedInteractions.data;
+            const existingInteractions = existingChat.paginatedInteractions?.data || [];
+            // Use existing meta as base, or default if none exists
+            const baseInteractionMeta = existingChat.paginatedInteractions?.meta || { page: 1, pageSize: 10, total: 0, totalPages: 1 }; 
+
+            // Map for efficient lookup and update of existing interactions
+            const interactionsMap = new Map(existingInteractions.map(interaction => [interaction.id, interaction]));
+
+            // Process incoming interactions: update existing or add new
+            incomingInteractionsData.forEach(incomingInteraction => {
+              // Update existing or add new interaction to the map
+              interactionsMap.set(incomingInteraction.id, {
+                ...(interactionsMap.get(incomingInteraction.id) || {}), // Keep old fields if updating
+                ...incomingInteraction // Override with incoming fields
+              });
+            });
+
+            // Get the final list of interactions from the map values
+            const finalInteractionsData = Array.from(interactionsMap.values());
+
+            // Update meta based on the final merged list
+            const finalTotal = finalInteractionsData.length;
+            const interactionPageSize = Math.max(1, baseInteractionMeta.pageSize);
+            const finalTotalPages = Math.ceil(finalTotal / interactionPageSize);
+
+            updatedPaginatedInteractions = {
+              data: finalInteractionsData,
+              meta: {
+                ...baseInteractionMeta, // Keep existing page, pageSize from original state
+                total: finalTotal,
+                totalPages: finalTotalPages,
+                // Optionally use meta from chat.paginatedInteractions if needed, e.g.:
+                // page: chat.paginatedInteractions.meta?.page ?? baseInteractionMeta.page,
+              }
+            };
+            // console.log(`Granularly updated interactions for chat ${chatId}. New total: ${finalTotal}`);
+          } else {
+            // If incoming chat has no interactions, keep the existing ones
+            // console.log(`No interactions provided in update for chat ${chatId}. Keeping existing interactions.`);
+          }
+          // --- End Granular Interaction Update Logic --- 
+
+          // Create the updated chat object
+          const updatedChat: ChatDto = {
+            ...existingChat, // Start with existing data
+            ...chat, // Override with incoming chat data (like read status, latestMessage, etc.)
+            paginatedInteractions: updatedPaginatedInteractions, // Assign the potentially updated interactions
+          };
+
+          // Replace the chat in the agent's chat list
+          updatedAgentChatsData = [
+            ...existingChats.slice(0, chatIndex),
+            updatedChat,
+            ...existingChats.slice(chatIndex + 1),
+          ];
+          // Meta total for chats doesn't change when updating a chat
+          updatedAgentChatsMeta.total = existingChats.length;
+
+        } else {
+          // --- Chat does not exist: Add it --- 
+          // console.log(`Adding new chat ${chatId} to agent ${agentId}`);
+          // The new chat is added as is, including its paginatedInteractions if present
+          updatedAgentChatsData = [...existingChats, chat];
+          // Update meta total for chats
+          updatedAgentChatsMeta.total = existingChats.length + 1;
+        }
+
+        // Recalculate totalPages for the chat list
+        updatedAgentChatsMeta.totalPages = Math.ceil(updatedAgentChatsMeta.total / chatPageSize);
+
+        // Create the updated agent object
+        const updatedAgent: Agent = {
+          ...agentWrapper.agent,
+          paginatedChats: {
+            data: updatedAgentChatsData,
+            meta: updatedAgentChatsMeta,
+          },
+        };
+
+        // Create the updated agent wrapper
+        const updatedAgentWrapper: AgentWrapper = {
+          ...agentWrapper,
+          agent: updatedAgent,
+        };
+
+        // Create the new agents array for the state update
+        const updatedAgentsArray = [
+          ...prev.agents.slice(0, agentIndex),
+          updatedAgentWrapper,
+          ...prev.agents.slice(agentIndex + 1),
+        ];
+
+        updateApplied = true; // Mark that an update was made
+
+        // Return the updated state structure
+        return {
+          ...prev,
+          agents: updatedAgentsArray,
+        };
+      });
+
+      return updateApplied;
+
+    } catch (error) {
+      console.error('Error in syncAgentMessageChatUpdateCorrected:', error);
       return false;
     }
   };
@@ -1318,6 +1464,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     syncAgentChatDeletion,
 
     syncAgentChatInteractions,
+    syncAgentMessageChatUpdate
   };
 
   return (

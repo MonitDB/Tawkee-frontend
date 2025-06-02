@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import {
   CreateTrainingDto,
+  defaultPaginatedResponse,
   TrainingDto,
   TrainingService,
 } from '../services/trainingService';
@@ -35,11 +36,8 @@ export const useTrainingService = (token: string) => {
 
         return response;
       } catch (error) {
-        notify(
-          error instanceof Error ? error.message : 'Unknown error',
-          'error'
-        );
-        return null;
+        notify(error as string, 'error');
+        return defaultPaginatedResponse;
       } finally {
         setLoading(false);
       }
@@ -61,10 +59,7 @@ export const useTrainingService = (token: string) => {
         notify('Training created successfully!', 'success');
         return newTraining;
       } catch (error) {
-        notify(
-          error instanceof Error ? error.message : 'Unknown error',
-          'error'
-        );
+        notify(error as string, 'error');
         return null;
       } finally {
         setLoading(false);
@@ -85,10 +80,7 @@ export const useTrainingService = (token: string) => {
         }
         return success;
       } catch (error) {
-        notify(
-          error instanceof Error ? error.message : 'Unknown error',
-          'error'
-        );
+        notify(error as string, 'error');
         return false;
       } finally {
         setLoading(false);
