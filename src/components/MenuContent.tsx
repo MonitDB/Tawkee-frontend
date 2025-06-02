@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useAgents } from '../context/AgentsContext';
 
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -11,6 +12,7 @@ import Stack from '@mui/material/Stack';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 // import GroupsIcon from '@mui/icons-material/Groups';
 import ChatIcon from '@mui/icons-material/Chat';
+import { Badge, ListItemAvatar } from '@mui/material';
 // import ContactIcon from '@mui/icons-material/Contacts';
 
 // import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
@@ -37,10 +39,21 @@ export default function MenuContent() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const { paginatedAgents } = useAgents();
+  const { agents } = paginatedAgents;
+
   const routeKeyMap: Record<number, string> = {
     0: '/',
     1: '/chats',
   };
+
+  const totalUnreadCount = agents.reduce((total, wrapper) => {
+    const chats = wrapper.agent?.paginatedChats?.data;
+    if (!chats) return total;
+
+    const agentUnread = chats.reduce((sum, chat) => sum + (chat.unReadCount || 0), 0);
+    return total + agentUnread;
+  }, 0);
 
   return (
     <Stack sx={{ flexGrow: 1, p: 1, justifyContent: 'space-between' }}>
@@ -53,8 +66,25 @@ export default function MenuContent() {
             onClick={() => navigate(routeKeyMap[index])}
           >
             <ListItemButton selected={routeKeyMap[index] == location.pathname}>
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
+              { item.text == 'Chats' ? (
+                <>
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemAvatar>
+                    <Badge
+                      badgeContent={totalUnreadCount}
+                      color='error'
+                      invisible={totalUnreadCount === 0}
+                    >
+                      <ListItemText primary={item.text} />
+                    </Badge>                
+                  </ListItemAvatar>
+                </>
+              ) : (
+                <>
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.text} />
+                </>
+              )} 
             </ListItemButton>
           </ListItem>
         ))}

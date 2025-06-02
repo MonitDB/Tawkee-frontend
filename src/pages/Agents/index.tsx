@@ -76,7 +76,7 @@ export default function Agents() {
   const navigate = useNavigate();
 
   const [tab, setTab] = useState(0);
-  const { deleteAgent, paginatedAgents, setPage, loading } = useAgents();
+  const { deleteAgent, activateAgent, deactivateAgent, paginatedAgents, setPage, loading } = useAgents();
 
   const { agents, meta } = paginatedAgents;
 
@@ -230,6 +230,12 @@ export default function Agents() {
                                     : 0
                                 ]
                               }
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                agent.isActive
+                                  ? deactivateAgent(agent.id)
+                                  : activateAgent(agent.id);
+                              }}
                             >
                               <Chip
                                 color={

@@ -71,7 +71,6 @@ export function SocketProvider({ children }: SocketProviderProps) {
     };
 
     const handleMessageChatUpdate = (data: ChatDto) => {
-      console.log('handlingMessageChatUpdate...', data);
       syncAgentMessageChatUpdate(data);
     }
 
