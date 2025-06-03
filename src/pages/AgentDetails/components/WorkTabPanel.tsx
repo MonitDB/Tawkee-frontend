@@ -71,18 +71,20 @@ export default function WorkTabPanel({
     }
 
     try {
-      const url = new URL(agentJobSiteValue);
-      if (!['http:', 'https:'].includes(url.protocol)) {
-        throw new Error('Invalid protocol');
-      }
-
-      if (agentJobSiteValue.length > AGENT_SITE_CHARS_LIMIT) {
-        setAgentJobSiteValueError(true);
-        setAgentJobSiteValueErrorMessage('');
-        isValid = false;
-      } else {
-        setAgentJobSiteValueError(false);
-        setAgentJobSiteValueErrorMessage('');
+      if (agentJobSiteValue) {
+        const url = new URL(agentJobSiteValue);
+        if (!['http:', 'https:'].includes(url.protocol)) {
+          throw new Error('Invalid protocol');
+        }
+  
+        if (agentJobSiteValue.length > AGENT_SITE_CHARS_LIMIT) {
+          setAgentJobSiteValueError(true);
+          setAgentJobSiteValueErrorMessage('');
+          isValid = false;
+        } else {
+          setAgentJobSiteValueError(false);
+          setAgentJobSiteValueErrorMessage('');
+        }
       }
     } catch (e) {
       setAgentJobSiteValueError(true);

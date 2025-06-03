@@ -18,6 +18,7 @@ export const useTrainingService = (token: string) => {
   } = useAgents();
 
   const [loading, setLoading] = useState(false);
+  const [createTrainingLoading, setCreateTrainingLoading] = useState(false);
 
   const service = useMemo(
     () => new TrainingService({ token, apiUrl: env.API_URL }),
@@ -48,8 +49,7 @@ export const useTrainingService = (token: string) => {
   const createTraining = useCallback(
     async (agentId: string, trainingData: CreateTrainingDto) => {
       try {
-        setLoading(true);
-        notify('Processing training material...', 'info');
+        setCreateTrainingLoading(true);
         const newTraining = (await service.create(
           agentId,
           trainingData
@@ -62,7 +62,7 @@ export const useTrainingService = (token: string) => {
         notify(error as string, 'error');
         return null;
       } finally {
-        setLoading(false);
+        setCreateTrainingLoading(false);
       }
     },
     [service, syncAgentTrainingCreation, notify]
@@ -94,5 +94,6 @@ export const useTrainingService = (token: string) => {
     createTraining,
     deleteTraining,
     loading,
+    createTrainingLoading
   };
 };

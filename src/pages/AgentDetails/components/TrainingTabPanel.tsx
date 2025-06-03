@@ -59,7 +59,7 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
 
   const { token } = useAuth();
-  const { fetchTrainings, createTraining, deleteTraining, loading } =
+  const { fetchTrainings, createTraining, deleteTraining, loading, createTrainingLoading } =
     useTrainingService(token as string);
 
   const [page, setPage] = useState<number>(
@@ -72,7 +72,7 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
   const [expanded, setExpanded] = useState<string | false>(false);
 
   const [activeTab, setActiveTab] = useState<
-    'all' | 'TEXT' | 'WEBSITE' | 'DOCUMENT'
+    'all' | 'TEXT' | 'DOCUMENT' | 'WEBSITE' | 'VIDEO'
   >('all');
 
   const [trainingData, setTrainingData] =
@@ -102,7 +102,6 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
       }
     } else {
       // Fetch from API
-      console.log({ paginatedPage: paginated?.meta?.page, page });
       fetchTrainingData(agentData.id);
     }
   }, [agentData?.paginatedTrainings?.data, page]);
@@ -150,6 +149,8 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
         return 'primary';
       case 'WEBSITE':
         return 'info';
+      case 'VIDEO':
+        return 'error';
       case 'DOCUMENT':
         return 'success';
       default:
@@ -173,6 +174,11 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
         return item.text || 'Text without content';
       case 'WEBSITE':
         return item.website || 'URL not specified';
+      case 'VIDEO':
+        // Check if video is a data URL
+        return item.documentName
+          ? item.documentName
+          : item.video || 'Unnamed video';
       case 'DOCUMENT':
         return item.documentName || 'Unnamed document';
       default:
@@ -180,49 +186,37 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
     }
   };
 
-  const getSimplifiedDocMimetype = (mimetype: string | undefined) => {
-    if (mimetype == undefined) {
-      return 'DOC';
-    }
+  const getMimeTypeExtension = (mimetype: string): string => {
+    const mimeTypeMap: Record<string, string> = {
+      // Document types
+      'application/pdf': 'PDF',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX',
+      'text/plain': 'TXT',
+      'text/html': 'HTML',
+      'application/msword': 'DOC',
+      'application/vnd.oasis.opendocument.text': 'ODT',
+      'application/rtf': 'RTF',
+      
+      // Image types
+      'image/jpeg': 'JPG',
+      'image/png': 'PNG',
+      'image/tiff': 'TIFF',
+      
+      // Video types
+      'video/mp4': 'MP4',
+      'video/avi': 'AVI',
+      'video/quicktime': 'MOV',
+      'video/x-msvideo': 'AVI',
+      'video/webm': 'WEBM',
+      'video/ogg': 'OGV',
+      'video/3gpp': '3GP',
+      'video/x-flv': 'FLV',
+      'video/x-ms-wmv': 'WMV',
+      'video/mp2t': 'TS',
+      'video/x-matroska': 'MKV'
+    };
 
-    switch (mimetype) {
-      case 'application/pdf': {
-        return 'PDF';
-      }
-      case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': {
-        return 'DOCX';
-      }
-      case 'text/plain': {
-        return 'TXT';
-      }
-      case 'text/html': {
-        return 'HTML';
-      }
-      case 'application/msword': {
-        return 'DOC';
-      }
-      case 'application/vnd.oasis.opendocument.text': {
-        return 'ODT';
-      }
-      case 'application/rtf': {
-        // RTF
-        return 'RTF';
-      }
-
-      case 'image/jpeg': {
-        return 'JPG';
-      }
-      case 'image/png': {
-        return 'PNG';
-      }
-      case 'image/tiff': {
-        return 'TIFF';
-      }
-
-      default: {
-        return 'Unkwown extension';
-      }
-    }
+    return mimeTypeMap[mimetype] || 'Unknown extension';
   };
 
   const handleCloseDialog = () => {
@@ -230,6 +224,7 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
   };
 
   const handleSubmitTraining = (training: CreateTrainingDto) => {
+    console.log('handleSubmitTraining...')
     createTraining(agentData?.id as string, training);
   };
 
@@ -248,9 +243,10 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
   const tabCounts = {
     all: trainingData.data.length,
     TEXT: trainingData.data.filter((item) => item.type === 'TEXT').length,
-    WEBSITE: trainingData.data.filter((item) => item.type === 'WEBSITE').length,
     DOCUMENT: trainingData.data.filter((item) => item.type === 'DOCUMENT')
       .length,
+    VIDEO: trainingData.data.filter((item) => item.type === 'VIDEO').length,
+    WEBSITE: trainingData.data.filter((item) => item.type === 'WEBSITE').length,
   };
 
   if (!agentData) return null;
@@ -315,7 +311,7 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
           spacing={1}
           sx={{ borderBottom: 1, borderColor: 'divider', pb: 1 }}
         >
-          {(['all', 'TEXT', 'WEBSITE', 'DOCUMENT'] as const).map((tab) => (
+          {(['all', 'TEXT', 'DOCUMENT', 'WEBSITE', 'VIDEO'] as const).map((tab) => (
             <Button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -350,13 +346,13 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
       </Box>
 
       {/* Content */}
-      {loading && (
+      {loading || createTrainingLoading && (
         <LinearProgress color="secondary" sx={{ width: '100%', margin: 1 }} />
       )}
       {filteredData.length === 0 ? (
         <Alert severity="info" sx={{ borderRadius: 2 }}>
-          {loading
-            ? 'Fetching data...'
+          {loading || createTrainingLoading
+            ? loading ? 'Fetching data...' : 'Processing and storing training data...'
             : searchQuery
               ? 'No training found for this search.'
               : 'No training registered yet.'}
@@ -498,8 +494,8 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
                       <Tooltip title="Download document">
                         <Chip
                           icon={<DocumentIcon fontSize="small" />}
-                          label={getSimplifiedDocMimetype(
-                            item.documentMimetype
+                          label={getMimeTypeExtension(
+                            item.documentMimetype as string
                           )}
                           size="small"
                           clickable
@@ -511,14 +507,16 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
                         />
                       </Tooltip>
                     )}
-                    {/* {item.trainingSubPages === 'ENABLED' && (
+                    {item.video && (
                       <Chip
-                        label="Subpáginas habilitadas"
+                        icon={<VideoIcon fontSize="small" />}
+                        label={getMimeTypeExtension(
+                          item.documentMimetype as string
+                        )}
                         size="small"
-                        color="success"
                         variant="outlined"
                       />
-                    )} */}
+                    )}                    
                   </Stack>
 
                   {/* Menu Button */}

@@ -14,15 +14,16 @@ import {
   Paper,
   CircularProgress,
   useColorScheme,
-  useTheme,
+  useTheme
 } from '@mui/material';
 import { CloudUpload, Close, Image } from '@mui/icons-material';
 
 // Enum para os tipos de treinamento
 enum TrainingType {
   TEXT = 'TEXT',
-  WEBSITE = 'WEBSITE',
   DOCUMENT = 'DOCUMENT',
+  WEBSITE = 'WEBSITE',
+  VIDEO = 'VIDEO'
 }
 
 // Interface para o DTO de criação de treinamento
@@ -36,6 +37,7 @@ interface CreateTrainingDto {
   documentUrl?: string;
   documentName?: string;
   documentMimetype?: string;
+  video?: string;
 }
 
 interface NewTrainingDialogProps {
@@ -66,12 +68,18 @@ export default function CreateTrainingDialog({
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
+  const [uploadedVideo, setUploadedVideo] = useState<File | null>(null);
 
   const [textCharacterCount, setTextCharacterCount] = useState<number>(0);
   const [textError, setTextError] = useState<boolean>(false);
 
   const [websiteCharacterCount, setWebsiteCharacterCount] = useState<number>(0);
   const [websiteError, setWebsiteError] = useState<boolean>(false);
+  const [websiteErrorMessage, setWebsiteErrorMessage] = useState<string>('');
+
+  const [videoCharacterCount, setVideoCharacterCount] = useState<number>(0);
+  const [videoError, setVideoError] = useState<boolean>(false);
+  const [videoErrorMessage, setVideoErrorMessage] = useState<string>('');
 
   const TEXT_CHARS_LIMIT = 1028;
 
@@ -99,11 +107,23 @@ export default function CreateTrainingDialog({
 
     if (name === 'website') {
       setWebsiteCharacterCount(value.length);
+      setWebsiteErrorMessage('');
 
       if (value.length > TEXT_CHARS_LIMIT) {
         setWebsiteError(true);
       } else {
         setWebsiteError(false);
+      }
+    }
+
+    if (name === 'video') {
+      setVideoCharacterCount(value.length);
+      setVideoErrorMessage('');
+
+      if (value.length > TEXT_CHARS_LIMIT) {
+        setVideoError(true);
+      } else {
+        setVideoError(false);
       }
     }
 
@@ -170,6 +190,29 @@ export default function CreateTrainingDialog({
     reader.readAsDataURL(file);
   };
 
+  const handleVideoUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadedVideo(file);
+
+    // Simulando o processo de upload e conversão para URL
+    const reader = new FileReader();
+    reader.onload = () => {
+      // Base64 do documento como URL simulada
+      const videoUrl = reader.result as string;
+      setFormData({
+        ...formData,
+        video: videoUrl,
+        documentName: file.name,
+        documentMimetype: file.type
+      });
+      setIsUploading(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Função para remover a imagem carregada
   const handleRemoveImage = () => {
     setUploadedImage(null);
@@ -190,23 +233,83 @@ export default function CreateTrainingDialog({
     });
   };
 
+  // Função para remover o documento carregado
+  const handleRemoveVideo = () => {
+    setUploadedVideo(null);
+    setFormData({
+      ...formData,
+      video: undefined
+    });
+    setVideoError(false);
+  };
+
   // Função para enviar o formulário
   const handleSubmit = () => {
     // Validar valores do formulário primeiro
-    if (textError || websiteError) {
+    if (textError) {
       setTextError(true);
       return;
     }
 
-    onSubmit(formData);
-    setTextCharacterCount(0);
-    setWebsiteCharacterCount(0);
+    if (websiteError) {
+      setWebsiteError(true);
+      return;
+    }
+
+    if (videoError) {
+      setVideoError(true);
+      return;
+    }
+
+    try {
+      if (formData.website) {
+        const url = new URL(formData.website);
+        if (!['http:', 'https:'].includes(url.protocol)) {
+          throw new Error('Invalid protocol');
+        }
+      }
+    } catch (e) {
+      setWebsiteError(true);
+      setWebsiteErrorMessage('Please enter a valid website URL.');
+      return;
+    }
+
+    try {
+      if (formData.video) {
+        const url = new URL(formData.video);
+        if (!['http:', 'https:', 'data:'].includes(url.protocol)) {
+          throw new Error('Invalid protocol');
+        }
+      }
+    } catch (e) {
+      setVideoError(true);
+      setVideoErrorMessage('Please enter a valid video URL.');
+      return;
+    }
+
+    const dataToSubmit = formData;
+
     setFormData({
       type: TrainingType.TEXT,
+      text: undefined,
+      image: undefined,
+      website: undefined,
+      documentUrl: undefined,
+      documentName: undefined,
+      documentMimetype: undefined,
+      video: undefined,     
     });
+    setTextCharacterCount(0);
+    setWebsiteCharacterCount(0);
+    setWebsiteErrorMessage('');
+    setVideoCharacterCount(0);
+    setVideoErrorMessage('');
     setUploadedImage(null);
     setUploadedDocument(null);
+    setUploadedImage(null);
+    setUploadedVideo(null);
     setActiveTab(TrainingType.TEXT);
+    onSubmit(dataToSubmit);
     onClose();
   };
 
@@ -224,6 +327,7 @@ export default function CreateTrainingDialog({
           <Tab label="Text" value={TrainingType.TEXT} />
           <Tab label="Website" value={TrainingType.WEBSITE} />
           <Tab label="Document" value={TrainingType.DOCUMENT} />
+          <Tab label="Video" value={TrainingType.VIDEO} />
         </Tabs>
 
         <Box sx={{ mt: 3 }}>
@@ -314,7 +418,7 @@ export default function CreateTrainingDialog({
                 sx={{ mb: 2 }}
                 error={websiteError}
                 color={websiteError ? 'error' : 'primary'}
-                helperText={`${websiteCharacterCount}/${TEXT_CHARS_LIMIT}`}
+                helperText={websiteErrorMessage || `${websiteCharacterCount}/${TEXT_CHARS_LIMIT}`}
               />
 
               {/* <Box display="flex" justifyContent="space-between" sx={{ mb: 2 }}>
@@ -406,6 +510,86 @@ export default function CreateTrainingDialog({
               </Paper>
             </Box>
           )}
+
+          {/* Aba de Vídeo */}
+          {activeTab === TrainingType.VIDEO && (
+            <Box>
+              <Typography variant="subtitle1" color="primary" gutterBottom>
+                New training via video
+              </Typography>
+              
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2}}>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 3,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minHeight: 150,
+                    cursor: 'pointer',
+                    backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                  }}
+                  component="label"
+                >
+                  {isUploading ? (
+                    <CircularProgress />
+                  ) : !uploadedVideo ? (
+                    <>
+                      <CloudUpload
+                        sx={{ fontSize: 40, mb: 1, color: 'primary.main' }}
+                      />
+                      <Typography variant="body1" gutterBottom>
+                        Select the file to upload
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary">
+                        Supported types: .mp4, .mov, .avi, .mkv, .webm, .wmv (max:
+                        100MB)
+                      </Typography>
+                      <input
+                        type="file"
+                        hidden
+                        accept=".mp4,.mov,.avi,.mkv,.webm,.wmv"
+                        onChange={handleVideoUpload}
+                      />
+                    </>
+                  ) : (
+                    <Box display="flex" alignItems="center" width="100%">
+                      <Typography variant="body1" sx={{ flexGrow: 1 }}>
+                        {uploadedVideo.name}
+                      </Typography>
+                      <IconButton onClick={handleRemoveVideo}>
+                        <Close />
+                      </IconButton>
+                    </Box>
+                  )}
+                </Paper>
+                
+                { !uploadedVideo && (
+                  <>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
+                      <Typography>OR</Typography>
+                    </Box>
+
+                    <TextField
+                      fullWidth
+                      placeholder="Paste the URL of a public video"
+                      name="video"
+                      value={formData.video || ''}
+                      onChange={handleTextChange}
+                      variant="outlined"
+                      sx={{ mb: 2 }}
+                      error={videoError}
+                      color={videoError ? 'error' : 'primary'}
+                      helperText={videoErrorMessage || `${videoCharacterCount}/${TEXT_CHARS_LIMIT}`}
+                      disabled={!!uploadedVideo}
+                    />
+                  </>
+                )}
+              </Box>
+            </Box>
+          )}
         </Box>
       </DialogContent>
       <DialogActions>
@@ -420,7 +604,8 @@ export default function CreateTrainingDialog({
             isUploading ||
             (activeTab === TrainingType.TEXT && !formData.text) ||
             (activeTab === TrainingType.WEBSITE && !formData.website) ||
-            (activeTab === TrainingType.DOCUMENT && !formData.documentUrl)
+            (activeTab === TrainingType.DOCUMENT && !formData.documentUrl) ||
+            (activeTab === TrainingType.VIDEO && !formData.video)
           }
           sx={{
             '&.Mui-disabled': {

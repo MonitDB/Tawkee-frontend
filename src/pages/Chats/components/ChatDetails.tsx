@@ -49,7 +49,7 @@ const getInteractionStatusColor = (status: InteractionStatus) => {
     case 'RUNNING':
       return 'warning';
     case 'WAITING':
-      return 'info';
+      return 'error';
     default:
       return 'default';
   }
