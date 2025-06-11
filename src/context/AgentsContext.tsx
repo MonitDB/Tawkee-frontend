@@ -22,6 +22,8 @@ import {
   PaginationMeta,
 } from '../services/chatService';
 import { InteractionStatus } from '../services/chatService';
+import { ScheduleSettingsDto } from '../pages/AgentDetails/components/IntegrationsTabPanel';
+
 
 export enum AIModel {
   GPT_4 = 'GPT_4',
@@ -83,6 +85,8 @@ export interface Agent {
   jobDescription: string;
   isActive: boolean;
   channels: Channel[];
+
+  scheduleSettings?: ScheduleSettingsDto;
 
   paginatedTrainings: PaginatedTrainingsResponseDto;
   paginatedChats: PaginatedResult<ChatDto>;
@@ -161,6 +165,8 @@ interface AgentsContextType {
     interactions: PaginatedInteractionsWithMessagesResponseDto
   ) => boolean;
   syncAgentMessageChatUpdate: (chat: ChatDto) => boolean;
+
+  syncAgentScheduleSettingsUpdate: ({agentId, scheduleSettings}: {agentId: string, scheduleSettings: ScheduleSettingsDto}) => boolean;
 }
 
 interface AgentsProviderProps {
@@ -1427,6 +1433,35 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     }
   };
 
+  const syncAgentScheduleSettingsUpdate = ({agentId, scheduleSettings}: {agentId: string, scheduleSettings: ScheduleSettingsDto}): boolean => {
+    try {
+      setPaginatedAgents((prev) => {
+        const updatedAgents = prev.agents.map((wrapper) => {
+          if (wrapper.agent.id === agentId) {
+            return {
+              ...wrapper,
+              agent: {
+                ...wrapper.agent,
+                scheduleSettings: scheduleSettings
+              },
+            };
+          }
+          return wrapper;
+        });
+
+        return {
+          ...prev,
+          agents: updatedAgents,
+        };
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error syncing Google Calendar auth:', error);
+      return false;
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchAgents();
@@ -1464,7 +1499,9 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     syncAgentChatDeletion,
 
     syncAgentChatInteractions,
-    syncAgentMessageChatUpdate
+    syncAgentMessageChatUpdate,
+
+    syncAgentScheduleSettingsUpdate    
   };
 
   return (

@@ -103,6 +103,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         body: JSON.stringify(credentials),
       });
 
+      
       const data = await response.json();
 
       if (data.error) {

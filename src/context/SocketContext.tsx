@@ -11,6 +11,8 @@ import env from '../config/env';
 import { useAuth } from './AuthContext';
 import { useAgents } from './AgentsContext';
 import { ChatDto } from '../services/chatService';
+import { useHttpResponse } from './ResponseNotifier';
+import { ScheduleSettingsDto } from '../pages/AgentDetails/components/IntegrationsTabPanel';
 
 interface ConnectionStatusPayload {
   status: string;
@@ -41,8 +43,9 @@ export function SocketProvider({ children }: SocketProviderProps) {
 
   const socketRef = useRef<Socket | null>(null);
 
+  const { notify } = useHttpResponse();
   const { user } = useAuth();
-  const { syncAgentChannelConnectionUpdate, syncAgentMessageChatUpdate } = useAgents();
+  const { syncAgentChannelConnectionUpdate, syncAgentMessageChatUpdate, syncAgentScheduleSettingsUpdate } = useAgents();
 
   useEffect(() => {
     const handleSocketConnect = () => {
@@ -74,6 +77,13 @@ export function SocketProvider({ children }: SocketProviderProps) {
       syncAgentMessageChatUpdate(data);
     }
 
+    const handleAgentScheduleSettingsUpdate = (data: {agentId: string, scheduleSettings: ScheduleSettingsDto }) => {
+      syncAgentScheduleSettingsUpdate(data);
+      if (data.scheduleSettings.email) {
+        notify(`${data.scheduleSettings.email} granted Google Calendar access!`, 'success');
+      }
+    }
+
     const handleSocketError = (error: ErrorPayload) => {
       console.error('Socket error:', error);
     };
@@ -95,6 +105,8 @@ export function SocketProvider({ children }: SocketProviderProps) {
       
       socketRef.current.on('messageChatUpdate', handleMessageChatUpdate);
 
+      socketRef.current.on('agentScheduleSettingsUpdate', handleAgentScheduleSettingsUpdate);
+
       socketRef.current.on('error', handleSocketError);
 
       return () => {
@@ -112,6 +124,8 @@ export function SocketProvider({ children }: SocketProviderProps) {
           );
 
           socketRef.current.off('messageChatUpdate', handleMessageChatUpdate);
+
+          socketRef.current.off('agentScheduleSettingsUpdate', handleAgentScheduleSettingsUpdate);
 
           socketRef.current.off('error', handleSocketError);
 

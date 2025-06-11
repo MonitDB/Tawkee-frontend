@@ -12,6 +12,7 @@ import newAgent from './newAgent.svg';
 // import newSaleAgent from './newSaleAgent.png';
 // import newSupportAgent from './newSupportAgent.png';
 // import successfulAgentCreation from './successfulAgentCreation.png';
+import googleCalendarIcon from './google-calendar-icon.png';
 
 export {
   tawkeeLogo,
@@ -22,8 +23,5 @@ export {
   tawkeeProfessionals,
   tawkeeEntrepreneurs,
   newAgent,
-  // newPersonalAgent,
-  // newSaleAgent,
-  // newSupportAgent,
-  // successfulAgentCreation
+  googleCalendarIcon
 };

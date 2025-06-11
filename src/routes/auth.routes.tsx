@@ -22,8 +22,8 @@ export default function AuthRoutes() {
           element={<OAuthCallbackPage />}
         />
 
-        <Route key="4" path="/verify-email" element={<VerifyAccount />} />
-        <Route key="5" path="/reset-password" element={<ResetPassword />} />
+        <Route key="5" path="/verify-email" element={<VerifyAccount />} />
+        <Route key="6" path="/reset-password" element={<ResetPassword />} />
 
         <Route key="*" path="*" element={<MarketingPage />} />
       </Routes>

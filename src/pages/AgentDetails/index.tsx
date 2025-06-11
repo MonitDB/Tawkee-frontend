@@ -34,13 +34,14 @@ import {
 import ProfileTabPanel from './components/ProfileTabPanel';
 import WorkTabPanel from './components/WorkTabPanel';
 import TrainingTabPanel from './components/TrainingTabPanel';
-import IntentionsTabPanel from './components/IntentionsTabPanel';
+// import IntentionsTabPanel from './components/IntentionsTabPanel';
 import IntegrationsTabPanel from './components/IntegrationsTabPanel';
 import SettingsTabPanel from './components/SettingsTabPanel';
 import {
   agentCommunicationDescriptions,
   agentTypeDescriptions,
 } from '../Agents';
+import ChannelsTabPanel from './components/ChannelsTabPanel';
 
 // Keep the original TabPanel helper component if it's generic
 interface TabPanelProps {
@@ -240,8 +241,8 @@ export default function AgentDetails() {
                 <Tab icon={<PersonIcon />} label="Profile" />
                 <Tab icon={<WorkIcon />} label="Work" />
                 <Tab icon={<SchoolIcon />} label="Training" />
-                <Tab icon={<PsychologyIcon />} disabled label="Intentions" />
-                <Tab icon={<HubIcon />} label="Integrations" />
+                <Tab icon={<PsychologyIcon />} label="Integrations" />
+                <Tab icon={<HubIcon />} label="Channels" />
                 <Tab icon={<SettingsIcon />} label="Settings" />
               </Tabs>
             </Grid>
@@ -258,10 +259,10 @@ export default function AgentDetails() {
                 <TrainingTabPanel agentData={agentData} />
               </TabPanel>
               <TabPanel value={currentTab} index={3}>
-                <IntentionsTabPanel agentData={agentData} />
+                <IntegrationsTabPanel agentData={agentData} />
               </TabPanel>
               <TabPanel value={currentTab} index={4}>
-                <IntegrationsTabPanel
+                <ChannelsTabPanel
                   agentData={agentData}
                   QRCode={QRCode}
                   handleRefreshQrCode={handleRefreshQrCode}

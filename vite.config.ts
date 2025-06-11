@@ -8,7 +8,8 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5002,
     allowedHosts: [
-      'monitdb-dev.ddns.net'
+      'monitdb-dev.ddns.net',
+      'e17a-2804-29b8-50a6-eded-e5de-928-14b9-d854.ngrok-free.app'
     ],
     strictPort: true,
     hmr: {
