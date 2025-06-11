@@ -273,7 +273,7 @@ export default function IntegrationsTabPanel({
     }
    
     if (!hasInitialized) {
-      if (existingSettings?.email) {
+      if (existingSettings?.email != undefined) {
         // Use existing settings from context
         const contextSettings = {
           ...DEFAULT_SCHEDULE_SETTINGS,

@@ -1,5 +1,5 @@
 import { SyntheticEvent, ReactNode, useEffect, useState } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 // Keep necessary imports from original file
 import { useAuth } from '../../context/AuthContext';
@@ -80,6 +80,7 @@ function TabPanel(props: TabPanelProps) {
 export default function AgentDetails() {
   const theme = useTheme();
   const params = useParams();
+  const navigate = useNavigate();
   const location = useLocation();
 
   const { paginatedAgents, activateAgent, deactivateAgent, loading } =
@@ -102,6 +103,9 @@ export default function AgentDetails() {
   // Keep handlers and useEffect from original file
   const handleTabChange = (_: SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue);
+
+    // Strip query params and navigate to the clean URL
+    navigate(location.pathname, { replace: true });    
   };
 
   const handleRefreshQrCode = async (channelId: string) => {

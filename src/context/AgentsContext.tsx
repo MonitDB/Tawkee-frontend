@@ -209,11 +209,13 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
         {
           method: 'GET',
           headers: {
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           } as const,
         }
       );
       const data = await response.json();
+
       if (data.error) throw new Error(data.error);
       setPaginatedAgents({
         agents: data.data || [],

@@ -103,7 +103,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         body: JSON.stringify(credentials),
       });
 
-      
       const data = await response.json();
 
       if (data.error) {
@@ -112,7 +111,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       notify('Login successful!', 'success');
 
-      const { token: newToken } = data.data;
+      const newToken = data.data.token;
       const userData: User = data.data.user;
 
       // Store token in localStorage
