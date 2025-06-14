@@ -94,6 +94,6 @@ export const useTrainingService = (token: string) => {
     createTraining,
     deleteTraining,
     loading,
-    createTrainingLoading
+    createTrainingLoading,
   };
 };

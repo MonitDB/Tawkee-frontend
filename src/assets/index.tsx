@@ -24,7 +24,6 @@ export {
   tawkeeProfessionals,
   tawkeeEntrepreneurs,
   newAgent,
-
   googleCalendarIcon,
-  elevenLabsIcon
+  elevenLabsIcon,
 };

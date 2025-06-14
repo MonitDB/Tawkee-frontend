@@ -14,7 +14,7 @@ import {
   Paper,
   CircularProgress,
   useColorScheme,
-  useTheme
+  useTheme,
 } from '@mui/material';
 import { CloudUpload, Close, Image } from '@mui/icons-material';
 
@@ -23,7 +23,7 @@ enum TrainingType {
   TEXT = 'TEXT',
   DOCUMENT = 'DOCUMENT',
   WEBSITE = 'WEBSITE',
-  VIDEO = 'VIDEO'
+  VIDEO = 'VIDEO',
 }
 
 // Interface para o DTO de criação de treinamento
@@ -206,7 +206,7 @@ export default function CreateTrainingDialog({
         ...formData,
         video: videoUrl,
         documentName: file.name,
-        documentMimetype: file.type
+        documentMimetype: file.type,
       });
       setIsUploading(false);
     };
@@ -238,7 +238,7 @@ export default function CreateTrainingDialog({
     setUploadedVideo(null);
     setFormData({
       ...formData,
-      video: undefined
+      video: undefined,
     });
     setVideoError(false);
   };
@@ -297,7 +297,7 @@ export default function CreateTrainingDialog({
       documentUrl: undefined,
       documentName: undefined,
       documentMimetype: undefined,
-      video: undefined,     
+      video: undefined,
     });
     setTextCharacterCount(0);
     setWebsiteCharacterCount(0);
@@ -418,7 +418,10 @@ export default function CreateTrainingDialog({
                 sx={{ mb: 2 }}
                 error={websiteError}
                 color={websiteError ? 'error' : 'primary'}
-                helperText={websiteErrorMessage || `${websiteCharacterCount}/${TEXT_CHARS_LIMIT}`}
+                helperText={
+                  websiteErrorMessage ||
+                  `${websiteCharacterCount}/${TEXT_CHARS_LIMIT}`
+                }
               />
 
               {/* <Box display="flex" justifyContent="space-between" sx={{ mb: 2 }}>
@@ -517,8 +520,8 @@ export default function CreateTrainingDialog({
               <Typography variant="subtitle1" color="primary" gutterBottom>
                 New training via video
               </Typography>
-              
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2}}>
+
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <Paper
                   variant="outlined"
                   sx={{
@@ -544,8 +547,8 @@ export default function CreateTrainingDialog({
                         Select the file to upload
                       </Typography>
                       <Typography variant="caption" color="textSecondary">
-                        Supported types: .mp4, .mov, .avi, .mkv, .webm, .wmv (max:
-                        100MB)
+                        Supported types: .mp4, .mov, .avi, .mkv, .webm, .wmv
+                        (max: 100MB)
                       </Typography>
                       <input
                         type="file"
@@ -565,10 +568,16 @@ export default function CreateTrainingDialog({
                     </Box>
                   )}
                 </Paper>
-                
-                { !uploadedVideo && (
+
+                {!uploadedVideo && (
                   <>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                      }}
+                    >
                       <Typography>OR</Typography>
                     </Box>
 
@@ -582,7 +591,10 @@ export default function CreateTrainingDialog({
                       sx={{ mb: 2 }}
                       error={videoError}
                       color={videoError ? 'error' : 'primary'}
-                      helperText={videoErrorMessage || `${videoCharacterCount}/${TEXT_CHARS_LIMIT}`}
+                      helperText={
+                        videoErrorMessage ||
+                        `${videoCharacterCount}/${TEXT_CHARS_LIMIT}`
+                      }
                       disabled={!!uploadedVideo}
                     />
                   </>

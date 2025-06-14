@@ -1,6 +1,15 @@
-import { ChatDto } from "../../../services/chatService";
-import { MouseEvent, useState } from "react";
-import { useTheme, Divider, IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from "@mui/material";
+import { ChatDto } from '../../../services/chatService';
+import { MouseEvent, useState } from 'react';
+import {
+  useTheme,
+  Divider,
+  IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Tooltip,
+} from '@mui/material';
 
 import {
   MoreVert as MoreVertIcon,
@@ -92,7 +101,7 @@ export function ChatMenu({
             Mark as {chat.finished ? 'Unread' : 'Finished'}
           </ListItemText>
         </MenuItem>
-        { chat.humanTalk && (
+        {chat.humanTalk && (
           <MenuItem
             onClick={(event) =>
               handleMenuItemClick(event, () =>
@@ -107,9 +116,7 @@ export function ChatMenu({
                 <CheckCircleIcon fontSize="small" />
               )}
             </ListItemIcon>
-            <ListItemText>
-              Stop Human Attendance
-            </ListItemText>
+            <ListItemText>Stop Human Attendance</ListItemText>
           </MenuItem>
         )}
         <Divider />

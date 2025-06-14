@@ -76,7 +76,7 @@ export default function WorkTabPanel({
         if (!['http:', 'https:'].includes(url.protocol)) {
           throw new Error('Invalid protocol');
         }
-  
+
         if (agentJobSiteValue.length > AGENT_SITE_CHARS_LIMIT) {
           setAgentJobSiteValueError(true);
           setAgentJobSiteValueErrorMessage('');

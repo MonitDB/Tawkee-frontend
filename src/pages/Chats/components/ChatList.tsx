@@ -1,20 +1,50 @@
-import { Dispatch, SetStateAction, SyntheticEvent, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  SyntheticEvent,
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
-import { useAuth } from "../../../context/AuthContext";
-import { Agent, useAgents } from "../../../context/AgentsContext";
+import { useAuth } from '../../../context/AuthContext';
+import { Agent, useAgents } from '../../../context/AgentsContext';
 
-import { useChatService } from "../../../hooks/useChatService";
+import { useChatService } from '../../../hooks/useChatService';
 
-import { ChatDto, PaginatedInteractionsWithMessagesResponseDto } from "../../../services/chatService";
+import {
+  ChatDto,
+  PaginatedInteractionsWithMessagesResponseDto,
+} from '../../../services/chatService';
 
-import { ChatMenu } from "./ChatMenu";
+import { ChatMenu } from './ChatMenu';
 
-import { Avatar, Badge, Box, Button, Chip, InputAdornment, LinearProgress, List, ListItem, ListItemAvatar, ListItemText, Tab, Tabs, TextField, Typography, useMediaQuery, useTheme } from "@mui/material";
+import {
+  Avatar,
+  Badge,
+  Box,
+  Button,
+  Chip,
+  InputAdornment,
+  LinearProgress,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Tab,
+  Tabs,
+  TextField,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
 import {
   Chat as ChatIcon,
   Search as SearchIcon,
   Person as PersonIcon,
-  Phone as PhoneIcon
+  Phone as PhoneIcon,
 } from '@mui/icons-material';
 
 interface ChatListProps {
@@ -68,22 +98,26 @@ export function ChatList({ selectedChat, setSelectedChat }: ChatListProps) {
   };
 
   const filteredChats = useMemo(() => {
-    return chats?.filter((chat) => {
-      const matchesSearch =
-        !deferredSearchQuery ||
-        chat.userName
-          ?.toLowerCase()
-          .includes(deferredSearchQuery.toLowerCase()) ||
-        chat.title?.toLowerCase().includes(deferredSearchQuery.toLowerCase()) ||
-        chat.agentName
-          ?.toLowerCase()
-          .includes(deferredSearchQuery.toLowerCase());
+    return (
+      chats?.filter((chat) => {
+        const matchesSearch =
+          !deferredSearchQuery ||
+          chat.userName
+            ?.toLowerCase()
+            .includes(deferredSearchQuery.toLowerCase()) ||
+          chat.title
+            ?.toLowerCase()
+            .includes(deferredSearchQuery.toLowerCase()) ||
+          chat.agentName
+            ?.toLowerCase()
+            .includes(deferredSearchQuery.toLowerCase());
 
-      if (tab === 1) return matchesSearch && !chat.read;
-      if (tab === 2) return matchesSearch && chat.humanTalk;
-      if (tab === 3) return matchesSearch && chat.finished;
-      return matchesSearch;
-    }) || [];
+        if (tab === 1) return matchesSearch && !chat.read;
+        if (tab === 2) return matchesSearch && chat.humanTalk;
+        if (tab === 3) return matchesSearch && chat.finished;
+        return matchesSearch;
+      }) || []
+    );
   }, [chats, tab, deferredSearchQuery]);
 
   const handleChatSelect = async (chat: ChatDto) => {
@@ -97,7 +131,6 @@ export function ChatList({ selectedChat, setSelectedChat }: ChatListProps) {
 
     let chatWithInteractions;
     if ((paginatedInteractions?.data?.length || 0) > 0) {
-
       chatWithInteractions = {
         ...chat,
         paginatedInteractions,
@@ -108,7 +141,7 @@ export function ChatList({ selectedChat, setSelectedChat }: ChatListProps) {
           chatId: chat.id,
           page: 1,
         });
-  
+
         chatWithInteractions = {
           ...chat,
           paginatedInteractions:
@@ -151,11 +184,12 @@ export function ChatList({ selectedChat, setSelectedChat }: ChatListProps) {
     const hasPaginatedChats = agents.some(
       (wrapper) => wrapper.agent?.paginatedChats != undefined
     );
-    
+
     if (agents.length == 0 || hasPaginatedChats) {
-      const chats = agents.flatMap(
-        (wrapper) => wrapper.agent?.paginatedChats?.data || []
-      ) || [];
+      const chats =
+        agents.flatMap(
+          (wrapper) => wrapper.agent?.paginatedChats?.data || []
+        ) || [];
       const totalChatAmount = agents.reduce((sum, wrapper) => {
         const total = wrapper.agent?.paginatedChats?.meta?.total;
         return sum + (typeof total === 'number' ? total : 0);
@@ -165,10 +199,9 @@ export function ChatList({ selectedChat, setSelectedChat }: ChatListProps) {
 
       if (selectedChat != undefined) {
         setSelectedChat(
-          chats?.find(chat => chat.id == selectedChat.id) || null
+          chats?.find((chat) => chat.id == selectedChat.id) || null
         );
       }
-
     } else {
       fetchChatList();
     }
@@ -188,7 +221,6 @@ export function ChatList({ selectedChat, setSelectedChat }: ChatListProps) {
     if (selectedChat && !selectedChat.read) {
       markChatAsRead(selectedChat.id);
     }
-
   }, [selectedChat]);
 
   return (
@@ -350,7 +382,10 @@ export function ChatList({ selectedChat, setSelectedChat }: ChatListProps) {
                       </Typography>
                       {!isSmallScreen && (
                         <Typography variant="caption" color="text.secondary">
-                          • {formatDate(chat?.latestMessage?.createdAt || chat.createdAt)}
+                          •{' '}
+                          {formatDate(
+                            chat?.latestMessage?.createdAt || chat.createdAt
+                          )}
                         </Typography>
                       )}
                     </Box>

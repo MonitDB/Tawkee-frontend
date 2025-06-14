@@ -63,8 +63,8 @@ const AUDIO_RESPONSE_MODES = [
     description: 'Text responses only',
     settings: {
       respondAudioWithAudio: false,
-      alwaysRespondWithAudio: false
-    }
+      alwaysRespondWithAudio: false,
+    },
   },
   {
     value: 'audio_only' as const,
@@ -72,8 +72,8 @@ const AUDIO_RESPONSE_MODES = [
     description: 'Audio response only when user sends audio',
     settings: {
       respondAudioWithAudio: true,
-      alwaysRespondWithAudio: false
-    }
+      alwaysRespondWithAudio: false,
+    },
   },
   {
     value: 'always' as const,
@@ -81,8 +81,8 @@ const AUDIO_RESPONSE_MODES = [
     description: 'All responses will include audio',
     settings: {
       respondAudioWithAudio: true,
-      alwaysRespondWithAudio: true
-    }
+      alwaysRespondWithAudio: true,
+    },
   },
 ];
 
@@ -100,13 +100,12 @@ export interface ElevenLabsVoice {
   preview_url: string;
 }
 
-export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> = ({
+export function ElevenLabsSettingsDialog({
   agentData,
   open,
   onClose,
-  onDeactivate
-}) => {
-
+  onDeactivate,
+}: ElevenLabsSettingsDialogProps) {
   const theme = useTheme();
 
   const { mode, systemMode } = useColorScheme();
@@ -116,12 +115,14 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
     agentData.elevenLabsSettings as CompleteElevenLabsDto
   );
 
-  const [audioResponseMode, setAudioResponseMode] = useState<'never' | 'always' | 'audio_only'>(
-    !!agentData?.elevenLabsSettings?.alwaysRespondWithAudio
-    ? 'always'
-    : !!agentData?.elevenLabsSettings?.respondAudioWithAudio
-      ? 'audio_only'
-      : 'never'
+  const [audioResponseMode, setAudioResponseMode] = useState<
+    'never' | 'always' | 'audio_only'
+  >(
+    agentData?.elevenLabsSettings?.alwaysRespondWithAudio
+      ? 'always'
+      : agentData?.elevenLabsSettings?.respondAudioWithAudio
+        ? 'audio_only'
+        : 'never'
   );
 
   const [filterCategory, setFilterCategory] = useState<string>('all');
@@ -130,29 +131,30 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
   const [filterUseCase, setFilterUseCase] = useState<string>('all');
 
   const { token } = useAuth();
-  const { fetchElevenLabsData, updateElevenLabsData, elevenLabsLoading } = useElevenLabsService(token as string);
-  
+  const { fetchElevenLabsData, updateElevenLabsData, elevenLabsLoading } =
+    useElevenLabsService(token as string);
+
   useEffect(() => {
     async function fetchData(agentId: string) {
       if (agentData?.elevenLabsSettings?.connected) {
         await fetchElevenLabsData(agentId);
       }
-    };
+    }
 
     fetchData(agentData.id);
-
   }, []);
 
   const voices = agentData?.elevenLabsSettings?.data?.voices?.voices || [];
 
   // Use the audio playback hook
-  const { isPlaying, currentVoiceId, playVoicePreview, stopPlayback } = useAudioPlayback();
+  const { isPlaying, currentVoiceId, playVoicePreview, stopPlayback } =
+    useAudioPlayback();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     function getAudioSettings(value: 'never' | 'audio_only' | 'always') {
-      const mode = AUDIO_RESPONSE_MODES.find(mode => mode.value === value);
+      const mode = AUDIO_RESPONSE_MODES.find((mode) => mode.value === value);
       if (!mode) {
         throw new Error(`Invalid audio mode: ${value}`);
       }
@@ -162,8 +164,8 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
     try {
       const finalSettings = {
         ...settings,
-        ...getAudioSettings(audioResponseMode)
-      }
+        ...getAudioSettings(audioResponseMode),
+      };
       await updateElevenLabsData(agentData.id, finalSettings);
       onClose();
     } catch (err) {
@@ -179,7 +181,7 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
   };
 
   const handleVoiceSelect = (voiceId: string) => {
-    setSettings(prev => ({ ...prev, selectedElevenLabsVoiceId: voiceId }));
+    setSettings((prev) => ({ ...prev, selectedElevenLabsVoiceId: voiceId }));
   };
 
   const handlePlayPreview = (voiceId: string, previewUrl: string) => {
@@ -212,7 +214,7 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
   const getUniqueCategories = (): string[] => {
     if (!voices) return [];
 
-    const categories = voices.map(voice => voice.category);
+    const categories = voices.map((voice) => voice.category);
     return [...new Set(categories)].sort();
   };
 
@@ -236,27 +238,45 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
     return [...new Set(useCases)].sort();
   };
 
-  const getCategoryColor = (category: string): "default" | "primary" | "secondary" | "success" | "error" | "info" | "warning" => {
+  const getCategoryColor = (
+    category: string
+  ):
+    | 'default'
+    | 'primary'
+    | 'secondary'
+    | 'success'
+    | 'error'
+    | 'info'
+    | 'warning' => {
     switch (category) {
-      case 'premade': return 'warning';
-      case 'cloned': return 'success';
-      case 'generated': return 'error';
-      case 'professional': return 'secondary'
-      default: return 'info';
-    }
-  }
-
-  const getGenderColor = (gender: string): string => {
-    switch (gender) {
-      case 'male': return '#2196F3';
-      case 'female': return '#E91E63';
-      default: return '#9E9E9E';
+      case 'premade':
+        return 'warning';
+      case 'cloned':
+        return 'success';
+      case 'generated':
+        return 'error';
+      case 'professional':
+        return 'secondary';
+      default:
+        return 'info';
     }
   };
 
-  const selectedVoice = voices?.find(
-    (voice) => voice.voice_id === settings.selectedElevenLabsVoiceId
-  ) ?? null;
+  const getGenderColor = (gender: string): string => {
+    switch (gender) {
+      case 'male':
+        return '#2196F3';
+      case 'female':
+        return '#E91E63';
+      default:
+        return '#9E9E9E';
+    }
+  };
+
+  const selectedVoice =
+    voices?.find(
+      (voice) => voice.voice_id === settings.selectedElevenLabsVoiceId
+    ) ?? null;
 
   return (
     <Dialog
@@ -272,7 +292,13 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
       }}
     >
       <DialogTitle>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
           <Typography variant="h6" component="div">
             ElevenLabs Settings
           </Typography>
@@ -287,7 +313,6 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
         </Box>
       </DialogTitle>
 
-
       <form onSubmit={handleSubmit}>
         <DialogContent sx={{ py: 3 }}>
           <Paper
@@ -298,25 +323,45 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
               backgroundColor: 'background.paper',
             }}
           >
-            <Grid container spacing={2} sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }} >
+            <Grid
+              container
+              spacing={2}
+              sx={{
+                p: 2,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+              }}
+            >
               <Grid size={{ xs: 12, md: 4 }}>
                 <Typography variant="subtitle2" sx={{ fontSize: '0.875rem' }}>
                   User
                 </Typography>
-                <Typography variant="body2">{agentData?.elevenLabsSettings?.userName}</Typography>
+                <Typography variant="body2">
+                  {agentData?.elevenLabsSettings?.userName}
+                </Typography>
               </Grid>
               <Grid size={{ xs: 12, md: 4 }}>
-                <Typography variant="subtitle2" sx={{ fontSize: '0.875rem', mt: 1 }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ fontSize: '0.875rem', mt: 1 }}
+                >
                   Subscription Tier
                 </Typography>
-                <Typography variant="body2">{agentData?.elevenLabsSettings?.subscriptionTier}</Typography>
+                <Typography variant="body2">
+                  {agentData?.elevenLabsSettings?.subscriptionTier}
+                </Typography>
               </Grid>
               <Grid size={{ xs: 12, md: 4 }}>
-                <Typography variant="subtitle2" sx={{ fontSize: '0.875rem', mt: 1 }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ fontSize: '0.875rem', mt: 1 }}
+                >
                   Characters Used
                 </Typography>
                 <Typography variant="body2">
-                  {agentData?.elevenLabsSettings?.characterCount} / {agentData?.elevenLabsSettings?.characterLimit}
+                  {agentData?.elevenLabsSettings?.characterCount} /{' '}
+                  {agentData?.elevenLabsSettings?.characterLimit}
                 </Typography>
               </Grid>
             </Grid>
@@ -330,11 +375,15 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
             <FormControl fullWidth>
               <Select
                 value={audioResponseMode}
-                onChange={(e: SelectChangeEvent) => 
-                  setAudioResponseMode(e.target.value as 'never' | 'audio_only' | 'always')
+                onChange={(e: SelectChangeEvent) =>
+                  setAudioResponseMode(
+                    e.target.value as 'never' | 'audio_only' | 'always'
+                  )
                 }
                 displayEmpty
-                startAdornment={<VolumeIcon sx={{ mr: 1, color: 'action.active' }} />}
+                startAdornment={
+                  <VolumeIcon sx={{ mr: 1, color: 'action.active' }} />
+                }
               >
                 {AUDIO_RESPONSE_MODES.map((mode) => (
                   <MenuItem key={mode.value} value={mode.value}>
@@ -358,17 +407,23 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <FormControl fullWidth size="small">
-                  <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+                  <Typography
+                    variant="caption"
+                    sx={{ mb: 1, display: 'block' }}
+                  >
                     Category
                   </Typography>
                   <Select
                     value={filterCategory}
-                    onChange={(e: SelectChangeEvent) => setFilterCategory(e.target.value)}
+                    onChange={(e: SelectChangeEvent) =>
+                      setFilterCategory(e.target.value)
+                    }
                   >
                     <MenuItem value="all">All</MenuItem>
-                    {getUniqueCategories().map(category => (
+                    {getUniqueCategories().map((category) => (
                       <MenuItem key={category} value={category}>
-                        {category.charAt(0).toUpperCase() + category.slice(1).replace('_', ' ')}
+                        {category.charAt(0).toUpperCase() +
+                          category.slice(1).replace('_', ' ')}
                       </MenuItem>
                     ))}
                   </Select>
@@ -377,12 +432,17 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
 
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <FormControl fullWidth size="small">
-                  <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+                  <Typography
+                    variant="caption"
+                    sx={{ mb: 1, display: 'block' }}
+                  >
                     Gender
                   </Typography>
                   <Select
                     value={filterGender}
-                    onChange={(e: SelectChangeEvent) => setFilterGender(e.target.value)}
+                    onChange={(e: SelectChangeEvent) =>
+                      setFilterGender(e.target.value)
+                    }
                   >
                     <MenuItem value="all">All</MenuItem>
                     <MenuItem value="male">Male</MenuItem>
@@ -393,17 +453,23 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
 
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <FormControl fullWidth size="small">
-                  <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+                  <Typography
+                    variant="caption"
+                    sx={{ mb: 1, display: 'block' }}
+                  >
                     Accent
                   </Typography>
                   <Select
                     value={filterAccent}
-                    onChange={(e: SelectChangeEvent) => setFilterAccent(e.target.value)}
+                    onChange={(e: SelectChangeEvent) =>
+                      setFilterAccent(e.target.value)
+                    }
                   >
                     <MenuItem value="all">All</MenuItem>
-                    {getUniqueAccents().map(accent => (
+                    {getUniqueAccents().map((accent) => (
                       <MenuItem key={accent} value={accent}>
-                        {accent.charAt(0).toUpperCase() + accent.slice(1).replace('-', ' ')}
+                        {accent.charAt(0).toUpperCase() +
+                          accent.slice(1).replace('-', ' ')}
                       </MenuItem>
                     ))}
                   </Select>
@@ -412,17 +478,23 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
 
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <FormControl fullWidth size="small">
-                  <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+                  <Typography
+                    variant="caption"
+                    sx={{ mb: 1, display: 'block' }}
+                  >
                     Use Cases
                   </Typography>
                   <Select
                     value={filterUseCase}
-                    onChange={(e: SelectChangeEvent) => setFilterUseCase(e.target.value)}
+                    onChange={(e: SelectChangeEvent) =>
+                      setFilterUseCase(e.target.value)
+                    }
                   >
                     <MenuItem value="all">All</MenuItem>
-                    {getUniqueUseCases().map(useCase => (
+                    {getUniqueUseCases().map((useCase) => (
                       <MenuItem key={useCase} value={useCase}>
-                        {useCase.charAt(0).toUpperCase() + useCase.slice(1).replace('_', ' ')}
+                        {useCase.charAt(0).toUpperCase() +
+                          useCase.slice(1).replace('_', ' ')}
                       </MenuItem>
                     ))}
                   </Select>
@@ -433,21 +505,44 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
 
           {/* Voice List */}
           <Box sx={{ mb: 4 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
               <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
                 Select Voice ({getFilteredVoices().length} available)
               </Typography>
-              <Chip color='secondary' label={`Selected ${selectedVoice?.name}`} />
+              <Chip
+                color="secondary"
+                label={`Selected ${selectedVoice?.name}`}
+              />
             </Box>
-            <Box sx={{ maxHeight: 300, overflowY: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+            <Box
+              sx={{
+                maxHeight: 300,
+                overflowY: 'auto',
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+              }}
+            >
               {getFilteredVoices().map((voice) => (
                 <Card
                   key={voice.voice_id}
                   sx={{
                     m: 1,
                     cursor: 'pointer',
-                    border: settings.selectedElevenLabsVoiceId === voice.voice_id ? 2 : 1,
-                    borderColor: settings.selectedElevenLabsVoiceId === voice.voice_id ? 'primary.main' : 'divider',
+                    border:
+                      settings.selectedElevenLabsVoiceId === voice.voice_id
+                        ? 2
+                        : 1,
+                    borderColor:
+                      settings.selectedElevenLabsVoiceId === voice.voice_id
+                        ? 'primary.main'
+                        : 'divider',
                     '&:hover': {
                       borderColor: 'primary.light',
                       backgroundColor: 'action.hover',
@@ -457,14 +552,23 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
                 >
                   <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Avatar sx={{ bgcolor: getGenderColor(voice.labels.gender) }}>
+                      <Avatar
+                        sx={{ bgcolor: getGenderColor(voice.labels.gender) }}
+                      >
                         <PersonIcon />
                       </Avatar>
                       <Box sx={{ flexGrow: 1 }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                        <Typography
+                          variant="subtitle1"
+                          sx={{ fontWeight: 600 }}
+                        >
                           {voice.name}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ mb: 1 }}
+                        >
                           {voice.labels.description}
                         </Typography>
                         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -472,15 +576,9 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
                             size="small"
                             label={voice.category}
                             color={getCategoryColor(voice.category)}
-                          />                        
-                          <Chip
-                            size="small"
-                            label={voice.labels.gender}
                           />
-                          <Chip
-                            size="small"
-                            label={voice.labels.age}
-                          />
+                          <Chip size="small" label={voice.labels.gender} />
+                          <Chip size="small" label={voice.labels.age} />
                           <Chip
                             size="small"
                             label={voice.labels.accent.replace('-', ' ')}
@@ -499,8 +597,14 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
                           e.stopPropagation();
                           handlePlayPreview(voice.voice_id, voice.preview_url);
                         }}
-                        disabled={isPlaying && currentVoiceId !== voice.voice_id}
-                        color={isPlaying && currentVoiceId === voice.voice_id ? 'secondary' : 'default'}
+                        disabled={
+                          isPlaying && currentVoiceId !== voice.voice_id
+                        }
+                        color={
+                          isPlaying && currentVoiceId === voice.voice_id
+                            ? 'secondary'
+                            : 'default'
+                        }
                       >
                         {isPlaying && currentVoiceId === voice.voice_id ? (
                           <StopIcon />
@@ -526,12 +630,21 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
                   <Typography variant="subtitle2" sx={{ mb: 1 }}>
                     Stability: {(settings.stability * 100).toFixed(0)}%
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ mb: 2, display: 'block' }}
+                  >
                     Controls the consistency of the voice
                   </Typography>
                   <Slider
                     value={settings.stability}
-                    onChange={(_, value) => setSettings(prev => ({ ...prev, stability: value as number }))}
+                    onChange={(_, value) =>
+                      setSettings((prev) => ({
+                        ...prev,
+                        stability: value as number,
+                      }))
+                    }
                     min={0}
                     max={1}
                     step={0.01}
@@ -540,14 +653,24 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                    Similarity Boost: {(settings.similarityBoost * 100).toFixed(0)}%
+                    Similarity Boost:{' '}
+                    {(settings.similarityBoost * 100).toFixed(0)}%
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ mb: 2, display: 'block' }}
+                  >
                     Controls the similarity to the original voice
                   </Typography>
                   <Slider
                     value={settings.similarityBoost}
-                    onChange={(_, value) => setSettings(prev => ({ ...prev, similarityBoost: value as number }))}
+                    onChange={(_, value) =>
+                      setSettings((prev) => ({
+                        ...prev,
+                        similarityBoost: value as number,
+                      }))
+                    }
                     min={0}
                     max={1}
                     step={0.01}
@@ -560,14 +683,20 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
+          <Box
+            sx={{
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'space-between',
+            }}
+          >
             <Button
               variant="text"
               onClick={onDeactivate}
               disabled={elevenLabsLoading}
               sx={{ mr: 1 }}
             >
-              <DeleteIcon color='error' />
+              <DeleteIcon color="error" />
               Deactivate integration
             </Button>
 
@@ -610,4 +739,4 @@ export const ElevenLabsSettingsDialog: React.FC<ElevenLabsSettingsDialogProps> =
       </form>
     </Dialog>
   );
-};
+}

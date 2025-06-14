@@ -165,30 +165,28 @@ export class ChatService {
         }
       }
 
-      const data: PaginatedResult<ChatDto> = await response
-        .json()
-        .catch(() => {
-          throw new Error('Invalid response from server.');
-        });
+      const data: PaginatedResult<ChatDto> = await response.json().catch(() => {
+        throw new Error('Invalid response from server.');
+      });
 
       return data;
-
     } catch (error: unknown) {
-        let errorMessage = 'A unexpected error occurred.';
+      let errorMessage = 'A unexpected error occurred.';
 
-        // Check if error is an instance of Error to safely access the message
-        if (error instanceof Error) {
-            // Handling network failures or fetch-specific errors
-            if (error.message.includes('Failed to fetch')) {
-                errorMessage = 'Network error. Please check your internet connection.';
-            } else {
-                errorMessage = `Error: ${error.message}`;
-            }
+      // Check if error is an instance of Error to safely access the message
+      if (error instanceof Error) {
+        // Handling network failures or fetch-specific errors
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
-            errorMessage = 'An unknown error occurred.';
+          errorMessage = `Error: ${error.message}`;
         }
+      } else {
+        errorMessage = 'An unknown error occurred.';
+      }
 
-        throw errorMessage;
+      throw errorMessage;
     }
   }
 
@@ -249,32 +247,35 @@ export class ChatService {
         });
 
       return data;
-
     } catch (error: unknown) {
-        let errorMessage = 'A unexpected error occurred.';
+      let errorMessage = 'A unexpected error occurred.';
 
-        // Check if error is an instance of Error to safely access the message
-        if (error instanceof Error) {
-            // Handling network failures or fetch-specific errors
-            if (error.message.includes('Failed to fetch')) {
-                errorMessage = 'Network error. Please check your internet connection.';
-            } else {
-                errorMessage = `Error: ${error.message}`;
-            }
+      // Check if error is an instance of Error to safely access the message
+      if (error instanceof Error) {
+        // Handling network failures or fetch-specific errors
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
-            errorMessage = 'An unknown error occurred.';
+          errorMessage = `Error: ${error.message}`;
         }
+      } else {
+        errorMessage = 'An unknown error occurred.';
+      }
 
-        throw errorMessage;
+      throw errorMessage;
     }
   }
 
   async finishChat(id: string): Promise<boolean> {
     try {
-      const response = await fetch(`${this.apiUrl}/chats/${id}/finish/${this.userId}`, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${this.token}` } as const,
-      });
+      const response = await fetch(
+        `${this.apiUrl}/chats/${id}/finish/${this.userId}`,
+        {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${this.token}` } as const,
+        }
+      );
 
       if (!response.ok) {
         if (response.status >= 500) {
@@ -292,7 +293,6 @@ export class ChatService {
       }
 
       return true;
-
     } catch (error) {
       if (error instanceof TypeError) {
         // This is probably a network error, e.g., backend down, no internet
@@ -309,10 +309,13 @@ export class ChatService {
 
   async unfinishChat(id: string): Promise<boolean> {
     try {
-      const response = await fetch(`${this.apiUrl}/chats/${id}/unfinish/${this.userId}`, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${this.token}` } as const,
-      });
+      const response = await fetch(
+        `${this.apiUrl}/chats/${id}/unfinish/${this.userId}`,
+        {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${this.token}` } as const,
+        }
+      );
 
       if (!response.ok) {
         if (response.status >= 500) {
@@ -330,32 +333,35 @@ export class ChatService {
       }
 
       return true;
-
     } catch (error: unknown) {
-        let errorMessage = 'A unexpected error occurred.';
+      let errorMessage = 'A unexpected error occurred.';
 
-        // Check if error is an instance of Error to safely access the message
-        if (error instanceof Error) {
-            // Handling network failures or fetch-specific errors
-            if (error.message.includes('Failed to fetch')) {
-                errorMessage = 'Network error. Please check your internet connection.';
-            } else {
-                errorMessage = `Error: ${error.message}`;
-            }
+      // Check if error is an instance of Error to safely access the message
+      if (error instanceof Error) {
+        // Handling network failures or fetch-specific errors
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
-            errorMessage = 'An unknown error occurred.';
+          errorMessage = `Error: ${error.message}`;
         }
+      } else {
+        errorMessage = 'An unknown error occurred.';
+      }
 
-        throw errorMessage;
+      throw errorMessage;
     }
   }
 
   async startHumanAttendanceChat(id: string): Promise<boolean> {
     try {
-      const response = await fetch(`${this.apiUrl}/chats/${id}/start-human/${this.userId}`, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${this.token}` } as const,
-      });
+      const response = await fetch(
+        `${this.apiUrl}/chats/${id}/start-human/${this.userId}`,
+        {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${this.token}` } as const,
+        }
+      );
 
       if (!response.ok) {
         if (response.status >= 500) {
@@ -373,33 +379,36 @@ export class ChatService {
       }
 
       return true;
-
     } catch (error: unknown) {
-        let errorMessage = 'A unexpected error occurred.';
+      let errorMessage = 'A unexpected error occurred.';
 
-        // Check if error is an instance of Error to safely access the message
-        if (error instanceof Error) {
-            // Handling network failures or fetch-specific errors
-            if (error.message.includes('Failed to fetch')) {
-                errorMessage = 'Network error. Please check your internet connection.';
-            } else {
-                errorMessage = `Error: ${error.message}`;
-            }
+      // Check if error is an instance of Error to safely access the message
+      if (error instanceof Error) {
+        // Handling network failures or fetch-specific errors
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
-            errorMessage = 'An unknown error occurred.';
+          errorMessage = `Error: ${error.message}`;
         }
+      } else {
+        errorMessage = 'An unknown error occurred.';
+      }
 
-        throw errorMessage;
+      throw errorMessage;
     }
   }
 
   async stopHumanAttendanceChat(id: string): Promise<boolean> {
     try {
-      console.log(`PUT ${this.apiUrl}/chats/${id}/stop-human...`)
-      const response = await fetch(`${this.apiUrl}/chats/${id}/stop-human/${this.userId}`, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${this.token}` } as const,
-      });
+      console.log(`PUT ${this.apiUrl}/chats/${id}/stop-human...`);
+      const response = await fetch(
+        `${this.apiUrl}/chats/${id}/stop-human/${this.userId}`,
+        {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${this.token}` } as const,
+        }
+      );
 
       if (!response.ok) {
         if (response.status >= 500) {
@@ -418,23 +427,23 @@ export class ChatService {
       }
 
       return true;
-
     } catch (error: unknown) {
-        let errorMessage = 'A unexpected error occurred.';
+      let errorMessage = 'A unexpected error occurred.';
 
-        // Check if error is an instance of Error to safely access the message
-        if (error instanceof Error) {
-            // Handling network failures or fetch-specific errors
-            if (error.message.includes('Failed to fetch')) {
-                errorMessage = 'Network error. Please check your internet connection.';
-            } else {
-                errorMessage = `Error: ${error.message}`;
-            }
+      // Check if error is an instance of Error to safely access the message
+      if (error instanceof Error) {
+        // Handling network failures or fetch-specific errors
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
-            errorMessage = 'An unknown error occurred.';
+          errorMessage = `Error: ${error.message}`;
         }
+      } else {
+        errorMessage = 'An unknown error occurred.';
+      }
 
-        throw errorMessage;
+      throw errorMessage;
     }
   }
 
@@ -461,21 +470,22 @@ export class ChatService {
       }
       return true;
     } catch (error: unknown) {
-        let errorMessage = 'A unexpected error occurred.';
+      let errorMessage = 'A unexpected error occurred.';
 
-        // Check if error is an instance of Error to safely access the message
-        if (error instanceof Error) {
-            // Handling network failures or fetch-specific errors
-            if (error.message.includes('Failed to fetch')) {
-                errorMessage = 'Network error. Please check your internet connection.';
-            } else {
-                errorMessage = `Error: ${error.message}`;
-            }
+      // Check if error is an instance of Error to safely access the message
+      if (error instanceof Error) {
+        // Handling network failures or fetch-specific errors
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
-            errorMessage = 'An unknown error occurred.';
+          errorMessage = `Error: ${error.message}`;
         }
+      } else {
+        errorMessage = 'An unknown error occurred.';
+      }
 
-        throw errorMessage;
+      throw errorMessage;
     }
   }
 
@@ -500,25 +510,25 @@ export class ChatService {
       if (data.error) {
         throw new Error(data.error);
       }
-      
+
       return true;
-
     } catch (error: unknown) {
-        let errorMessage = 'A unexpected error occurred.';
+      let errorMessage = 'A unexpected error occurred.';
 
-        // Check if error is an instance of Error to safely access the message
-        if (error instanceof Error) {
-            // Handling network failures or fetch-specific errors
-            if (error.message.includes('Failed to fetch')) {
-                errorMessage = 'Network error. Please check your internet connection.';
-            } else {
-                errorMessage = `Error: ${error.message}`;
-            }
+      // Check if error is an instance of Error to safely access the message
+      if (error instanceof Error) {
+        // Handling network failures or fetch-specific errors
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
-            errorMessage = 'An unknown error occurred.';
+          errorMessage = `Error: ${error.message}`;
         }
+      } else {
+        errorMessage = 'An unknown error occurred.';
+      }
 
-        throw errorMessage;
+      throw errorMessage;
     }
   }
 }

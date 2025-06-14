@@ -105,7 +105,7 @@ export default function AgentDetails() {
     setCurrentTab(newValue);
 
     // Strip query params and navigate to the clean URL
-    navigate(location.pathname, { replace: true });    
+    navigate(location.pathname, { replace: true });
   };
 
   const handleRefreshQrCode = async (channelId: string) => {

@@ -1,8 +1,31 @@
-import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChatDto, InteractionStatus } from "../../../services/chatService";
-import { Avatar, Box, Button, Chip, Divider, IconButton, LinearProgress, Paper, Stack, styled, TextField, Typography, useMediaQuery, useTheme } from "@mui/material";
-import { useAuth } from "../../../context/AuthContext";
-import { useChatService } from "../../../hooks/useChatService";
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { ChatDto, InteractionStatus } from '../../../services/chatService';
+import {
+  Avatar,
+  Box,
+  Button,
+  Chip,
+  Divider,
+  IconButton,
+  LinearProgress,
+  Paper,
+  Stack,
+  styled,
+  TextField,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
+import { useAuth } from '../../../context/AuthContext';
+import { useChatService } from '../../../hooks/useChatService';
 
 import {
   Send as SendIcon,
@@ -11,7 +34,7 @@ import {
   Phone as PhoneIcon,
   CheckCircle as CheckCircleIcon,
   Schedule as ScheduleIcon,
-  Error as ErrorIcon
+  Error as ErrorIcon,
 } from '@mui/icons-material';
 
 // Helper function for throttling
@@ -96,45 +119,47 @@ export function ChatDetails({
     }
   }, [newMessage]);
 
-  const handleStartHumanAttendance = useCallback(async (chatId: string) => {
-    try {
-      await startChatHumanAttendance(chatId);
-  
-      setSelectedChat((prevState) => {
-        if (prevState === null) return null;
-  
-        const updatedPaginatedInteractions = prevState.paginatedInteractions
-          ? {
-              ...prevState.paginatedInteractions,
-              data: prevState.paginatedInteractions.data.map(
-                (interaction, index) => {
-                  if (
-                    index ===
-                    (prevState.paginatedInteractions?.data.length || 0) - 1
-                  ) {
-                    return {
-                      ...interaction,
-                      status: 'WAITING' as InteractionStatus,
-                    };
+  const handleStartHumanAttendance = useCallback(
+    async (chatId: string) => {
+      try {
+        await startChatHumanAttendance(chatId);
+
+        setSelectedChat((prevState) => {
+          if (prevState === null) return null;
+
+          const updatedPaginatedInteractions = prevState.paginatedInteractions
+            ? {
+                ...prevState.paginatedInteractions,
+                data: prevState.paginatedInteractions.data.map(
+                  (interaction, index) => {
+                    if (
+                      index ===
+                      (prevState.paginatedInteractions?.data.length || 0) - 1
+                    ) {
+                      return {
+                        ...interaction,
+                        status: 'WAITING' as InteractionStatus,
+                      };
+                    }
+                    return interaction;
                   }
-                  return interaction;
-                }
-              ),
-            }
-          : prevState.paginatedInteractions;
-  
-        return {
-          ...prevState,
-          humanTalk: true,
-          finished: false,
-          paginatedInteractions: updatedPaginatedInteractions,
-        };
-      });
-    } catch(error) {
-      console.log(error);
-    }
-    
-  }, [startChatHumanAttendance, setSelectedChat]);
+                ),
+              }
+            : prevState.paginatedInteractions;
+
+          return {
+            ...prevState,
+            humanTalk: true,
+            finished: false,
+            paginatedInteractions: updatedPaginatedInteractions,
+          };
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    [startChatHumanAttendance, setSelectedChat]
+  );
 
   // Separate scroll-related state to minimize re-renders
   const [scrollState, setScrollState] = useState({
@@ -232,7 +257,7 @@ export function ChatDetails({
       const viewportBottom = containerTop + containerHeight;
 
       // Batch state updates to minimize re-renders
-      setScrollState(prevState => {
+      setScrollState((prevState) => {
         const isAtTop = containerTop <= 5;
         let currentInteractionIndex = prevState.visibleInteraction; // Default to previous state
 
@@ -242,41 +267,45 @@ export function ChatDetails({
         let foundVisible = false;
 
         const interactionIndices = Object.keys(interactionRefs.current)
-                                        .map(Number)
-                                        .sort((a, b) => a - b); // Ensure sorted order
+          .map(Number)
+          .sort((a, b) => a - b); // Ensure sorted order
 
         for (const index of interactionIndices) {
-            const element = interactionRefs.current[index];
-            if (element) {
-                const elementTop = element.offsetTop - container.offsetTop;
-                const elementBottom = elementTop + element.offsetHeight;
+          const element = interactionRefs.current[index];
+          if (element) {
+            const elementTop = element.offsetTop - container.offsetTop;
+            const elementBottom = elementTop + element.offsetHeight;
 
-                // Check if any part of the element is within the viewport
-                if (elementTop < viewportBottom && elementBottom > viewportTop) {
-                    foundVisible = true;
-                    // Calculate distance from element top to viewport top
-                    const distance = Math.abs(elementTop - viewportTop);
+            // Check if any part of the element is within the viewport
+            if (elementTop < viewportBottom && elementBottom > viewportTop) {
+              foundVisible = true;
+              // Calculate distance from element top to viewport top
+              const distance = Math.abs(elementTop - viewportTop);
 
-                    // Find the element whose top is closest to the viewport top
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                        newVisibleInteractionIndex = index;
-                    }
-                } else if (foundVisible) {
-                    // Optimization: If we've already found visible elements and this one is completely below,
-                    // we can stop searching as elements are sorted by position.
-                    break;
-                }
+              // Find the element whose top is closest to the viewport top
+              if (distance < minDistance) {
+                minDistance = distance;
+                newVisibleInteractionIndex = index;
+              }
+            } else if (foundVisible) {
+              // Optimization: If we've already found visible elements and this one is completely below,
+              // we can stop searching as elements are sorted by position.
+              break;
             }
+          }
         }
 
         // Handle edge case: Scrolled to the very bottom
-        if (containerTop + containerHeight >= container.scrollHeight - 5 && interactionIndices.length > 0) {
-             newVisibleInteractionIndex = interactionIndices[interactionIndices.length - 1];
+        if (
+          containerTop + containerHeight >= container.scrollHeight - 5 &&
+          interactionIndices.length > 0
+        ) {
+          newVisibleInteractionIndex =
+            interactionIndices[interactionIndices.length - 1];
         }
         // Handle edge case: Scrolled to the very top
         else if (containerTop <= 5 && interactionIndices.length > 0) {
-             newVisibleInteractionIndex = interactionIndices[0];
+          newVisibleInteractionIndex = interactionIndices[0];
         }
 
         currentInteractionIndex = newVisibleInteractionIndex; // Update the variable used later
@@ -284,7 +313,8 @@ export function ChatDetails({
 
         // Store scroll preservation data when near the top
         if (isAtTop || containerTop < 100) {
-          const currentElement = interactionRefs.current[currentInteractionIndex];
+          const currentElement =
+            interactionRefs.current[currentInteractionIndex];
           if (currentElement) {
             preservationRef.current = {
               interactionIndex: currentInteractionIndex,
@@ -301,7 +331,11 @@ export function ChatDetails({
         }
 
         // Only update state if the visible interaction actually changed
-        if (currentInteractionIndex !== prevState.visibleInteraction || !prevState.showFloatingIndicator || isAtTop !== prevState.hasTriggeredTopCallback) {
+        if (
+          currentInteractionIndex !== prevState.visibleInteraction ||
+          !prevState.showFloatingIndicator ||
+          isAtTop !== prevState.hasTriggeredTopCallback
+        ) {
           return {
             visibleInteraction: currentInteractionIndex,
             showFloatingIndicator: true,
@@ -320,7 +354,7 @@ export function ChatDetails({
 
       // Set timeout to hide indicator
       scrollTimeoutRef.current = setTimeout(() => {
-        setScrollState(prev => ({ ...prev, showFloatingIndicator: false }));
+        setScrollState((prev) => ({ ...prev, showFloatingIndicator: false }));
       }, 2000);
     }, 16), // ~60fps throttling
     [onScrollToTop]
@@ -362,9 +396,9 @@ export function ChatDetails({
       // console.log("Running useEffect... (2)")
       const container = messagesContainerRef.current;
       // Only scroll to bottom if not preserving scroll position
-      if (!!preservationRef.current.shouldPreserve) {
-          container.scrollTop = container.scrollHeight;
-          // console.log("Running useEffect... (3)")
+      if (preservationRef.current?.shouldPreserve) {
+        container.scrollTop = container.scrollHeight;
+        // console.log("Running useEffect... (3)")
       }
     }
   }, [selectedChat.id, selectedChat.paginatedInteractions?.data]);
@@ -375,7 +409,8 @@ export function ChatDetails({
       !selectedChat.paginatedInteractions?.data ||
       selectedChat.paginatedInteractions?.data.length === 0 ||
       scrollState.visibleInteraction < 0 || // Add check for valid index
-      scrollState.visibleInteraction >= selectedChat.paginatedInteractions.data.length
+      scrollState.visibleInteraction >=
+        selectedChat.paginatedInteractions.data.length
     )
       return '';
 
@@ -403,97 +438,106 @@ export function ChatDetails({
       !selectedChat.paginatedInteractions?.data ||
       selectedChat.paginatedInteractions?.data.length === 0 ||
       scrollState.visibleInteraction < 0 ||
-      scrollState.visibleInteraction >= selectedChat.paginatedInteractions.data.length
+      scrollState.visibleInteraction >=
+        selectedChat.paginatedInteractions.data.length
     ) {
       return null;
     }
-    return selectedChat.paginatedInteractions.data[scrollState.visibleInteraction];
-  }, [selectedChat.paginatedInteractions?.data, scrollState.visibleInteraction]);
+    return selectedChat.paginatedInteractions.data[
+      scrollState.visibleInteraction
+    ];
+  }, [
+    selectedChat.paginatedInteractions?.data,
+    scrollState.visibleInteraction,
+  ]);
 
   // Memoize message input section to prevent unnecessary re-renders
-  const messageInputSection = useMemo(() => (
-    <Paper
-      sx={{
-        p: 2,
-        borderRadius: 0,
-        borderTop: 1,
-        borderColor: 'divider',
-        display: 'flex',
-        gap: 1,
-        flexDirection: 'column',
-      }}
-    >
-      {chatLoading && (
-        <LinearProgress color="secondary" sx={{ width: '100%' }} />
-      )}
-
-      <Box
+  const messageInputSection = useMemo(
+    () => (
+      <Paper
         sx={{
+          p: 2,
+          borderRadius: 0,
+          borderTop: 1,
+          borderColor: 'divider',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
           gap: 1,
+          flexDirection: 'column',
         }}
       >
-        {selectedChat.humanTalk ? (
-          <>
-            <TextField
-              fullWidth
-              placeholder="Type a message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-              multiline
-              maxRows={4}
-            />
-            <IconButton
-              color="primary"
-              onClick={handleSendMessage}
-              disabled={!newMessage.trim()}
-            >
-              <SendIcon />
-            </IconButton>
-          </>
-        ) : (
-          <>
-            {!isLargeScreen && (
-              <Typography>
-                Chat held by Agent {selectedChat.agentName}
-              </Typography>
-            )}
-            <Button
-              variant="outlined"
-              onClick={() => handleStartHumanAttendance(selectedChat.id)}
-              disabled={chatLoading}
-            >
-              {!isSmallScreen
-                ? chatLoading
-                  ? 'Wait a moment...'
-                  : 'Start Human Attendance'
-                : chatLoading
-                  ? 'Wait...'
-                  : 'Start attendance'}
-            </Button>
-          </>
+        {chatLoading && (
+          <LinearProgress color="secondary" sx={{ width: '100%' }} />
         )}
-      </Box>
-    </Paper>
-  ), [
-    chatLoading,
-    selectedChat.humanTalk,
-    selectedChat.agentName,
-    selectedChat.id,
-    newMessage,
-    handleSendMessage,
-    handleStartHumanAttendance,
-    isLargeScreen,
-    isSmallScreen,
-  ]);
+
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 1,
+          }}
+        >
+          {selectedChat.humanTalk ? (
+            <>
+              <TextField
+                fullWidth
+                placeholder="Type a message..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+                multiline
+                maxRows={4}
+              />
+              <IconButton
+                color="primary"
+                onClick={handleSendMessage}
+                disabled={!newMessage.trim()}
+              >
+                <SendIcon />
+              </IconButton>
+            </>
+          ) : (
+            <>
+              {!isLargeScreen && (
+                <Typography>
+                  Chat held by Agent {selectedChat.agentName}
+                </Typography>
+              )}
+              <Button
+                variant="outlined"
+                onClick={() => handleStartHumanAttendance(selectedChat.id)}
+                disabled={chatLoading}
+              >
+                {!isSmallScreen
+                  ? chatLoading
+                    ? 'Wait a moment...'
+                    : 'Start Human Attendance'
+                  : chatLoading
+                    ? 'Wait...'
+                    : 'Start attendance'}
+              </Button>
+            </>
+          )}
+        </Box>
+      </Paper>
+    ),
+    [
+      chatLoading,
+      selectedChat.humanTalk,
+      selectedChat.agentName,
+      selectedChat.id,
+      newMessage,
+      handleSendMessage,
+      handleStartHumanAttendance,
+      isLargeScreen,
+      isSmallScreen,
+    ]
+  );
 
   return (
     <Box
@@ -548,45 +592,45 @@ export function ChatDetails({
 
       {/* Floating Date and Interaction Indicator */}
       {currentFloatingInteraction && (
-          <Paper
-            sx={{
-              position: 'absolute',
-              top: 60, // Adjust as needed
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 1000,
-              px: 2,
-              py: 1.5,
-              borderRadius: 2,
-              boxShadow: 2,
-              backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(8px)',
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 1,
-              opacity: scrollState.showFloatingIndicator ? 1 : 0,
-              transition: 'opacity 0.3s ease-in-out',
-              pointerEvents: scrollState.showFloatingIndicator ? 'auto' : 'none',
-            }}
+        <Paper
+          sx={{
+            position: 'absolute',
+            top: 60, // Adjust as needed
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1000,
+            px: 2,
+            py: 1.5,
+            borderRadius: 2,
+            boxShadow: 2,
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 1,
+            opacity: scrollState.showFloatingIndicator ? 1 : 0,
+            transition: 'opacity 0.3s ease-in-out',
+            pointerEvents: scrollState.showFloatingIndicator ? 'auto' : 'none',
+          }}
+        >
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ fontWeight: 500, fontSize: '0.875rem', whiteSpace: 'nowrap' }}
           >
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ fontWeight: 500, fontSize: '0.875rem', whiteSpace: 'nowrap' }}
-            >
-              {currentDate}
-            </Typography>
+            {currentDate}
+          </Typography>
 
-            <Chip
-              size="small"
-              icon={getInteractionStatusIcon(currentFloatingInteraction.status)}
-              label={`Interaction #${(selectedChat?.paginatedInteractions?.meta?.total || 0) - ((selectedChat?.paginatedInteractions?.data?.length || 0) - 1 - scrollState.visibleInteraction)} - ${currentFloatingInteraction.status}`}
-              color={getInteractionStatusColor(currentFloatingInteraction.status)}
-              sx={{ backgroundColor: 'background.paper' }}
-            />
-          </Paper>
-        )}
+          <Chip
+            size="small"
+            icon={getInteractionStatusIcon(currentFloatingInteraction.status)}
+            label={`Interaction #${(selectedChat?.paginatedInteractions?.meta?.total || 0) - ((selectedChat?.paginatedInteractions?.data?.length || 0) - 1 - scrollState.visibleInteraction)} - ${currentFloatingInteraction.status}`}
+            color={getInteractionStatusColor(currentFloatingInteraction.status)}
+            sx={{ backgroundColor: 'background.paper' }}
+          />
+        </Paper>
+      )}
 
       {/* Messages Area */}
       {interactionLoading && (
@@ -651,8 +695,16 @@ export function ChatDetails({
                         <Box
                           sx={{
                             display: 'flex',
-                            flexDirection: message.role === 'system' ? 'column' : (message.role === 'user' ? 'row' : 'row-reverse'),
-                            alignItems: message.role === 'system' ? 'center' : 'flex-start',
+                            flexDirection:
+                              message.role === 'system'
+                                ? 'column'
+                                : message.role === 'user'
+                                  ? 'row'
+                                  : 'row-reverse',
+                            alignItems:
+                              message.role === 'system'
+                                ? 'center'
+                                : 'flex-start',
                             gap: message.role === 'system' ? 0.5 : 1,
                           }}
                         >
@@ -672,51 +724,78 @@ export function ChatDetails({
                               )}
                             </Avatar>
                           )}
-                          
+
                           <Box
                             sx={{
-                              width: message.role === 'system' ? '100%' : 'fit-content',
+                              width:
+                                message.role === 'system'
+                                  ? '100%'
+                                  : 'fit-content',
                               display: 'flex',
                               flexDirection: 'column',
-                              alignItems: message.role === 'system' 
-                                ? 'center' 
-                                : (message.role === 'user' ? 'flex-start' : 'flex-end'),
+                              alignItems:
+                                message.role === 'system'
+                                  ? 'center'
+                                  : message.role === 'user'
+                                    ? 'flex-start'
+                                    : 'flex-end',
                             }}
                           >
                             <Box
                               sx={{
-                                maxWidth: message.role === 'system' ? '300px' : '350px',
-                                padding: message.role === 'system' 
-                                  ? theme.spacing(0.5, 1.5) 
-                                  : theme.spacing(1, 2),
-                                borderRadius: message.role === 'system' 
-                                  ? theme.spacing(1) 
-                                  : theme.spacing(2),
+                                maxWidth:
+                                  message.role === 'system' ? '300px' : '350px',
+                                padding:
+                                  message.role === 'system'
+                                    ? theme.spacing(0.5, 1.5)
+                                    : theme.spacing(1, 2),
+                                borderRadius:
+                                  message.role === 'system'
+                                    ? theme.spacing(1)
+                                    : theme.spacing(2),
                                 marginBottom: theme.spacing(0.5),
-                                alignSelf: message.role === 'system' 
-                                  ? 'center' 
-                                  : (isUser ? 'flex-start' : 'flex-end'),
-                                backgroundColor: message.role === 'system'
-                                  ? theme.palette.grey[200]
-                                  : (isUser ? theme.palette.primary.main : theme.palette.grey[100]),
-                                color: message.role === 'system'
-                                  ? theme.palette.text.secondary
-                                  : (isUser ? '' : theme.palette.text.primary),
+                                alignSelf:
+                                  message.role === 'system'
+                                    ? 'center'
+                                    : isUser
+                                      ? 'flex-start'
+                                      : 'flex-end',
+                                backgroundColor:
+                                  message.role === 'system'
+                                    ? theme.palette.grey[200]
+                                    : isUser
+                                      ? theme.palette.primary.main
+                                      : theme.palette.grey[100],
+                                color:
+                                  message.role === 'system'
+                                    ? theme.palette.text.secondary
+                                    : isUser
+                                      ? ''
+                                      : theme.palette.text.primary,
                                 wordBreak: 'initial',
-                                textAlign: message.role === 'system' ? 'center' : 'left',
+                                textAlign:
+                                  message.role === 'system' ? 'center' : 'left',
                               }}
                             >
-                              <Typography 
-                                variant={message.role === 'system' ? 'caption' : 'body2'}
-                                sx={{ 
-                                  fontStyle: message.role === 'system' ? 'italic' : 'normal',
-                                  fontWeight: message.role === 'system' ? 500 : 'normal'
+                              <Typography
+                                variant={
+                                  message.role === 'system'
+                                    ? 'caption'
+                                    : 'body2'
+                                }
+                                sx={{
+                                  fontStyle:
+                                    message.role === 'system'
+                                      ? 'italic'
+                                      : 'normal',
+                                  fontWeight:
+                                    message.role === 'system' ? 500 : 'normal',
                                 }}
                               >
                                 {message.text}
                               </Typography>
                             </Box>
-                            
+
                             {message.role !== 'system' && (
                               <Typography
                                 variant="caption"

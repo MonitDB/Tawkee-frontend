@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { ElevenLabsDataResponseDto, ElevenLabsService } from '../services/elevenLabsService';
+import { ElevenLabsService } from '../services/elevenLabsService';
 import { env } from '../config/env';
 import { useHttpResponse } from '../context/ResponseNotifier';
 import { useAgents } from '../context/AgentsContext';
@@ -9,16 +9,18 @@ import { ElevenLabsSettings } from '../pages/AgentDetails/components/dialogs/Ele
 export const useElevenLabsService = (token: string) => {
   const { notify } = useHttpResponse();
   const { user } = useAuth();
-  const {
-    syncAgentElevenLabsStatus,
-    syncAgentElevenLabsData
-  } = useAgents();
+  const { syncAgentElevenLabsStatus, syncAgentElevenLabsData } = useAgents();
 
   const [elevenLabsLoading, setElevenLabsLoading] = useState<boolean>(false);
   const [voicesLoading, setVoicesLoading] = useState<boolean>(false);
 
   const service = useMemo(
-    () => new ElevenLabsService({ token, apiUrl: env.API_URL, userId: user?.id as string }),
+    () =>
+      new ElevenLabsService({
+        token,
+        apiUrl: env.API_URL,
+        userId: user?.id as string,
+      }),
     [token, env.API_URL]
   );
 

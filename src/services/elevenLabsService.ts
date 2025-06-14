@@ -1,6 +1,6 @@
 // Types/Interfaces for ElevenLabs Service
 
-import { ElevenLabsSettings } from "../pages/AgentDetails/components/dialogs/ElevenLabsSettingsDialog";
+import { ElevenLabsSettings } from '../pages/AgentDetails/components/dialogs/ElevenLabsSettingsDialog';
 
 // Voice category types
 export type VoiceCategory = 'premade' | 'cloned' | 'generated' | 'professional';
@@ -39,10 +39,12 @@ export interface ElevenLabsDataResponseDto {
   data: {
     voices: { voices?: ElevenLabsVoiceDto[] };
     user?: ElevenLabsUserDto;
-  }
+  };
 }
 
-export interface CompleteElevenLabsDto extends ElevenLabsUserDto, ElevenLabsDataResponseDto {}
+export interface CompleteElevenLabsDto
+  extends ElevenLabsUserDto,
+    ElevenLabsDataResponseDto {}
 
 // Parameters for activating ElevenLabs integration
 export interface ActivateElevenLabsParams {
@@ -86,7 +88,10 @@ export class ElevenLabsService {
   /**
    * Activates ElevenLabs integration for a specific agent
    */
-  async activateIntegration(agentId: string, params: ActivateElevenLabsParams): Promise<ElevenLabsOperationResponse> {
+  async activateIntegration(
+    agentId: string,
+    params: ActivateElevenLabsParams
+  ): Promise<ElevenLabsOperationResponse> {
     try {
       if (!agentId) {
         throw new Error('Agent ID is required.');
@@ -130,13 +135,13 @@ export class ElevenLabsService {
         });
 
       return data;
-
     } catch (error: unknown) {
       let errorMessage = 'An unexpected error occurred.';
 
       if (error instanceof Error) {
         if (error.message.includes('Failed to fetch')) {
-          errorMessage = 'Network error. Please check your internet connection.';
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
           errorMessage = `Error: ${error.message}`;
         }
@@ -151,7 +156,9 @@ export class ElevenLabsService {
   /**
    * Deactivates ElevenLabs integration for a specific agent
    */
-  async deactivateIntegration(agentId: string): Promise<ElevenLabsOperationResponse> {
+  async deactivateIntegration(
+    agentId: string
+  ): Promise<ElevenLabsOperationResponse> {
     try {
       if (!agentId) {
         throw new Error('Agent ID is required.');
@@ -186,13 +193,13 @@ export class ElevenLabsService {
         });
 
       return data;
-
     } catch (error: unknown) {
       let errorMessage = 'An unexpected error occurred.';
 
       if (error instanceof Error) {
         if (error.message.includes('Failed to fetch')) {
-          errorMessage = 'Network error. Please check your internet connection.';
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
           errorMessage = `Error: ${error.message}`;
         }
@@ -209,18 +216,20 @@ export class ElevenLabsService {
    */
   async getData(agentId: string): Promise<ElevenLabsDataResponseDto> {
     try {
-
       if (!agentId) {
         throw new Error('Agent ID is required.');
       }
 
-      const response = await fetch(`${this.apiUrl}/elevenlabs-data/${agentId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.token}`,
-        },
-      });
+      const response = await fetch(
+        `${this.apiUrl}/elevenlabs-data/${agentId}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -228,10 +237,12 @@ export class ElevenLabsService {
             `No data found for agent ${agentId} or agent does not exist.`
           );
           return {
-            data: { voices: {voices: []}}
+            data: { voices: { voices: [] } },
           };
         } else if (response.status === 401) {
-          throw new Error('ElevenLabs integration not activated or invalid API key.');
+          throw new Error(
+            'ElevenLabs integration not activated or invalid API key.'
+          );
         } else if (response.status >= 500) {
           throw new Error('Internal server error. Please try again later.');
         } else {
@@ -248,13 +259,13 @@ export class ElevenLabsService {
         });
 
       return data;
-
     } catch (error: unknown) {
       let errorMessage = 'An unexpected error occurred.';
 
       if (error instanceof Error) {
         if (error.message.includes('Failed to fetch')) {
-          errorMessage = 'Network error. Please check your internet connection.';
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
           errorMessage = `Error: ${error.message}`;
         }
@@ -269,7 +280,10 @@ export class ElevenLabsService {
   /**
    * Updates the selected voice for a specific agent
    */
-  async updateData(agentId: string, params: Partial<ElevenLabsSettings>): Promise<ElevenLabsOperationResponse> {
+  async updateData(
+    agentId: string,
+    params: Partial<ElevenLabsSettings>
+  ): Promise<ElevenLabsOperationResponse> {
     try {
       if (!agentId) {
         throw new Error('Agent ID is required.');
@@ -280,17 +294,20 @@ export class ElevenLabsService {
         alwaysRespondWithAudio: params.alwaysRespondWithAudio,
         selectedElevenLabsVoiceId: params.selectedElevenLabsVoiceId,
         similarityBoost: params.similarityBoost,
-        stability: params.stability
-      }
+        stability: params.stability,
+      };
 
-      const response = await fetch(`${this.apiUrl}/elevenlabs-update-settings/${agentId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.token}`,
-        },
-        body: JSON.stringify(importantParams),
-      });
+      const response = await fetch(
+        `${this.apiUrl}/elevenlabs-update-settings/${agentId}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.token}`,
+          },
+          body: JSON.stringify(importantParams),
+        }
+      );
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -315,13 +332,13 @@ export class ElevenLabsService {
         });
 
       return data;
-
     } catch (error: unknown) {
       let errorMessage = 'An unexpected error occurred.';
 
       if (error instanceof Error) {
         if (error.message.includes('Failed to fetch')) {
-          errorMessage = 'Network error. Please check your internet connection.';
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
           errorMessage = `Error: ${error.message}`;
         }

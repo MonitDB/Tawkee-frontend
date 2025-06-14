@@ -17,7 +17,7 @@ import {
 import {
   Schedule,
   Delete as DeleteIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import LoadingBackdrop from '../../../../components/LoadingBackdrop';
 
@@ -37,7 +37,11 @@ interface GoogleCalendarConfigDialogProps {
   open: boolean;
   onClose: () => void;
   scheduleSettings: ScheduleSettingsDto;
-  onScheduleSettingsChange: (settings: ScheduleSettingsDto | ((prev: ScheduleSettingsDto) => ScheduleSettingsDto)) => void;
+  onScheduleSettingsChange: (
+    settings:
+      | ScheduleSettingsDto
+      | ((prev: ScheduleSettingsDto) => ScheduleSettingsDto)
+  ) => void;
   onSave: () => void;
   onOpenScheduleDialog: () => void;
   onDeactivate: () => void;
@@ -55,15 +59,16 @@ export default function GoogleCalendarConfigDialog({
   loading,
 }: GoogleCalendarConfigDialogProps) {
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="sm"
-      fullWidth
-    >
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
             <Typography variant="h6">General agenda data</Typography>
           </Box>
           <IconButton
@@ -93,18 +98,23 @@ export default function GoogleCalendarConfigDialog({
           <Grid size={{ xs: 12, md: 6 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
               <Schedule sx={{ mr: 1 }} />
-              <Typography variant="subtitle2">
-                Minimum advance time
-              </Typography>
+              <Typography variant="subtitle2">Minimum advance time</Typography>
             </Box>
-            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ mb: 1, display: 'block' }}
+            >
               Minimum time in minutes the next meeting can be scheduled
             </Typography>
             <FormControl fullWidth>
               <Select
                 value={scheduleSettings?.minAdvanceMinutes || 60}
-                onChange={(e: SelectChangeEvent<number>) => 
-                  onScheduleSettingsChange(prev => ({ ...prev, minAdvanceMinutes: Number(e.target.value) }))
+                onChange={(e: SelectChangeEvent<number>) =>
+                  onScheduleSettingsChange((prev) => ({
+                    ...prev,
+                    minAdvanceMinutes: Number(e.target.value),
+                  }))
                 }
               >
                 <MenuItem value={60}>1 hour</MenuItem>
@@ -114,21 +124,28 @@ export default function GoogleCalendarConfigDialog({
             </FormControl>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 6}}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
               <Schedule sx={{ mr: 1 }} />
               <Typography variant="subtitle2">
                 Maximum allowed distance
               </Typography>
             </Box>
-            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ mb: 1, display: 'block' }}
+            >
               Maximum time in days the next meeting can be scheduled
             </Typography>
             <FormControl fullWidth>
               <Select
                 value={scheduleSettings?.maxAdvanceDays || 7}
-                onChange={(e: SelectChangeEvent<number>) => 
-                  onScheduleSettingsChange(prev => ({ ...prev, maxAdvanceDays: Number(e.target.value) }))
+                onChange={(e: SelectChangeEvent<number>) =>
+                  onScheduleSettingsChange((prev) => ({
+                    ...prev,
+                    maxAdvanceDays: Number(e.target.value),
+                  }))
                 }
               >
                 <MenuItem value={7}>Up to one week</MenuItem>
@@ -145,14 +162,21 @@ export default function GoogleCalendarConfigDialog({
                 Maximum agenda duration
               </Typography>
             </Box>
-            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ mb: 1, display: 'block' }}
+            >
               Time limit for each appointment
             </Typography>
             <FormControl fullWidth>
               <Select
                 value={scheduleSettings?.maxEventDuration || 60}
-                onChange={(e: SelectChangeEvent<number>) => 
-                  onScheduleSettingsChange(prev => ({ ...prev, maxEventDuration: Number(e.target.value) }))
+                onChange={(e: SelectChangeEvent<number>) =>
+                  onScheduleSettingsChange((prev) => ({
+                    ...prev,
+                    maxEventDuration: Number(e.target.value),
+                  }))
                 }
               >
                 <MenuItem value={30}>30 minutes</MenuItem>
@@ -164,30 +188,34 @@ export default function GoogleCalendarConfigDialog({
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Box sx={{
-          width: '100%',
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'space-between',
-          justifyContent: 'space-between',
-          gap: 1
-        }}>
+        <Box
+          sx={{
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'space-between',
+            justifyContent: 'space-between',
+            gap: 1,
+          }}
+        >
           <Button
             variant="text"
             onClick={onDeactivate}
-            sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1,
+            }}
           >
-            <DeleteIcon color='error' />
+            <DeleteIcon color="error" />
             Deactivate integration
-          </Button>             
+          </Button>
 
-          <Button
-            variant="contained"
-            onClick={onOpenScheduleDialog}
-          >
+          <Button variant="contained" onClick={onOpenScheduleDialog}>
             Configure Schedule Settings
           </Button>
-          
+
           <Button
             variant="contained"
             onClick={onSave}

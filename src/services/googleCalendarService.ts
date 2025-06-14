@@ -1,4 +1,4 @@
-import { ScheduleSettingsDto } from "../pages/AgentDetails/components/IntegrationsTabPanel";
+import { ScheduleSettingsDto } from '../pages/AgentDetails/components/dialogs/GoogleCalendarConfigDialog';
 
 // Define DTOs and interfaces for Google Calendar service
 export interface IntentionDto {
@@ -54,7 +54,8 @@ export class GoogleCalendarService {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
+        const errorMessage =
+          data.error || `HTTP error! status: ${response.status}`;
         throw new Error(errorMessage);
       }
 
@@ -68,7 +69,8 @@ export class GoogleCalendarService {
 
       if (error instanceof Error) {
         if (error.message.includes('Failed to fetch')) {
-          errorMessage = 'Network error. Please check your internet connection.';
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
           errorMessage = `Error: ${error.message}`;
         }
@@ -94,7 +96,8 @@ export class GoogleCalendarService {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
+        const errorMessage =
+          data.error || `HTTP error! status: ${response.status}`;
         throw new Error(errorMessage);
       }
 
@@ -103,7 +106,11 @@ export class GoogleCalendarService {
       if (data.error) throw new Error(data.error);
 
       // Validate response structure
-      if (data.data && typeof data.data.authUrl === 'string' && typeof data.data.state === 'string') {
+      if (
+        data.data &&
+        typeof data.data.authUrl === 'string' &&
+        typeof data.data.state === 'string'
+      ) {
         return data.data as GoogleAuthUrlResponseDto;
       } else {
         console.error('Invalid response structure for getAuthUrl:', data);
@@ -114,7 +121,8 @@ export class GoogleCalendarService {
 
       if (error instanceof Error) {
         if (error.message.includes('Failed to fetch')) {
-          errorMessage = 'Network error. Please check your internet connection.';
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
           errorMessage = `Error: ${error.message}`;
         }
@@ -140,7 +148,8 @@ export class GoogleCalendarService {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
+        const errorMessage =
+          data.error || `HTTP error! status: ${response.status}`;
         throw new Error(errorMessage);
       }
 
@@ -166,7 +175,8 @@ export class GoogleCalendarService {
 
       if (error instanceof Error) {
         if (error.message.includes('Failed to fetch')) {
-          errorMessage = 'Network error. Please check your internet connection.';
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
           errorMessage = `Error: ${error.message}`;
         }
@@ -192,7 +202,8 @@ export class GoogleCalendarService {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
+        const errorMessage =
+          data.error || `HTTP error! status: ${response.status}`;
         throw new Error(errorMessage);
       }
 
@@ -212,7 +223,8 @@ export class GoogleCalendarService {
 
       if (error instanceof Error) {
         if (error.message.includes('Failed to fetch')) {
-          errorMessage = 'Network error. Please check your internet connection.';
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
           errorMessage = `Error: ${error.message}`;
         }
@@ -238,7 +250,8 @@ export class GoogleCalendarService {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
+        const errorMessage =
+          data.error || `HTTP error! status: ${response.status}`;
         throw new Error(errorMessage);
       }
 
@@ -247,13 +260,13 @@ export class GoogleCalendarService {
       if (data.error) throw new Error(data.error);
 
       return data.data as ScheduleSettingsDto;
-
     } catch (error: unknown) {
       let errorMessage = 'An unexpected error occurred.';
 
       if (error instanceof Error) {
         if (error.message.includes('Failed to fetch')) {
-          errorMessage = 'Network error. Please check your internet connection.';
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
           errorMessage = `Error: ${error.message}`;
         }
@@ -265,7 +278,10 @@ export class GoogleCalendarService {
     }
   }
 
-  async updateScheduleSettings(agentId: string, scheduleSettings: ScheduleSettingsDto): Promise<ScheduleSettingsDto> {
+  async updateScheduleSettings(
+    agentId: string,
+    scheduleSettings: ScheduleSettingsDto
+  ): Promise<ScheduleSettingsDto> {
     try {
       const response = await fetch(
         `${this.apiUrl}/agents/${agentId}/schedule-settings`,
@@ -275,13 +291,14 @@ export class GoogleCalendarService {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${this.token}`,
           } as const,
-          body: JSON.stringify(scheduleSettings)
+          body: JSON.stringify(scheduleSettings),
         }
       );
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
+        const errorMessage =
+          data.error || `HTTP error! status: ${response.status}`;
         throw new Error(errorMessage);
       }
 
@@ -290,13 +307,13 @@ export class GoogleCalendarService {
       if (data.error) throw new Error(data.error);
 
       return data.data as ScheduleSettingsDto;
-
     } catch (error: unknown) {
       let errorMessage = 'An unexpected error occurred.';
 
       if (error instanceof Error) {
         if (error.message.includes('Failed to fetch')) {
-          errorMessage = 'Network error. Please check your internet connection.';
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
           errorMessage = `Error: ${error.message}`;
         }
@@ -306,5 +323,5 @@ export class GoogleCalendarService {
 
       throw new Error(errorMessage);
     }
-  }  
+  }
 }

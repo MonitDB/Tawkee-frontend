@@ -78,57 +78,72 @@ export default function OAuthCallbackPage() {
   // Show calendar success confirmation
   if (isCalendarSuccess) {
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        textAlign: 'center',
-        padding: '20px',
-        fontFamily: 'Arial, sans-serif'
-      }}>
-        <div style={{
-          background: '#d4edda',
-          border: '1px solid #c3e6cb',
-          borderRadius: '8px',
-          padding: '30px',
-          maxWidth: '400px',
-          width: '100%'
-        }}>
-          <div style={{
-            fontSize: '48px',
-            color: '#155724',
-            marginBottom: '16px'
-          }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          textAlign: 'center',
+          padding: '20px',
+          fontFamily: 'Arial, sans-serif',
+        }}
+      >
+        <div
+          style={{
+            background: '#d4edda',
+            border: '1px solid #c3e6cb',
+            borderRadius: '8px',
+            padding: '30px',
+            maxWidth: '400px',
+            width: '100%',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '48px',
+              color: '#155724',
+              marginBottom: '16px',
+            }}
+          >
             ✅
           </div>
-          <h2 style={{
-            color: '#155724',
-            marginBottom: '16px',
-            fontSize: '24px'
-          }}>
+          <h2
+            style={{
+              color: '#155724',
+              marginBottom: '16px',
+              fontSize: '24px',
+            }}
+          >
             Calendar Authorization Granted
           </h2>
-          <p style={{
-            color: '#155724',
-            fontSize: '16px',
-            marginBottom: '20px'
-          }}>
-            <strong>{calendarEmail}</strong> granted access to your Google Calendar.
+          <p
+            style={{
+              color: '#155724',
+              fontSize: '16px',
+              marginBottom: '20px',
+            }}
+          >
+            <strong>{calendarEmail}</strong> granted access to your Google
+            Calendar.
           </p>
-          <p style={{
-            color: '#155724',
-            fontSize: '18px',
-            fontWeight: 'bold'
-          }}>
+          <p
+            style={{
+              color: '#155724',
+              fontSize: '18px',
+              fontWeight: 'bold',
+            }}
+          >
             You can close this page now.
           </p>
-          <p style={{
-            color: '#6c757d',
-            fontSize: '14px',
-            marginTop: '16px'
-          }}>
+          <p
+            style={{
+              color: '#6c757d',
+              fontSize: '14px',
+              marginTop: '16px',
+            }}
+          >
             This page will close automatically in 5 seconds.
           </p>
         </div>

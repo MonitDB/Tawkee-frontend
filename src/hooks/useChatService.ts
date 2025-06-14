@@ -22,7 +22,12 @@ export const useChatService = (token: string) => {
   const [interactionLoading, setInteractionLoading] = useState<boolean>(false);
 
   const service = useMemo(
-    () => new ChatService({ token, apiUrl: env.API_URL, userId: user?.id as string }),
+    () =>
+      new ChatService({
+        token,
+        apiUrl: env.API_URL,
+        userId: user?.id as string,
+      }),
     [token, env.API_URL]
   );
 

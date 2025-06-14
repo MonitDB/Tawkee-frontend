@@ -59,8 +59,13 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
 
   const { token } = useAuth();
-  const { fetchTrainings, createTraining, deleteTraining, loading, createTrainingLoading } =
-    useTrainingService(token as string);
+  const {
+    fetchTrainings,
+    createTraining,
+    deleteTraining,
+    loading,
+    createTrainingLoading,
+  } = useTrainingService(token as string);
 
   const [page, setPage] = useState<number>(
     agentData?.paginatedTrainings?.meta?.page || 1
@@ -190,18 +195,19 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
     const mimeTypeMap: Record<string, string> = {
       // Document types
       'application/pdf': 'PDF',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        'DOCX',
       'text/plain': 'TXT',
       'text/html': 'HTML',
       'application/msword': 'DOC',
       'application/vnd.oasis.opendocument.text': 'ODT',
       'application/rtf': 'RTF',
-      
+
       // Image types
       'image/jpeg': 'JPG',
       'image/png': 'PNG',
       'image/tiff': 'TIFF',
-      
+
       // Video types
       'video/mp4': 'MP4',
       'video/avi': 'AVI',
@@ -213,7 +219,7 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
       'video/x-flv': 'FLV',
       'video/x-ms-wmv': 'WMV',
       'video/mp2t': 'TS',
-      'video/x-matroska': 'MKV'
+      'video/x-matroska': 'MKV',
     };
 
     return mimeTypeMap[mimetype] || 'Unknown extension';
@@ -224,7 +230,7 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
   };
 
   const handleSubmitTraining = (training: CreateTrainingDto) => {
-    console.log('handleSubmitTraining...')
+    console.log('handleSubmitTraining...');
     createTraining(agentData?.id as string, training);
   };
 
@@ -311,48 +317,53 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
           spacing={1}
           sx={{ borderBottom: 1, borderColor: 'divider', pb: 1 }}
         >
-          {(['all', 'TEXT', 'DOCUMENT', 'WEBSITE', 'VIDEO'] as const).map((tab) => (
-            <Button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              variant={activeTab === tab ? 'contained' : 'text'}
-              size="small"
-              sx={{
-                textTransform: 'none',
-                borderRadius: 2,
-                minWidth: 'auto',
-                px: 2,
-                py: 1,
-                color: activeTab === tab ? 'white' : 'text.secondary',
-                '&:hover': {
-                  backgroundColor:
-                    activeTab === tab ? '#5855eb' : 'rgba(99, 102, 241, 0.1)',
-                },
-              }}
-            >
-              {tab === 'all' ? 'All' : tab.toLowerCase()}
-              <Chip
-                label={tabCounts[tab]}
+          {(['all', 'TEXT', 'DOCUMENT', 'WEBSITE', 'VIDEO'] as const).map(
+            (tab) => (
+              <Button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                variant={activeTab === tab ? 'contained' : 'text'}
                 size="small"
                 sx={{
-                  ml: 1,
-                  height: 20,
-                  fontSize: '0.75rem',
+                  textTransform: 'none',
+                  borderRadius: 2,
+                  minWidth: 'auto',
+                  px: 2,
+                  py: 1,
+                  color: activeTab === tab ? 'white' : 'text.secondary',
+                  '&:hover': {
+                    backgroundColor:
+                      activeTab === tab ? '#5855eb' : 'rgba(99, 102, 241, 0.1)',
+                  },
                 }}
-              />
-            </Button>
-          ))}
+              >
+                {tab === 'all' ? 'All' : tab.toLowerCase()}
+                <Chip
+                  label={tabCounts[tab]}
+                  size="small"
+                  sx={{
+                    ml: 1,
+                    height: 20,
+                    fontSize: '0.75rem',
+                  }}
+                />
+              </Button>
+            )
+          )}
         </Stack>
       </Box>
 
       {/* Content */}
-      {loading || createTrainingLoading && (
-        <LinearProgress color="secondary" sx={{ width: '100%', margin: 1 }} />
-      )}
+      {loading ||
+        (createTrainingLoading && (
+          <LinearProgress color="secondary" sx={{ width: '100%', margin: 1 }} />
+        ))}
       {filteredData.length === 0 ? (
         <Alert severity="info" sx={{ borderRadius: 2 }}>
           {loading || createTrainingLoading
-            ? loading ? 'Fetching data...' : 'Processing and storing training data...'
+            ? loading
+              ? 'Fetching data...'
+              : 'Processing and storing training data...'
             : searchQuery
               ? 'No training found for this search.'
               : 'No training registered yet.'}
@@ -516,7 +527,7 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
                         size="small"
                         variant="outlined"
                       />
-                    )}                    
+                    )}
                   </Stack>
 
                   {/* Menu Button */}

@@ -1,11 +1,9 @@
 import { useState, useCallback, useMemo } from 'react';
-import {
-  GoogleCalendarService
-} from '../services/googleCalendarService';
+import { GoogleCalendarService } from '../services/googleCalendarService';
 import { env } from '../config/env';
 import { useHttpResponse } from '../context/ResponseNotifier';
 import { useAgents } from '../context/AgentsContext';
-import { ScheduleSettingsDto } from '../pages/AgentDetails/components/IntegrationsTabPanel';
+import { ScheduleSettingsDto } from '../pages/AgentDetails/components/dialogs/GoogleCalendarConfigDialog';
 
 export const useGoogleCalendarService = (token: string) => {
   const { notify } = useHttpResponse();
@@ -25,10 +23,16 @@ export const useGoogleCalendarService = (token: string) => {
         const intention = await service.createScheduleMeetingIntention(agentId);
         // syncAgentGoogleCalendarIntention(agentId, intention);
 
-        notify('Google Calendar scheduling intention created successfully!', 'success');
+        notify(
+          'Google Calendar scheduling intention created successfully!',
+          'success'
+        );
         return intention;
       } catch (error) {
-        notify(error instanceof Error ? error.message : 'Failed to create intention', 'error');
+        notify(
+          error instanceof Error ? error.message : 'Failed to create intention',
+          'error'
+        );
         return null;
       } finally {
         setLoading(false);
@@ -43,7 +47,12 @@ export const useGoogleCalendarService = (token: string) => {
         setLoading(true);
         return await service.getAuthUrl(agentId);
       } catch (error) {
-        notify(error instanceof Error ? error.message : 'Failed to generate auth URL', 'error');
+        notify(
+          error instanceof Error
+            ? error.message
+            : 'Failed to generate auth URL',
+          'error'
+        );
         return null;
       } finally {
         setLoading(false);
@@ -60,7 +69,12 @@ export const useGoogleCalendarService = (token: string) => {
 
         return status;
       } catch (error) {
-        notify(error instanceof Error ? error.message : 'Failed to check auth status', 'error');
+        notify(
+          error instanceof Error
+            ? error.message
+            : 'Failed to check auth status',
+          'error'
+        );
         return null;
       } finally {
         setLoading(false);
@@ -74,16 +88,19 @@ export const useGoogleCalendarService = (token: string) => {
       try {
         setLoading(true);
         const result = await service.revokeTokens(agentId);
-        
+
         if (result.success) {
           notify('Google Calendar tokens revoked successfully!', 'success');
         } else {
           notify('Failed to revoke tokens', 'error');
         }
-        
+
         return result;
       } catch (error) {
-        notify(error instanceof Error ? error.message : 'Failed to revoke tokens', 'error');
+        notify(
+          error instanceof Error ? error.message : 'Failed to revoke tokens',
+          'error'
+        );
         return { success: false };
       } finally {
         setLoading(false);
@@ -125,31 +142,44 @@ export const useGoogleCalendarService = (token: string) => {
         syncAgentScheduleSettingsUpdate({ agentId, scheduleSettings: data });
         return data;
       } catch (error) {
-        notify(error instanceof Error ? error.message : 'Failed to get schedule settings', 'error');
+        notify(
+          error instanceof Error
+            ? error.message
+            : 'Failed to get schedule settings',
+          'error'
+        );
         return null;
       } finally {
         setLoading(false);
       }
     },
     [service, notify]
-  );  
+  );
 
   const updateScheduleSettings = useCallback(
     async (agentId: string, scheduleSettings: ScheduleSettingsDto) => {
       try {
         setLoading(true);
-        const data = await service.updateScheduleSettings(agentId, scheduleSettings);
+        const data = await service.updateScheduleSettings(
+          agentId,
+          scheduleSettings
+        );
         syncAgentScheduleSettingsUpdate({ agentId, scheduleSettings: data });
         return data;
       } catch (error) {
-        notify(error instanceof Error ? error.message : 'Failed to update schedule settings', 'error');
+        notify(
+          error instanceof Error
+            ? error.message
+            : 'Failed to update schedule settings',
+          'error'
+        );
         return null;
       } finally {
         setLoading(false);
       }
     },
     [service, notify]
-  );  
+  );
 
   return {
     // Main service methods
@@ -157,14 +187,14 @@ export const useGoogleCalendarService = (token: string) => {
     getAuthUrl,
     checkAuthStatus,
     revokeTokens,
-    
+
     // Convenience methods
     authenticateAgent,
     getScheduleSettings,
     updateScheduleSettings,
     refreshAuthStatus,
-    
+
     // Loading states
-    loading
+    loading,
   };
 };

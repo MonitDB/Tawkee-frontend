@@ -25,7 +25,6 @@ import { InteractionStatus } from '../services/chatService';
 import { ScheduleSettingsDto } from '../pages/AgentDetails/components/dialogs/GoogleCalendarConfigDialog';
 import { CompleteElevenLabsDto } from '../services/elevenLabsService';
 
-
 export enum AIModel {
   GPT_4 = 'GPT_4',
   GPT_4_O = 'GPT_4_O',
@@ -168,10 +167,28 @@ interface AgentsContextType {
   ) => boolean;
   syncAgentMessageChatUpdate: (chat: ChatDto) => boolean;
 
-  syncAgentScheduleSettingsUpdate: ({agentId, scheduleSettings}: {agentId: string, scheduleSettings: ScheduleSettingsDto}) => boolean;
+  syncAgentScheduleSettingsUpdate: ({
+    agentId,
+    scheduleSettings,
+  }: {
+    agentId: string;
+    scheduleSettings: ScheduleSettingsDto;
+  }) => boolean;
 
-  syncAgentElevenLabsStatus: ({agentId, connected}: {agentId: string, connected: boolean}) => void;
-  syncAgentElevenLabsData: ({agentId, params}: {agentId: string, params: any}) => void;
+  syncAgentElevenLabsStatus: ({
+    agentId,
+    connected,
+  }: {
+    agentId: string;
+    connected: boolean;
+  }) => void;
+  syncAgentElevenLabsData: ({
+    agentId,
+    params,
+  }: {
+    agentId: string;
+    params: any;
+  }) => void;
 }
 
 interface AgentsProviderProps {
@@ -798,7 +815,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
                 ...wrapper.agent,
                 paginatedChats: {
                   data: existingChats,
-                  meta: wrapper.agent.paginatedChats?.meta || inputMeta
+                  meta: wrapper.agent.paginatedChats?.meta || inputMeta,
                 },
               },
             };
@@ -1154,7 +1171,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
           // Find the chat within this agent that matches the chatId
           const existingChats = agent?.paginatedChats?.data || [];
 
-          // --- Determinar chatIndex manualmente --- 
+          // --- Determinar chatIndex manualmente ---
           let chatIndex = -1;
           // console.log(`DEBUG MAP [Agent: ${agent?.id}]: Iniciando busca manual por chatId: ${chatId}`);
           for (let i = 0; i < existingChats.length; i++) {
@@ -1227,7 +1244,12 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
           const updatedAgentPaginatedChats: PaginatedResult<ChatDto> = {
             ...(agent.paginatedChats || {}),
             data: updatedChats,
-            meta: agent.paginatedChats?.meta || { total: updatedChats.length, page: 1, pageSize: updatedChats.length, totalPages: 1 }
+            meta: agent.paginatedChats?.meta || {
+              total: updatedChats.length,
+              page: 1,
+              pageSize: updatedChats.length,
+              totalPages: 1,
+            },
           };
 
           // console.log(`DEBUG [Agent: ${agent.id}, Chat: ${chatId}]: updatedAgentPaginatedChats final:`, JSON.stringify(updatedAgentPaginatedChats));
@@ -1291,7 +1313,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
       return true;
     } catch (error) {
-      console.error("Error updating agent chat interactions locally:", error);
+      console.error('Error updating agent chat interactions locally:', error);
       return false;
     }
   };
@@ -1303,48 +1325,70 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
         const agentId = chat.agentId;
         const chatId = chat.id;
 
-        const agentIndex = prev.agents.findIndex(wrapper => wrapper.agent.id === agentId);
+        const agentIndex = prev.agents.findIndex(
+          (wrapper) => wrapper.agent.id === agentId
+        );
 
         if (agentIndex === -1) {
-          console.warn(`Agent with ID ${agentId} not found. Skipping chat update for chat ID ${chatId}.`);
+          console.warn(
+            `Agent with ID ${agentId} not found. Skipping chat update for chat ID ${chatId}.`
+          );
           updateApplied = false;
           return prev;
         }
 
         const agentWrapper = prev.agents[agentIndex];
-        const existingPaginatedChats = agentWrapper.agent.paginatedChats || { data: [], meta: { page: 1, pageSize: 10, total: 0, totalPages: 1 } };
+        const existingPaginatedChats = agentWrapper.agent.paginatedChats || {
+          data: [],
+          meta: { page: 1, pageSize: 10, total: 0, totalPages: 1 },
+        };
         const existingChats = existingPaginatedChats.data;
-        const chatIndex = existingChats.findIndex(c => c.id === chatId);
+        const chatIndex = existingChats.findIndex((c) => c.id === chatId);
 
         let updatedAgentChatsData: ChatDto[];
-        let updatedAgentChatsMeta: PaginationMeta = { ...existingPaginatedChats.meta };
+        const updatedAgentChatsMeta: PaginationMeta = {
+          ...existingPaginatedChats.meta,
+        };
         const chatPageSize = Math.max(1, updatedAgentChatsMeta.pageSize);
 
         if (chatIndex !== -1) {
-          // --- Chat exists: Update it --- 
+          // --- Chat exists: Update it ---
           // console.log(`Updating existing chat ${chatId} for agent ${agentId}`);
           const existingChat = existingChats[chatIndex];
 
-          // --- Granular Interaction Update Logic --- 
-          let updatedPaginatedInteractions: PaginatedInteractionsWithMessagesResponseDto | undefined = existingChat.paginatedInteractions;
+          // --- Granular Interaction Update Logic ---
+          let updatedPaginatedInteractions:
+            | PaginatedInteractionsWithMessagesResponseDto
+            | undefined = existingChat.paginatedInteractions;
 
           // Only perform interaction update if the incoming chat has interactions data
-          
-          if (chat.paginatedInteractions && chat.paginatedInteractions.data && chat.paginatedInteractions.data.length > 0) {
+
+          if (
+            chat.paginatedInteractions &&
+            chat.paginatedInteractions.data &&
+            chat.paginatedInteractions.data.length > 0
+          ) {
             const incomingInteractionsData = chat.paginatedInteractions.data;
-            const existingInteractions = existingChat.paginatedInteractions?.data || [];
+            const existingInteractions =
+              existingChat.paginatedInteractions?.data || [];
             // Use existing meta as base, or default if none exists
-            const baseInteractionMeta = existingChat.paginatedInteractions?.meta || { page: 1, pageSize: 10, total: 0, totalPages: 1 }; 
+            const baseInteractionMeta = existingChat.paginatedInteractions
+              ?.meta || { page: 1, pageSize: 10, total: 0, totalPages: 1 };
 
             // Map for efficient lookup and update of existing interactions
-            const interactionsMap = new Map(existingInteractions.map(interaction => [interaction.id, interaction]));
+            const interactionsMap = new Map(
+              existingInteractions.map((interaction) => [
+                interaction.id,
+                interaction,
+              ])
+            );
 
             // Process incoming interactions: update existing or add new
-            incomingInteractionsData.forEach(incomingInteraction => {
+            incomingInteractionsData.forEach((incomingInteraction) => {
               // Update existing or add new interaction to the map
               interactionsMap.set(incomingInteraction.id, {
                 ...(interactionsMap.get(incomingInteraction.id) || {}), // Keep old fields if updating
-                ...incomingInteraction // Override with incoming fields
+                ...incomingInteraction, // Override with incoming fields
               });
             });
 
@@ -1353,7 +1397,10 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
             // Update meta based on the final merged list
             const finalTotal = finalInteractionsData.length;
-            const interactionPageSize = Math.max(1, baseInteractionMeta.pageSize);
+            const interactionPageSize = Math.max(
+              1,
+              baseInteractionMeta.pageSize
+            );
             const finalTotalPages = Math.ceil(finalTotal / interactionPageSize);
 
             updatedPaginatedInteractions = {
@@ -1364,14 +1411,14 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
                 totalPages: finalTotalPages,
                 // Optionally use meta from chat.paginatedInteractions if needed, e.g.:
                 // page: chat.paginatedInteractions.meta?.page ?? baseInteractionMeta.page,
-              }
+              },
             };
             // console.log(`Granularly updated interactions for chat ${chatId}. New total: ${finalTotal}`);
           } else {
             // If incoming chat has no interactions, keep the existing ones
             // console.log(`No interactions provided in update for chat ${chatId}. Keeping existing interactions.`);
           }
-          // --- End Granular Interaction Update Logic --- 
+          // --- End Granular Interaction Update Logic ---
 
           // Create the updated chat object
           const updatedChat: ChatDto = {
@@ -1388,9 +1435,8 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
           ];
           // Meta total for chats doesn't change when updating a chat
           updatedAgentChatsMeta.total = existingChats.length;
-
         } else {
-          // --- Chat does not exist: Add it --- 
+          // --- Chat does not exist: Add it ---
           // console.log(`Adding new chat ${chatId} to agent ${agentId}`);
           // The new chat is added as is, including its paginatedInteractions if present
           updatedAgentChatsData = [...existingChats, chat];
@@ -1399,7 +1445,9 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
         }
 
         // Recalculate totalPages for the chat list
-        updatedAgentChatsMeta.totalPages = Math.ceil(updatedAgentChatsMeta.total / chatPageSize);
+        updatedAgentChatsMeta.totalPages = Math.ceil(
+          updatedAgentChatsMeta.total / chatPageSize
+        );
 
         // Create the updated agent object
         const updatedAgent: Agent = {
@@ -1433,14 +1481,19 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       });
 
       return updateApplied;
-
     } catch (error) {
       console.error('Error in syncAgentMessageChatUpdateCorrected:', error);
       return false;
     }
   };
 
-  const syncAgentScheduleSettingsUpdate = ({agentId, scheduleSettings}: {agentId: string, scheduleSettings: ScheduleSettingsDto}): boolean => {
+  const syncAgentScheduleSettingsUpdate = ({
+    agentId,
+    scheduleSettings,
+  }: {
+    agentId: string;
+    scheduleSettings: ScheduleSettingsDto;
+  }): boolean => {
     try {
       setPaginatedAgents((prev) => {
         const updatedAgents = prev.agents.map((wrapper) => {
@@ -1449,7 +1502,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
               ...wrapper,
               agent: {
                 ...wrapper.agent,
-                scheduleSettings: scheduleSettings
+                scheduleSettings: scheduleSettings,
               },
             };
           }
@@ -1472,7 +1525,10 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
   const syncAgentElevenLabsStatus = ({
     agentId,
     connected,
-  }: { agentId: string; connected: boolean }) => {
+  }: {
+    agentId: string;
+    connected: boolean;
+  }) => {
     try {
       setPaginatedAgents((prev) => {
         const updatedAgents = prev.agents.map((agentWrapper) => {
@@ -1513,7 +1569,10 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
   const syncAgentElevenLabsData = ({
     agentId,
     params,
-  }: { agentId: string; params: any }) => {
+  }: {
+    agentId: string;
+    params: any;
+  }) => {
     try {
       setPaginatedAgents((prev) => {
         const updatedAgents = prev.agents.map((agentWrapper) => {
@@ -1585,11 +1644,10 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     syncAgentChatInteractions,
     syncAgentMessageChatUpdate,
 
-    syncAgentScheduleSettingsUpdate, 
-    
-    syncAgentElevenLabsStatus,
-    syncAgentElevenLabsData
+    syncAgentScheduleSettingsUpdate,
 
+    syncAgentElevenLabsStatus,
+    syncAgentElevenLabsData,
   };
 
   return (

@@ -13,7 +13,9 @@ import { elevenLabsIcon, googleCalendarIcon } from '../../../assets';
 import { useGoogleCalendarService } from '../../../hooks/useGoogleCalendarService';
 import { useAuth } from '../../../context/AuthContext';
 import LoadingBackdrop from '../../../components/LoadingBackdrop';
-import GoogleCalendarConfigDialog, { ScheduleSettingsDto } from '../components/dialogs/GoogleCalendarConfigDialog';
+import GoogleCalendarConfigDialog, {
+  ScheduleSettingsDto,
+} from '../components/dialogs/GoogleCalendarConfigDialog';
 import ScheduleSettingsDialog from '../components/dialogs/ScheduleSettingsDialog';
 import { ElevenLabsApiKeyDialog } from './dialogs/ElevenLabsApiKeyDialog';
 import { ElevenLabsSettingsDialog } from './dialogs/ElevenLabsSettingsDialog';
@@ -46,24 +48,29 @@ export default function IntegrationsTabPanel({
   agentData,
 }: IntegrationsTabPanelProps) {
   const { token } = useAuth();
-  const { 
-    authenticateAgent,
-    updateScheduleSettings,
-    revokeTokens,
-    loading
-  } = useGoogleCalendarService(token as string);
-  
-  const { paginatedAgents, syncAgentScheduleSettingsUpdate, syncAgentElevenLabsStatus } = useAgents();
+  const { authenticateAgent, updateScheduleSettings, revokeTokens, loading } =
+    useGoogleCalendarService(token as string);
+
+  const {
+    paginatedAgents,
+    syncAgentScheduleSettingsUpdate,
+    syncAgentElevenLabsStatus,
+  } = useAgents();
   const { deactivateElevenLabs } = useElevenLabsService(token as string);
   const { agents } = paginatedAgents;
 
-  const [configGoogleCalendarDialogOpen, setConfigGoogleCalendarDialogOpen] = useState(false);
+  const [configGoogleCalendarDialogOpen, setConfigGoogleCalendarDialogOpen] =
+    useState(false);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
-  const [scheduleSettings, setScheduleSettings] = useState<ScheduleSettingsDto>(DEFAULT_SCHEDULE_SETTINGS);
+  const [scheduleSettings, setScheduleSettings] = useState<ScheduleSettingsDto>(
+    DEFAULT_SCHEDULE_SETTINGS
+  );
 
   // Estados para diálogos do ElevenLabs
-  const [elevenLabsApiKeyDialogOpen, setElevenLabsApiKeyDialogOpen] = useState(false);
-  const [elevenLabsSettingsDialogOpen, setElevenLabsSettingsDialogOpen] = useState(false);
+  const [elevenLabsApiKeyDialogOpen, setElevenLabsApiKeyDialogOpen] =
+    useState(false);
+  const [elevenLabsSettingsDialogOpen, setElevenLabsSettingsDialogOpen] =
+    useState(false);
 
   if (!agentData) return null;
 
@@ -81,8 +88,8 @@ export default function IntegrationsTabPanel({
 
   const handleElevenLabsIntegrationSuccess = () => {
     syncAgentElevenLabsStatus({ agentId: agentData.id, connected: true });
-  }
-  
+  };
+
   const handleConfigureElevenLabsIntegration = () => {
     setElevenLabsSettingsDialogOpen(true);
   };
@@ -90,7 +97,7 @@ export default function IntegrationsTabPanel({
   const handleElevenLabsDeactivation = async (agentId: string) => {
     await deactivateElevenLabs(agentId);
     setElevenLabsSettingsDialogOpen(false);
-  };  
+  };
 
   const handleSaveConfiguration = async () => {
     await updateScheduleSettings(agentData.id, scheduleSettings);
@@ -106,7 +113,10 @@ export default function IntegrationsTabPanel({
     await revokeTokens(agentId);
     setScheduleSettings(DEFAULT_SCHEDULE_SETTINGS);
     setConfigGoogleCalendarDialogOpen(false);
-    syncAgentScheduleSettingsUpdate({ agentId, scheduleSettings: DEFAULT_SCHEDULE_SETTINGS });
+    syncAgentScheduleSettingsUpdate({
+      agentId,
+      scheduleSettings: DEFAULT_SCHEDULE_SETTINGS,
+    });
   };
 
   const renderIntegrationCard = (
@@ -121,7 +131,14 @@ export default function IntegrationsTabPanel({
     <Grid size={{ xs: 12, md: 6 }}>
       <Card sx={{ mb: 2, border: '1px solid', borderColor: 'divider' }}>
         <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2, minHeight: '120px' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              mb: 2,
+              minHeight: '120px',
+            }}
+          >
             {icon}
             <Box sx={{ ml: 2, flexGrow: 1 }}>
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
@@ -134,8 +151,16 @@ export default function IntegrationsTabPanel({
           </Box>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
             {isActive ? (
-              <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1}}>
-                <Chip color='success' label={`Connected to ${email}`}/>
+              <Box
+                sx={{
+                  width: '100%',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: 1,
+                }}
+              >
+                <Chip color="success" label={`Connected to ${email}`} />
                 <Button
                   variant="outlined"
                   onClick={onConfigure}
@@ -159,7 +184,9 @@ export default function IntegrationsTabPanel({
     </Grid>
   );
 
-  const agentWrapper = agents.find(wrapper => wrapper.agent.id === agentData.id);
+  const agentWrapper = agents.find(
+    (wrapper) => wrapper.agent.id === agentData.id
+  );
   const existingSettings = agentWrapper?.agent?.scheduleSettings;
 
   const connectedToElevenLabs = !!agentData?.elevenLabsSettings?.connected;
@@ -170,7 +197,8 @@ export default function IntegrationsTabPanel({
         Integrations
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Connect your agent to other applications. This allows it to get more accurate information or schedule meetings for you.
+        Connect your agent to other applications. This allows it to get more
+        accurate information or schedule meetings for you.
       </Typography>
 
       <Grid container spacing={2}>
@@ -187,9 +215,19 @@ export default function IntegrationsTabPanel({
         {renderIntegrationCard(
           'Enable Text-to-Speech with ElevenLabs',
           'With ElevenLabs your agent will be able to respond messages via audio.',
-          <img src={elevenLabsIcon} style={{ width: '30%', background: 'white', padding: 3, borderRadius: 8 }} />,
+          <img
+            src={elevenLabsIcon}
+            style={{
+              width: '30%',
+              background: 'white',
+              padding: 3,
+              borderRadius: 8,
+            }}
+          />,
           connectedToElevenLabs,
-          connectedToElevenLabs ? agentData?.elevenLabsSettings?.userName : undefined,
+          connectedToElevenLabs
+            ? agentData?.elevenLabsSettings?.userName
+            : undefined,
           handleActivateElevenLabsIntegration,
           handleConfigureElevenLabsIntegration
         )}
@@ -217,7 +255,6 @@ export default function IntegrationsTabPanel({
         onSave={handleSaveSchedule}
         loading={loading}
       />
-
 
       <ElevenLabsApiKeyDialog
         agentId={agentData.id}

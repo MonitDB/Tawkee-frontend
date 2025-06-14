@@ -48,7 +48,8 @@ export class ChannelService {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
+        const errorMessage =
+          data.error || `HTTP error! status: ${response.status}`;
         throw new Error(errorMessage);
       }
 
@@ -57,21 +58,22 @@ export class ChannelService {
 
       return data.data || null;
     } catch (error: unknown) {
-        let errorMessage = 'A unexpected error occurred.';
+      let errorMessage = 'A unexpected error occurred.';
 
-        // Check if error is an instance of Error to safely access the message
-        if (error instanceof Error) {
-            // Handling network failures or fetch-specific errors
-            if (error.message.includes('Failed to fetch')) {
-                errorMessage = 'Network error. Please check your internet connection.';
-            } else {
-                errorMessage = `Error: ${error.message}`;
-            }
+      // Check if error is an instance of Error to safely access the message
+      if (error instanceof Error) {
+        // Handling network failures or fetch-specific errors
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
-            errorMessage = 'An unknown error occurred.';
+          errorMessage = `Error: ${error.message}`;
         }
+      } else {
+        errorMessage = 'An unknown error occurred.';
+      }
 
-        throw errorMessage;
+      throw errorMessage;
     }
   }
 
@@ -87,7 +89,8 @@ export class ChannelService {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
+        const errorMessage =
+          data.error || `HTTP error! status: ${response.status}`;
         throw new Error(errorMessage);
       }
 
@@ -96,21 +99,22 @@ export class ChannelService {
 
       return { qrCode: data.data.qrCode || null };
     } catch (error: unknown) {
-        let errorMessage = 'A unexpected error occurred.';
+      let errorMessage = 'A unexpected error occurred.';
 
-        // Check if error is an instance of Error to safely access the message
-        if (error instanceof Error) {
-            // Handling network failures or fetch-specific errors
-            if (error.message.includes('Failed to fetch')) {
-                errorMessage = 'Network error. Please check your internet connection.';
-            } else {
-                errorMessage = `Error: ${error.message}`;
-            }
+      // Check if error is an instance of Error to safely access the message
+      if (error instanceof Error) {
+        // Handling network failures or fetch-specific errors
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
-            errorMessage = 'An unknown error occurred.';
+          errorMessage = `Error: ${error.message}`;
         }
+      } else {
+        errorMessage = 'An unknown error occurred.';
+      }
 
-        throw errorMessage;
+      throw errorMessage;
     }
   }
 
@@ -126,7 +130,8 @@ export class ChannelService {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
+        const errorMessage =
+          data.error || `HTTP error! status: ${response.status}`;
         throw new Error(errorMessage);
       }
 
@@ -135,21 +140,22 @@ export class ChannelService {
 
       return data.success === true;
     } catch (error: unknown) {
-        let errorMessage = 'A unexpected error occurred.';
+      let errorMessage = 'A unexpected error occurred.';
 
-        // Check if error is an instance of Error to safely access the message
-        if (error instanceof Error) {
-            // Handling network failures or fetch-specific errors
-            if (error.message.includes('Failed to fetch')) {
-                errorMessage = 'Network error. Please check your internet connection.';
-            } else {
-                errorMessage = `Error: ${error.message}`;
-            }
+      // Check if error is an instance of Error to safely access the message
+      if (error instanceof Error) {
+        // Handling network failures or fetch-specific errors
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
-            errorMessage = 'An unknown error occurred.';
+          errorMessage = `Error: ${error.message}`;
         }
+      } else {
+        errorMessage = 'An unknown error occurred.';
+      }
 
-        throw errorMessage;
+      throw errorMessage;
     }
   }
 
@@ -162,7 +168,8 @@ export class ChannelService {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        const errorMessage = data.error || `HTTP error! status: ${response.status}`;
+        const errorMessage =
+          data.error || `HTTP error! status: ${response.status}`;
         throw new Error(errorMessage);
       }
 
@@ -171,22 +178,22 @@ export class ChannelService {
 
       return data.success === true;
     } catch (error: unknown) {
-        let errorMessage = 'A unexpected error occurred.';
+      let errorMessage = 'A unexpected error occurred.';
 
-        // Check if error is an instance of Error to safely access the message
-        if (error instanceof Error) {
-            // Handling network failures or fetch-specific errors
-            if (error.message.includes('Failed to fetch')) {
-                errorMessage = 'Network error. Please check your internet connection.';
-            } else {
-                errorMessage = `Error: ${error.message}`;
-            }
+      // Check if error is an instance of Error to safely access the message
+      if (error instanceof Error) {
+        // Handling network failures or fetch-specific errors
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
-            errorMessage = 'An unknown error occurred.';
+          errorMessage = `Error: ${error.message}`;
         }
+      } else {
+        errorMessage = 'An unknown error occurred.';
+      }
 
-        throw errorMessage;
+      throw errorMessage;
     }
   }
-
 }

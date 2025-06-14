@@ -10,14 +10,10 @@ import { ChatDetails } from './components/ChatDetails';
 
 import {
   ChatDto,
-  InteractionWithMessagesDto
+  InteractionWithMessagesDto,
 } from '../../services/chatService';
 
-import {
-  Box,
-  Card,
-  CardContent
-} from '@mui/material';
+import { Box, Card, CardContent } from '@mui/material';
 
 export default function Chats() {
   const { token } = useAuth();
@@ -52,7 +48,7 @@ export default function Chats() {
         chatId: selectedChat.id,
         page: pageToFetch,
       });
-  
+
       // Check if the response is valid
       if (!response || !response.data || !response.meta) {
         console.error(
@@ -67,24 +63,24 @@ export default function Chats() {
       const newMeta = response.meta; // Use the meta from the latest response
       const existingInteractionsData =
         selectedChat.paginatedInteractions?.data || [];
-  
+
       // --- Data Merging Logic ---
       // Merge strategy: Update existing items if IDs match in new data, add truly new items, keep old items not in new data.
-  
+
       // 1. Create a map of new interactions for efficient lookup
       const newInteractionsMap = new Map(
         newInteractionsData.map((interaction) => [interaction.id, interaction])
       );
-  
+
       // 2. Create a set of existing IDs for efficient lookup
       const existingInteractionIds = new Set(
         existingInteractionsData.map((interaction) => interaction.id)
       );
-  
+
       // 3. Build the merged list
       const mergedInteractionsData: InteractionWithMessagesDto[] = [];
       const processedNewIds = new Set<string>();
-  
+
       // Iterate through existing interactions
       existingInteractionsData.forEach((existingInteraction) => {
         if (newInteractionsMap.has(existingInteraction.id)) {
@@ -98,7 +94,7 @@ export default function Chats() {
           mergedInteractionsData.push(existingInteraction);
         }
       });
-  
+
       // Add any remaining new interactions that weren't used for updates (truly new)
       newInteractionsData.forEach((newInteraction) => {
         if (!existingInteractionIds.has(newInteraction.id)) {
@@ -106,7 +102,7 @@ export default function Chats() {
         }
       });
       // --- End of Data Merging Logic ---
-  
+
       // Prepare the updated chat object with merged data and new meta
       const updatedChat: ChatDto = {
         ...selectedChat,
@@ -115,14 +111,13 @@ export default function Chats() {
           meta: newMeta, // Replace meta completely with the latest response meta
         },
       };
-  
+
       // Update the selected chat state
       setSelectedChat(updatedChat);
       // console.log(`Updated chat ${selectedChat.id}. Fetched page ${newMeta.page}. Total interactions now: ${mergedInteractionsData.length}. Meta updated.`);
-    } catch(error) {
+    } catch (error) {
       console.log(error);
     }
-
   };
 
   return (

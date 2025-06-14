@@ -25,20 +25,21 @@ interface ElevenLabsApiKeyDialogProps {
   onSuccess: () => void;
 }
 
-export const ElevenLabsApiKeyDialog: React.FC<ElevenLabsApiKeyDialogProps> = ({
+export function ElevenLabsApiKeyDialog({
   agentId,
   open,
   onClose,
   onSuccess,
-}) => {
+}: ElevenLabsApiKeyDialogProps) {
   const [apiKey, setApiKey] = useState<string>('');
   const { token } = useAuth();
-  const { activateElevenLabs, elevenLabsLoading } = useElevenLabsService(token as string);
+  const { activateElevenLabs, elevenLabsLoading } = useElevenLabsService(
+    token as string
+  );
 
   const theme = useTheme();
   const { mode, systemMode } = useColorScheme();
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,7 +75,13 @@ export const ElevenLabsApiKeyDialog: React.FC<ElevenLabsApiKeyDialogProps> = ({
       }}
     >
       <DialogTitle>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <KeyIcon color="primary" />
             <Typography variant="h6" component="div">
@@ -99,9 +106,11 @@ export const ElevenLabsApiKeyDialog: React.FC<ElevenLabsApiKeyDialogProps> = ({
               API Key
             </Typography>
             <Typography variant="body2" sx={{ mb: 2 }}>
-              Please inform below an API key from ElevenLabs that allows you to authenticate with their API and access these functionalities programmatically: Text to Speech, Voices (read) and User (read) 
+              Please inform below an API key from ElevenLabs that allows you to
+              authenticate with their API and access these functionalities
+              programmatically: Text to Speech, Voices (read) and User (read)
             </Typography>
-            
+
             <TextField
               fullWidth
               placeholder="Token"
@@ -160,4 +169,4 @@ export const ElevenLabsApiKeyDialog: React.FC<ElevenLabsApiKeyDialogProps> = ({
       </form>
     </Dialog>
   );
-};
+}

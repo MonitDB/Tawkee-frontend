@@ -76,7 +76,14 @@ export default function Agents() {
   const navigate = useNavigate();
 
   const [tab, setTab] = useState(0);
-  const { deleteAgent, activateAgent, deactivateAgent, paginatedAgents, setPage, loading } = useAgents();
+  const {
+    deleteAgent,
+    activateAgent,
+    deactivateAgent,
+    paginatedAgents,
+    setPage,
+    loading,
+  } = useAgents();
 
   const { agents, meta } = paginatedAgents;
 
@@ -200,13 +207,17 @@ export default function Agents() {
                 onClick={() => navigate(`/agents/${agent.id}`)}
               >
                 <>
-                  <CardContent sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: theme.spacing(1),
-                  }}>
-                    <ListItem sx={{ width: 'fit-content', whiteSpace: 'nowrap' }}>
+                  <CardContent
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: theme.spacing(1),
+                    }}
+                  >
+                    <ListItem
+                      sx={{ width: 'fit-content', whiteSpace: 'nowrap' }}
+                    >
                       <ListItemAvatar>
                         <Avatar src={agent.avatar} alt={agent.name}>
                           {agent.name[0]}
@@ -214,11 +225,7 @@ export default function Agents() {
                       </ListItemAvatar>
                       <ListItemText
                         sx={{ cursor: 'pointer' }}
-                        primary={
-                          <Box>
-                            {agent.name}
-                          </Box>
-                        }
+                        primary={<Box>{agent.name}</Box>}
                       />
                     </ListItem>
                     <Tooltip

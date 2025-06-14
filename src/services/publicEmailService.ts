@@ -40,14 +40,15 @@ export class PublicEmailService {
 
       // Check if error is an instance of Error to safely access the message
       if (error instanceof Error) {
-          // Handling network failures or fetch-specific errors
-          if (error.message.includes('Failed to fetch')) {
-              errorMessage = 'Network error. Please check your internet connection.';
-          } else {
-              errorMessage = `Error: ${error.message}`;
-          }
+        // Handling network failures or fetch-specific errors
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage =
+            'Network error. Please check your internet connection.';
+        } else {
+          errorMessage = `Error: ${error.message}`;
+        }
       } else {
-          errorMessage = 'An unknown error occurred.';
+        errorMessage = 'An unknown error occurred.';
       }
 
       throw errorMessage;

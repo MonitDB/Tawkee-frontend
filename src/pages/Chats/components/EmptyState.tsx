@@ -1,10 +1,12 @@
-import { Box, LinearProgress, Typography } from "@mui/material";
+import { Box, LinearProgress, Typography } from '@mui/material';
 
-import {
-  Chat as ChatIcon
-} from '@mui/icons-material';
+import { Chat as ChatIcon } from '@mui/icons-material';
 
-export function EmptyState({ interactionLoading }: {interactionLoading: boolean}) {
+export function EmptyState({
+  interactionLoading,
+}: {
+  interactionLoading: boolean;
+}) {
   return (
     <>
       {interactionLoading && (

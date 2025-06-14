@@ -51,7 +51,10 @@ export default function MenuContent() {
     const chats = wrapper.agent?.paginatedChats?.data;
     if (!chats) return total;
 
-    const agentUnread = chats.reduce((sum, chat) => sum + (chat.unReadCount || 0), 0);
+    const agentUnread = chats.reduce(
+      (sum, chat) => sum + (chat.unReadCount || 0),
+      0
+    );
     return total + agentUnread;
   }, 0);
 
@@ -66,17 +69,17 @@ export default function MenuContent() {
             onClick={() => navigate(routeKeyMap[index])}
           >
             <ListItemButton selected={routeKeyMap[index] == location.pathname}>
-              { item.text == 'Chats' ? (
+              {item.text == 'Chats' ? (
                 <>
                   <ListItemIcon>{item.icon}</ListItemIcon>
                   <ListItemAvatar>
                     <Badge
                       badgeContent={totalUnreadCount}
-                      color='error'
+                      color="error"
                       invisible={totalUnreadCount === 0}
                     >
                       <ListItemText primary={item.text} />
-                    </Badge>                
+                    </Badge>
                   </ListItemAvatar>
                 </>
               ) : (
@@ -84,7 +87,7 @@ export default function MenuContent() {
                   <ListItemIcon>{item.icon}</ListItemIcon>
                   <ListItemText primary={item.text} />
                 </>
-              )} 
+              )}
             </ListItemButton>
           </ListItem>
         ))}
