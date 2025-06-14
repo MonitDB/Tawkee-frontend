@@ -128,7 +128,7 @@ export default function IntegrationsTabPanel({
     onActivate: () => void,
     onConfigure: () => void
   ) => (
-    <Grid size={{ xs: 12, md: 6 }}>
+    <Grid size={{ xs: 12, lg: 6 }}>
       <Card sx={{ mb: 2, border: '1px solid', borderColor: 'divider' }}>
         <CardContent sx={{ p: 3 }}>
           <Box
