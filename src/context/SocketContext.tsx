@@ -134,6 +134,9 @@ export function SocketProvider({ children }: SocketProviderProps) {
         }
       };
     }
+
+    console.log("Socket provider mounted!");
+
   }, [user?.id]);
 
   const contextValue: SocketContextType = {};

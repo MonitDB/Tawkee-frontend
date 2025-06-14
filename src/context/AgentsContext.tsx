@@ -22,7 +22,8 @@ import {
   PaginationMeta,
 } from '../services/chatService';
 import { InteractionStatus } from '../services/chatService';
-import { ScheduleSettingsDto } from '../pages/AgentDetails/components/IntegrationsTabPanel';
+import { ScheduleSettingsDto } from '../pages/AgentDetails/components/dialogs/GoogleCalendarConfigDialog';
+import { CompleteElevenLabsDto } from '../services/elevenLabsService';
 
 
 export enum AIModel {
@@ -87,6 +88,7 @@ export interface Agent {
   channels: Channel[];
 
   scheduleSettings?: ScheduleSettingsDto;
+  elevenLabsSettings?: CompleteElevenLabsDto;
 
   paginatedTrainings: PaginatedTrainingsResponseDto;
   paginatedChats: PaginatedResult<ChatDto>;
@@ -167,6 +169,9 @@ interface AgentsContextType {
   syncAgentMessageChatUpdate: (chat: ChatDto) => boolean;
 
   syncAgentScheduleSettingsUpdate: ({agentId, scheduleSettings}: {agentId: string, scheduleSettings: ScheduleSettingsDto}) => boolean;
+
+  syncAgentElevenLabsStatus: ({agentId, connected}: {agentId: string, connected: boolean}) => void;
+  syncAgentElevenLabsData: ({agentId, params}: {agentId: string, params: any}) => void;
 }
 
 interface AgentsProviderProps {
@@ -1464,6 +1469,83 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     }
   };
 
+  const syncAgentElevenLabsStatus = ({
+    agentId,
+    connected,
+  }: { agentId: string; connected: boolean }) => {
+    try {
+      setPaginatedAgents((prev) => {
+        const updatedAgents = prev.agents.map((agentWrapper) => {
+          if (agentWrapper.agent.id !== agentId) return agentWrapper;
+
+          const existingSettings = agentWrapper.agent.elevenLabsSettings;
+
+          if (!existingSettings) {
+            console.warn(`Agent ${agentId} has no elevenLabsSettings.`);
+            return agentWrapper;
+          }
+
+          return {
+            ...agentWrapper,
+            agent: {
+              ...agentWrapper.agent,
+              elevenLabsSettings: {
+                ...existingSettings,
+                connected,
+              },
+            },
+          };
+        });
+
+        return {
+          ...prev,
+          agents: updatedAgents,
+        };
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error updating ElevenLabs connection status:', error);
+      return false;
+    }
+  };
+
+  const syncAgentElevenLabsData = ({
+    agentId,
+    params,
+  }: { agentId: string; params: any }) => {
+    try {
+      setPaginatedAgents((prev) => {
+        const updatedAgents = prev.agents.map((agentWrapper) => {
+          if (agentWrapper.agent.id !== agentId) return agentWrapper;
+
+          const updatedAgent = {
+            ...agentWrapper.agent,
+            elevenLabsSettings: {
+              ...agentWrapper.agent.elevenLabsSettings,
+              ...params,
+            },
+          };
+
+          return {
+            ...agentWrapper,
+            agent: updatedAgent,
+          };
+        });
+
+        return {
+          ...prev,
+          agents: updatedAgents,
+        };
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error updating ElevenLabs settings:', error);
+      return false;
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchAgents();
@@ -1503,7 +1585,11 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     syncAgentChatInteractions,
     syncAgentMessageChatUpdate,
 
-    syncAgentScheduleSettingsUpdate    
+    syncAgentScheduleSettingsUpdate, 
+    
+    syncAgentElevenLabsStatus,
+    syncAgentElevenLabsData
+
   };
 
   return (

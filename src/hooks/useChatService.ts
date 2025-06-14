@@ -158,7 +158,6 @@ export const useChatService = (token: string) => {
     async ({ chatId, page }: { chatId: string; page: number }) => {
       try {
         setInteractionLoading(true);
-        console.log('fetching interactions...')
         const response = await service.findInteractionsWithMessages({
           chatId,
           page,
