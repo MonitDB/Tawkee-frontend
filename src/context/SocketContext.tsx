@@ -6,7 +6,7 @@ import { useAuth } from './AuthContext';
 import { useAgents } from './AgentsContext';
 import { ChatDto } from '../services/chatService';
 import { useHttpResponse } from './ResponseNotifier';
-import { ScheduleSettingsDto } from '../pages/AgentDetails/components/IntegrationsTabPanel';
+import { ScheduleSettingsDto } from '../pages/AgentDetails/components/dialogs/GoogleCalendarConfigDialog';
 
 interface ConnectionStatusPayload {
   status: string;
