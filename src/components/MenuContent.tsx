@@ -8,7 +8,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Stack from '@mui/material/Stack';
 
-// import DashboardIcon from '@mui/icons-material/Dashboard';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 // import GroupsIcon from '@mui/icons-material/Groups';
 import ChatIcon from '@mui/icons-material/Chat';
@@ -21,7 +21,7 @@ import { Badge, ListItemAvatar } from '@mui/material';
 // import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 
 const mainListItems = [
-  // { text: 'Dashboard', icon: <DashboardIcon /> },
+  { text: 'Dashboard', icon: <DashboardIcon /> },
   { text: 'Agents', icon: <SupportAgentIcon /> },
   // { text: 'Team', icon: <GroupsIcon /> },
   { text: 'Chats', icon: <ChatIcon /> },
@@ -44,7 +44,8 @@ export default function MenuContent() {
 
   const routeKeyMap: Record<number, string> = {
     0: '/',
-    1: '/chats',
+    1: '/agents',
+    2: '/chats',
   };
 
   const totalUnreadCount = agents.reduce((total, wrapper) => {

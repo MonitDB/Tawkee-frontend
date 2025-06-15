@@ -30,7 +30,7 @@ export default function NavbarBreadcrumbs({
     // Remove query parameters if any
     const cleanPath = path.split('?')[0];
 
-    if (cleanPath === '/' || cleanPath.trim() === '') return ['Agents'];
+    if (cleanPath === '/' || cleanPath.trim() === '') return ['Dashboard'];
 
     return cleanPath.replace(/^\/+/, '').split('/');
   }

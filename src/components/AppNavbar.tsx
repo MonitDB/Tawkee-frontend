@@ -62,7 +62,7 @@ export default function AppNavbar() {
   };
 
   function formatRouteName(path: string): string {
-    if (path === '/' || path.trim() === '') return 'Agents';
+    if (path === '/' || path.trim() === '') return 'Dashboard';
 
     const segment = path.replace(/^\/+/, '').split('/')[0]; // remove leading slashes and get first segment
     return segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase();

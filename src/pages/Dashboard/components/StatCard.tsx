@@ -1,71 +1,43 @@
-import { useTheme } from '@mui/material/styles';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Chip from '@mui/material/Chip';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
-import { SparkLineChart } from '@mui/x-charts/SparkLineChart';
-import { areaElementClasses } from '@mui/x-charts/LineChart';
+import {
+  Card,
+  CardContent,
+  Chip,
+  Stack,
+  Typography,
+  List,
+  ListItemButton,
+  ListItemText,
+  Popover,
+  Box,
+} from '@mui/material';
+import { useState, useRef } from 'react';
 
 export type StatCardProps = {
   title: string;
   value: string;
   interval: string;
-  trend: 'up' | 'down' | 'neutral';
-  data: number[];
+  trend?: 'up' | 'down' | 'neutral';
+  trendValue?: number;
+  interactions?: {
+    id: string;
+    userName: string | null;
+    whatsappPhone: string | null;
+    isWaiting: boolean;
+  }[];
 };
-
-function getDaysInMonth(month: number, year: number) {
-  const date = new Date(year, month, 0);
-  const monthName = date.toLocaleDateString('en-US', {
-    month: 'short',
-  });
-  const daysInMonth = date.getDate();
-  const days = [];
-  let i = 1;
-  while (days.length < daysInMonth) {
-    days.push(`${monthName} ${i}`);
-    i += 1;
-  }
-  return days;
-}
-
-function AreaGradient({ color, id }: { color: string; id: string }) {
-  return (
-    <defs>
-      <linearGradient id={id} x1="50%" y1="0%" x2="50%" y2="100%">
-        <stop offset="0%" stopColor={color} stopOpacity={0.3} />
-        <stop offset="100%" stopColor={color} stopOpacity={0} />
-      </linearGradient>
-    </defs>
-  );
-}
 
 export default function StatCard({
   title,
   value,
   interval,
   trend,
-  data,
+  trendValue,
+  interactions,
 }: StatCardProps) {
-  const theme = useTheme();
-  const daysInWeek = getDaysInMonth(4, 2024);
-
-  const trendColors = {
-    up:
-      theme.palette.mode === 'light'
-        ? theme.palette.success.main
-        : theme.palette.success.dark,
-    down:
-      theme.palette.mode === 'light'
-        ? theme.palette.error.main
-        : theme.palette.error.dark,
-    neutral:
-      theme.palette.mode === 'light'
-        ? theme.palette.grey[400]
-        : theme.palette.grey[700],
-  };
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [hovering, setHovering] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const hoverTimeout = useRef<number | null>(null);
 
   const labelColors = {
     up: 'success' as const,
@@ -73,56 +45,106 @@ export default function StatCard({
     neutral: 'default' as const,
   };
 
-  const color = labelColors[trend];
-  const chartColor = trendColors[trend];
-  const trendValues = { up: '+25%', down: '-25%', neutral: '+5%' };
+  const trendLabel =
+    trendValue !== undefined ? `${trendValue > 0 ? '+' : ''}${trendValue}%` : '';
+
+  const handleEnter = () => {
+    if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
+    setHovering(true);
+    if (wrapperRef.current) setAnchorEl(wrapperRef.current);
+  };
+
+  const handleLeave = () => {
+    hoverTimeout.current = setTimeout(() => {
+      setHovering(false);
+      setAnchorEl(null);
+    }, 150); // slight delay to allow cursor transition
+  };
 
   return (
-    <Card variant="outlined" sx={{ height: '100%', flexGrow: 1 }}>
-      <CardContent>
-        <Typography component="h2" variant="subtitle2" gutterBottom>
-          {title}
-        </Typography>
-        <Stack
-          direction="column"
-          sx={{ justifyContent: 'space-between', flexGrow: '1', gap: 1 }}
-        >
-          <Stack sx={{ justifyContent: 'space-between' }}>
+    <Box
+      ref={wrapperRef}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+      sx={{ display: 'inline-block', width: '100%' }}
+    >
+      <Card
+        variant="outlined"
+        sx={{
+          width: '100%',
+        }}
+      >
+        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+          <Typography component="h2" variant="subtitle2" gutterBottom>
+            {title}
+          </Typography>
+          <Stack spacing={0.5}>
             <Stack
               direction="row"
-              sx={{ justifyContent: 'space-between', alignItems: 'center' }}
+              justifyContent="space-between"
+              alignItems="center"
             >
               <Typography variant="h4" component="p">
                 {value}
               </Typography>
-              <Chip size="small" color={color} label={trendValues[trend]} />
+              {trend && trendLabel && (
+                <Chip
+                  size="small"
+                  color={labelColors[trend]}
+                  label={trendLabel}
+                />
+              )}
             </Stack>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {interval}
             </Typography>
           </Stack>
-          <Box sx={{ width: '100%', height: 50 }}>
-            <SparkLineChart
-              color={chartColor}
-              data={data}
-              area
-              showHighlight
-              showTooltip
-              xAxis={{
-                scaleType: 'band',
-                data: daysInWeek, // Use the correct property 'data' for xAxis
-              }}
-              sx={{
-                [`& .${areaElementClasses.root}`]: {
-                  fill: `url(#area-gradient-${value})`,
-                },
-              }}
-            >
-              <AreaGradient color={chartColor} id={`area-gradient-${value}`} />
-            </SparkLineChart>
-          </Box>
-        </Stack>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {interactions && interactions.length > 0 && (
+        <Popover
+          open={hovering}
+          anchorEl={anchorEl}
+          onClose={() => setHovering(false)}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'left',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'left',
+          }}
+          disableRestoreFocus
+          PaperProps={{
+            onMouseEnter: handleEnter,
+            onMouseLeave: handleLeave,
+            sx: {
+              pointerEvents: 'auto',
+              maxHeight: 240,
+              overflowY: 'auto',
+              mt: 1,
+              minWidth: 250,
+            },
+          }}
+        >
+          <List dense>
+            {interactions.map((interaction) => (
+              <ListItemButton
+                key={interaction.id}
+                onClick={() => {
+                  window.location.href = `/chats/${interaction.id}`;
+                }}
+              >
+                <ListItemText
+                  primary={interaction.userName || 'Unnamed User'}
+                  secondary={interaction.whatsappPhone || interaction.id}
+                />
+              </ListItemButton>
+            ))}
+          </List>
+        </Popover>
+      )}
+    </Box>
   );
 }

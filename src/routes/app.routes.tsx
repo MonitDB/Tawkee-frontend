@@ -12,6 +12,7 @@ import ResetPassword from '../pages/ResetPassword';
 import AgentDetails from '../pages/AgentDetails';
 import ChatComponent from '../components/ChatComponent';
 import Chats from '../pages/Chats';
+import Dashboard from '../pages/Dashboard';
 
 export default function AppRoutes() {
   return (
@@ -22,8 +23,7 @@ export default function AppRoutes() {
           path="/"
           element={
             <AppPageLayout>
-              {/* <Dashboard /> */}
-              <Agents />
+              <Dashboard />
             </AppPageLayout>
           }
         />
