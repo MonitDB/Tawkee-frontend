@@ -55,6 +55,7 @@ export default function CreditsPerDayChart({ data }: CreditsPerDayChartProps) {
       variant="outlined"
       sx={{
         width: '100%',
+        minHeight: 300,
         height: '100%',
         flex: 1,
         display: 'flex',

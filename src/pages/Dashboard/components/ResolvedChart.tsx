@@ -1,10 +1,14 @@
 import { useTheme } from '@mui/material/styles';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
-import Chip from '@mui/material/Chip';
+import {
+  Card,
+  CardContent,
+  Typography,
+  Chip,
+  Skeleton,
+  Box,
+  Stack,
+} from '@mui/material';
 import { LineChart } from '@mui/x-charts/LineChart';
-import { Box, Stack } from '@mui/material';
 
 type ResolvedChartProps = {
   data: {
@@ -20,6 +24,7 @@ type ResolvedChartProps = {
       byHuman: number;
     };
   };
+  loading?: boolean;
 };
 
 function AreaGradient({ color, id }: { color: string; id: string }) {
@@ -33,7 +38,7 @@ function AreaGradient({ color, id }: { color: string; id: string }) {
   );
 }
 
-export default function ResolvedChart({ data }: ResolvedChartProps) {
+export default function ResolvedChart({ data, loading = false }: ResolvedChartProps) {
   const theme = useTheme();
   const { timeSeries, trend } = data;
 
@@ -62,10 +67,11 @@ export default function ResolvedChart({ data }: ResolvedChartProps) {
       variant="outlined"
       sx={{
         width: '100%',
+        minHeight: 300,
         height: '100%',
         flex: 1,
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
       }}
     >
       <CardContent
@@ -82,9 +88,31 @@ export default function ResolvedChart({ data }: ResolvedChartProps) {
             Resolved Interactions
           </Typography>
           <Stack direction="row" spacing={1}>
-            <Chip size="small" color="default" label={`Total: (${totalSum}) ${trendLabel(trend.total)}`} />
-            <Chip size="small" color="success" label={`AI: (${aiSum}) ${trendLabel(trend.byAI)}`} />
-            <Chip size="small" color="warning" label={`Human: (${humanSum}) ${trendLabel(trend.byHuman)}`} />
+            {loading ? (
+              <>
+                <Skeleton variant="rounded" width={110} height={28} sx={{ borderRadius: 16 }} />
+                <Skeleton variant="rounded" width={90} height={28} sx={{ borderRadius: 16 }} />
+                <Skeleton variant="rounded" width={110} height={28} sx={{ borderRadius: 16 }} />
+              </>
+            ) : (
+              <>
+                <Chip
+                  size="small"
+                  color="default"
+                  label={`Total: (${totalSum}) ${trendLabel(trend.total)}`}
+                />
+                <Chip
+                  size="small"
+                  color="success"
+                  label={`AI: (${aiSum}) ${trendLabel(trend.byAI)}`}
+                />
+                <Chip
+                  size="small"
+                  color="warning"
+                  label={`Human: (${humanSum}) ${trendLabel(trend.byHuman)}`}
+                />
+              </>
+            )}
           </Stack>
         </Stack>
 
@@ -93,60 +121,84 @@ export default function ResolvedChart({ data }: ResolvedChartProps) {
         </Typography>
 
         <Box sx={{ flex: 1, height: '100%' }}>
-          <LineChart
-            xAxis={[
-              {
-                scaleType: 'point',
-                data: labels,
-                tickInterval: (_, i) => (i + 1) % 2 === 0,
-              },
-            ]}
-            series={[
-              {
-                id: 'total',
-                label: `Total`,
-                data: totals,
-                showMark: false,
-                curve: 'bumpX',
-                area: true,
-              },
-              {
-                id: 'ai',
-                label: `By AI`,
-                data: ai,
-                showMark: false,
-                curve: 'bumpX',
-                area: true,
-              },
-              {
-                id: 'human',
-                label: `By Human`,
-                data: human,
-                showMark: false,
-                curve: 'bumpX',
-                area: true,
-              },
-            ]}
-            colors={colorPalette}
-            margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
-            grid={{ horizontal: true }}
-            sx={{
-              '& .MuiAreaElement-series-total': {
-                fill: "url('#total')",
-              },
-              '& .MuiAreaElement-series-ai': {
-                fill: "url('#ai')",
-              },
-              '& .MuiAreaElement-series-human': {
-                fill: "url('#human')",
-              },
-              height: '99.4%',
-            }}
-          >
-            <AreaGradient color={colorPalette[0]} id="total" />
-            <AreaGradient color={colorPalette[1]} id="ai" />
-            <AreaGradient color={colorPalette[2]} id="human" />
-          </LineChart>
+          {loading ? (
+            <Skeleton
+              variant="rectangular"
+              height="100%"
+              sx={{ borderRadius: 2 }}
+            />
+          ) : totals.length === 0 || (totals.every(v => v === 0) && ai.every(v => v === 0) && human.every(v => v === 0)) ? (
+            <Box
+              sx={{
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'text.secondary',
+                fontStyle: 'italic',
+                fontSize: '0.9rem',
+                textAlign: 'center',
+                px: 2,
+              }}
+            >
+              No interaction data available for the selected period.
+            </Box>
+          ) : (
+            <LineChart
+              xAxis={[
+                {
+                  scaleType: 'point',
+                  data: labels,
+                  tickInterval: (_, i) => (i + 1) % 2 === 0,
+                },
+              ]}
+              series={[
+                {
+                  id: 'total',
+                  label: `Total`,
+                  data: totals,
+                  showMark: false,
+                  curve: 'bumpX',
+                  area: true,
+                },
+                {
+                  id: 'ai',
+                  label: `By AI`,
+                  data: ai,
+                  showMark: false,
+                  curve: 'bumpX',
+                  area: true,
+                },
+                {
+                  id: 'human',
+                  label: `By Human`,
+                  data: human,
+                  showMark: false,
+                  curve: 'bumpX',
+                  area: true,
+                },
+              ]}
+              colors={colorPalette}
+              margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
+              grid={{ horizontal: true }}
+              sx={{
+                '& .MuiAreaElement-series-total': {
+                  fill: "url('#total')",
+                },
+                '& .MuiAreaElement-series-ai': {
+                  fill: "url('#ai')",
+                },
+                '& .MuiAreaElement-series-human': {
+                  fill: "url('#human')",
+                },
+                height: '99.4%',
+              }}
+            >
+              <AreaGradient color={colorPalette[0]} id="total" />
+              <AreaGradient color={colorPalette[1]} id="ai" />
+              <AreaGradient color={colorPalette[2]} id="human" />
+            </LineChart>
+          )}
         </Box>
       </CardContent>
     </Card>

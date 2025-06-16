@@ -5,17 +5,10 @@ import Stack from '@mui/material/Stack';
 import { BarChart } from '@mui/x-charts';
 import { useTheme } from '@mui/material/styles';
 import { Box } from '@mui/material';
-
-type Agent = {
-  agentId: string;
-  name: string;
-  jobName: string;
-  avatar: string;
-  totalCredits: number;
-};
+import { AgentConsumptionDto } from '../../../services/dashboardService';
 
 type TopAgentsBarChartProps = {
-  data: Agent[];
+  data: AgentConsumptionDto[];
 };
 
 export default function TopAgentsBarChart({ data }: TopAgentsBarChartProps) {

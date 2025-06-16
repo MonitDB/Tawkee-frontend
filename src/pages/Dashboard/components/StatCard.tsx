@@ -9,6 +9,7 @@ import {
   ListItemText,
   Popover,
   Box,
+  Skeleton,
 } from '@mui/material';
 import { useState, useRef } from 'react';
 
@@ -24,6 +25,7 @@ export type StatCardProps = {
     whatsappPhone: string | null;
     isWaiting: boolean;
   }[];
+  loading?: boolean;
 };
 
 export default function StatCard({
@@ -33,6 +35,7 @@ export default function StatCard({
   trend,
   trendValue,
   interactions,
+  loading = false,
 }: StatCardProps) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [hovering, setHovering] = useState(false);
@@ -58,7 +61,7 @@ export default function StatCard({
     hoverTimeout.current = setTimeout(() => {
       setHovering(false);
       setAnchorEl(null);
-    }, 150); // slight delay to allow cursor transition
+    }, 150);
   };
 
   return (
@@ -68,41 +71,32 @@ export default function StatCard({
       onMouseLeave={handleLeave}
       sx={{ display: 'inline-block', width: '100%' }}
     >
-      <Card
-        variant="outlined"
-        sx={{
-          width: '100%',
-        }}
-      >
+      <Card variant="outlined" sx={{ width: '100%', minHeight: 175 }}>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Typography component="h2" variant="subtitle2" gutterBottom>
-            {title}
+            {loading ? <Skeleton width="60%" /> : title}
           </Typography>
           <Stack spacing={0.5}>
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <Typography variant="h4" component="p">
-                {value}
-              </Typography>
-              {trend && trendLabel && (
-                <Chip
-                  size="small"
-                  color={labelColors[trend]}
-                  label={trendLabel}
-                />
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+              {loading ? (
+                <Skeleton variant="text" width={80} height={40} />
+              ) : (
+                <Typography variant="h4" component="p">
+                  {value}
+                </Typography>
+              )}
+              {!loading && trend && trendLabel && (
+                <Chip size="small" color={labelColors[trend]} label={trendLabel} />
               )}
             </Stack>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              {interval}
+              {loading ? <Skeleton width="40%" /> : interval}
             </Typography>
           </Stack>
         </CardContent>
       </Card>
 
-      {interactions && interactions.length > 0 && (
+      {!loading && interactions && interactions.length > 0 && (
         <Popover
           open={hovering}
           anchorEl={anchorEl}
