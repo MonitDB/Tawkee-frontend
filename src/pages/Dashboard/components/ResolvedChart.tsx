@@ -9,23 +9,64 @@ import {
   Stack,
 } from '@mui/material';
 import { LineChart } from '@mui/x-charts/LineChart';
+import { useMemo } from 'react';
+import dayjs from 'dayjs';
+
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+dayjs.extend(isSameOrBefore);
+
+type TimeSeriesPoint = {
+  date: string;
+  total: number;
+  byAI: number;
+  byHuman: number;
+};
 
 type ResolvedChartProps = {
   data: {
-    timeSeries: {
-      date: string;
-      total: number;
-      byAI: number;
-      byHuman: number;
-    }[];
+    timeSeries: TimeSeriesPoint[];
     trend: {
       total: number;
       byAI: number;
       byHuman: number;
     };
   };
+  startDate: string;
+  endDate: string;
   loading?: boolean;
 };
+
+function generateDateRange(startDate: string, endDate: string): string[] {
+  const start = dayjs(startDate);
+  const end = dayjs(endDate);
+  const range: string[] = [];
+
+  for (let d = start; d.isSameOrBefore(end); d = d.add(1, 'day')) {
+    range.push(d.format('YYYY-MM-DD'));
+  }
+
+  return range;
+}
+
+function fillMissingDates(
+  data: TimeSeriesPoint[],
+  startDate: string,
+  endDate: string
+): TimeSeriesPoint[] {
+  const allDates = generateDateRange(startDate, endDate);
+  const dataMap = new Map(data.map((d) => [d.date, d]));
+
+  return allDates.map((date) => {
+    return (
+      dataMap.get(date) || {
+        date,
+        total: 0,
+        byAI: 0,
+        byHuman: 0,
+      }
+    );
+  });
+}
 
 function AreaGradient({ color, id }: { color: string; id: string }) {
   return (
@@ -38,17 +79,36 @@ function AreaGradient({ color, id }: { color: string; id: string }) {
   );
 }
 
-export default function ResolvedChart({ data, loading = false }: ResolvedChartProps) {
-  const theme = useTheme();
-  const { timeSeries, trend } = data;
+function formatRelative(dateStr: string): string {
+  const today = new Date();
+  const target = new Date(`${dateStr}T00:00:00Z`);
+  const diffTime = today.getTime() - target.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-  const labels = timeSeries.map((d) =>
-    new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays > 1 && diffDays < 7) return `${diffDays} days ago`;
+  return '';
+}
+
+export default function ResolvedChart({
+  data,
+  startDate,
+  endDate,
+  loading = false,
+}: ResolvedChartProps) {
+  const theme = useTheme();
+
+  const adjustedTimeSeries = useMemo(
+    () => fillMissingDates(data.timeSeries, startDate, endDate),
+    [data.timeSeries, startDate, endDate]
   );
 
-  const totals = timeSeries.map((d) => d.total);
-  const ai = timeSeries.map((d) => d.byAI);
-  const human = timeSeries.map((d) => d.byHuman);
+  const labels = useMemo(() => adjustedTimeSeries.map((d) => d.date), [adjustedTimeSeries]);
+
+  const totals = adjustedTimeSeries.map((d) => d.total);
+  const ai = adjustedTimeSeries.map((d) => d.byAI);
+  const human = adjustedTimeSeries.map((d) => d.byHuman);
 
   const totalSum = totals.reduce((acc, val) => acc + val, 0);
   const aiSum = ai.reduce((acc, val) => acc + val, 0);
@@ -99,17 +159,17 @@ export default function ResolvedChart({ data, loading = false }: ResolvedChartPr
                 <Chip
                   size="small"
                   color="default"
-                  label={`Total: (${totalSum}) ${trendLabel(trend.total)}`}
+                  label={`Total: (${totalSum}) ${trendLabel(data.trend.total)}`}
                 />
                 <Chip
                   size="small"
                   color="success"
-                  label={`AI: (${aiSum}) ${trendLabel(trend.byAI)}`}
+                  label={`AI: (${aiSum}) ${trendLabel(data.trend.byAI)}`}
                 />
                 <Chip
                   size="small"
                   color="warning"
-                  label={`Human: (${humanSum}) ${trendLabel(trend.byHuman)}`}
+                  label={`Human: (${humanSum}) ${trendLabel(data.trend.byHuman)}`}
                 />
               </>
             )}
@@ -149,7 +209,23 @@ export default function ResolvedChart({ data, loading = false }: ResolvedChartPr
                 {
                   scaleType: 'point',
                   data: labels,
+                  valueFormatter: (value) => {
+                    const date = new Date(`${value}T00:00:00Z`);
+                    const label = date.toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      timeZone: 'UTC',
+                    });
+                    const relative = formatRelative(value);
+                    return relative ? `${label} (${relative})` : label;
+                  },
                   tickInterval: (_, i) => (i + 1) % 2 === 0,
+                },
+              ]}
+              yAxis={[
+                {
+                  tickMinStep: 1,
+                  valueFormatter: (value: number) => `${Math.round(value)}`,
                 },
               ]}
               series={[

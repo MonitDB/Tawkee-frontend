@@ -362,6 +362,15 @@ export const inputsCustomizations: Components<Theme> = {
       }),
     },
   },
+  MuiPickersDay: {
+    styleOverrides: {
+      root: {
+        '&.Mui-selected': {
+          color: '#fff',
+        },
+      },
+    },
+  },  
   // MuiInputBase: {
   //   styleOverrides: {
   //     root: {

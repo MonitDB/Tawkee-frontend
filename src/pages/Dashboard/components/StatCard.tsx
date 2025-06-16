@@ -38,9 +38,7 @@ export default function StatCard({
   loading = false,
 }: StatCardProps) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const [hovering, setHovering] = useState(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
-  const hoverTimeout = useRef<number | null>(null);
 
   const labelColors = {
     up: 'success' as const,
@@ -51,27 +49,23 @@ export default function StatCard({
   const trendLabel =
     trendValue !== undefined ? `${trendValue > 0 ? '+' : ''}${trendValue}%` : '';
 
-  const handleEnter = () => {
-    if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
-    setHovering(true);
-    if (wrapperRef.current) setAnchorEl(wrapperRef.current);
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(anchorEl ? null : event.currentTarget);
   };
 
-  const handleLeave = () => {
-    hoverTimeout.current = setTimeout(() => {
-      setHovering(false);
-      setAnchorEl(null);
-    }, 150);
-  };
+  const open = Boolean(anchorEl);
 
   return (
-    <Box
-      ref={wrapperRef}
-      onMouseEnter={handleEnter}
-      onMouseLeave={handleLeave}
-      sx={{ display: 'inline-block', width: '100%' }}
-    >
-      <Card variant="outlined" sx={{ width: '100%', minHeight: 175 }}>
+    <Box ref={wrapperRef} sx={{ display: 'inline-block', width: '100%' }}>
+      <Card
+        variant="outlined"
+        sx={{
+          width: '100%',
+          minHeight: 175,
+          cursor: !loading && interactions && interactions.length > 0 ? 'pointer' : 'default',
+        }}
+        onClick={!loading && interactions && interactions.length > 0 ? handleClick : undefined}
+      >
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Typography component="h2" variant="subtitle2" gutterBottom>
             {loading ? <Skeleton width="60%" /> : title}
@@ -98,9 +92,9 @@ export default function StatCard({
 
       {!loading && interactions && interactions.length > 0 && (
         <Popover
-          open={hovering}
+          open={open}
           anchorEl={anchorEl}
-          onClose={() => setHovering(false)}
+          onClose={() => setAnchorEl(null)}
           anchorOrigin={{
             vertical: 'bottom',
             horizontal: 'left',
@@ -111,8 +105,6 @@ export default function StatCard({
           }}
           disableRestoreFocus
           PaperProps={{
-            onMouseEnter: handleEnter,
-            onMouseLeave: handleLeave,
             sx: {
               pointerEvents: 'auto',
               maxHeight: 240,

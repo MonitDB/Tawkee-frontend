@@ -34,6 +34,7 @@ export interface RunningMetricsDto {
 
 export interface CreditByAgentDto {
   agentId: string;
+  agentName: string;
   credits: number;
 }
 

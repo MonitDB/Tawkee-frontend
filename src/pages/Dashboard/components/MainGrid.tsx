@@ -60,11 +60,24 @@ export default function MainGrid() {
   };
 
   const handleCustomDateChange = (newValue: Dayjs | null, type: 'start' | 'end') => {
+    if (!newValue) return;
+
     if (type === 'start') {
       setStartDate(newValue);
+
+      if (endDate && newValue.isAfter(endDate, 'day')) {
+        const adjustedEnd = newValue.endOf('month');
+        setEndDate(adjustedEnd);
+      }
     } else {
       setEndDate(newValue);
+
+      if (startDate && newValue.isBefore(startDate, 'day')) {
+        const adjustedStart = newValue.startOf('month');
+        setStartDate(adjustedStart);
+      }
     }
+
     setSelectedRange(-1); // Deselect preset
   };
 
@@ -150,7 +163,12 @@ export default function MainGrid() {
                 </Stack>
               </Grid>
               <Grid size={{ xs: 12, md: 9}}>
-                <ResolvedChart data={data.resolved} loading={loading} />
+                <ResolvedChart
+                  data={data.resolved}
+                  loading={loading}
+                  startDate={startDate?.format('YYYY-MM-DD') ?? ''}
+                  endDate={endDate?.format('YYYY-MM-DD') ?? ''}
+                />
               </Grid>
             </Grid>
 
@@ -165,7 +183,11 @@ export default function MainGrid() {
                 </Stack>
               </Grid>
               <Grid size={{ xs: 12, md: 9}}>
-                <CreditsPerDayChart data={data.creditsPerDay} />
+                <CreditsPerDayChart
+                  data={data.creditsPerDay}
+                  startDate={startDate?.format('YYYY-MM-DD') ?? ''}
+                  endDate={endDate?.format('YYYY-MM-DD') ?? ''}
+                />
               </Grid>
             </Grid>
           </>

@@ -6,9 +6,14 @@ import { LineChart } from '@mui/x-charts/LineChart';
 import { CurveType } from '@mui/x-charts/models';
 import { Box } from '@mui/material';
 import { Fragment, useMemo } from 'react';
+import dayjs from 'dayjs';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+
+dayjs.extend(isSameOrBefore);
 
 type AgentCredits = {
   agentId: string;
+  agentName: string;
   credits: number;
 };
 
@@ -20,6 +25,8 @@ type CreditEntry = {
 
 type CreditsPerDayChartProps = {
   data: CreditEntry[];
+  startDate: string;
+  endDate: string;
 };
 
 function AreaGradient({ color, id }: { color: string; id: string }) {
@@ -33,22 +40,98 @@ function AreaGradient({ color, id }: { color: string; id: string }) {
   );
 }
 
-export default function CreditsPerDayChart({ data }: CreditsPerDayChartProps) {
+function formatRelative(dateStr: string): string {
+  const today = new Date();
+  const target = new Date(`${dateStr}T00:00:00Z`);
+  const diffTime = today.getTime() - target.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays > 1 && diffDays < 7) return `${diffDays} days ago`;
+  return '';
+}
+
+function generateDateRange(startDate: string, endDate: string): string[] {
+  const start = dayjs(startDate);
+  const end = dayjs(endDate);
+  const range: string[] = [];
+
+  for (let d = start; d.isSameOrBefore(end); d = d.add(1, 'day')) {
+    range.push(d.format('YYYY-MM-DD'));
+  }
+
+  return range;
+}
+
+function fillMissingDates(
+  data: CreditEntry[],
+  startDate: string,
+  endDate: string
+): CreditEntry[] {
+  const fullRange = generateDateRange(startDate, endDate);
+  const known = new Map(data.map((d) => [d.date, d]));
+
+  const allAgents = Array.from(
+    new Set(data.flatMap((d) => d.creditsByAgent.map((c) => c.agentId)))
+  );
+
+  const agentIdToName: Record<string, string> = {};
+  data.forEach((d) =>
+    d.creditsByAgent.forEach(({ agentId, agentName }) => {
+      agentIdToName[agentId] = agentName;
+    })
+  );
+
+  return fullRange.map((date) => {
+    return (
+      known.get(date) || {
+        date,
+        totalCredits: 0,
+        creditsByAgent: allAgents.map((agentId) => ({
+          agentId,
+          agentName: agentIdToName[agentId] || 'Unknown',
+          credits: 0,
+        })),
+      }
+    );
+  });
+}
+
+export default function CreditsPerDayChart({
+  data,
+  startDate,
+  endDate,
+}: CreditsPerDayChartProps) {
   const theme = useTheme();
+  const adjustedData = useMemo(
+    () => fillMissingDates(data, startDate, endDate),
+    [data, startDate, endDate]
+  );
 
   const labels = useMemo(() => {
-    return data.map((d) =>
-      new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-    );
-  }, [data]);
+    return adjustedData.map((d) => d.date);
+  }, [adjustedData]);
 
   const allAgentIds = useMemo(() => {
     const idSet = new Set<string>();
-    data.forEach((entry) => {
+    adjustedData.forEach((entry) => {
       entry.creditsByAgent.forEach((agent) => idSet.add(agent.agentId));
     });
     return Array.from(idSet);
-  }, [data]);
+  }, [adjustedData]);
+
+  const agentIdToNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    adjustedData.forEach((entry) => {
+      entry.creditsByAgent.forEach(({ agentId, agentName }) => {
+        if (!map.has(agentId)) {
+          map.set(agentId, agentName);
+        }
+      });
+    });
+    return map;
+  }, [adjustedData]);
 
   const colorPalette = [
     theme.palette.success.main,
@@ -60,13 +143,15 @@ export default function CreditsPerDayChart({ data }: CreditsPerDayChartProps) {
   ];
 
   const series = allAgentIds.map((agentId) => {
-    const agentData = data.map(
+    const agentData = adjustedData.map(
       (entry) => entry.creditsByAgent.find((c) => c.agentId === agentId)?.credits ?? 0
     );
 
+    const agentName = agentIdToNameMap.get(agentId) || 'Unknown';
+
     return {
       id: agentId,
-      label: `Agent ${agentId}`,
+      label: `Agent ${agentName}`,
       data: agentData,
       showMark: false,
       curve: 'bumpX' as CurveType,
@@ -74,7 +159,6 @@ export default function CreditsPerDayChart({ data }: CreditsPerDayChartProps) {
       stack: 'total',
     };
   });
-
 
   const totalSum = series.flatMap((s) => s.data).reduce((acc, val) => acc + val, 0);
 
@@ -112,7 +196,23 @@ export default function CreditsPerDayChart({ data }: CreditsPerDayChartProps) {
               {
                 scaleType: 'point',
                 data: labels,
+                valueFormatter: (value) => {
+                  const date = new Date(`${value}T00:00:00Z`);
+                  const label = date.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    timeZone: 'UTC',
+                  });
+                  const relative = formatRelative(value);
+                  return relative ? `${label} (${relative})` : label;
+                },
                 tickInterval: (_, i) => (i + 1) % 2 === 0,
+              },
+            ]}
+            yAxis={[
+              {
+                tickMinStep: 1,
+                valueFormatter: (value: number) => `${Math.round(value)}`,
               },
             ]}
             series={series}
