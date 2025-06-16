@@ -3,7 +3,9 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import { LineChart } from '@mui/x-charts/LineChart';
+import { CurveType } from '@mui/x-charts/models';
 import { Box } from '@mui/material';
+import { Fragment, useMemo } from 'react';
 
 type AgentCredits = {
   agentId: string;
@@ -34,21 +36,47 @@ function AreaGradient({ color, id }: { color: string; id: string }) {
 export default function CreditsPerDayChart({ data }: CreditsPerDayChartProps) {
   const theme = useTheme();
 
-  const labels = data.map((d) =>
-    new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  );
+  const labels = useMemo(() => {
+    return data.map((d) =>
+      new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    );
+  }, [data]);
 
-  const a1 = data.map((d) => d.creditsByAgent.find((c) => c.agentId === 'a1')?.credits ?? 0);
-  const a2 = data.map((d) => d.creditsByAgent.find((c) => c.agentId === 'a2')?.credits ?? 0);
-  const a3 = data.map((d) => d.creditsByAgent.find((c) => c.agentId === 'a3')?.credits ?? 0);
-
-  const totalSum = [...a1, ...a2, ...a3].reduce((acc, val) => acc + val, 0);
+  const allAgentIds = useMemo(() => {
+    const idSet = new Set<string>();
+    data.forEach((entry) => {
+      entry.creditsByAgent.forEach((agent) => idSet.add(agent.agentId));
+    });
+    return Array.from(idSet);
+  }, [data]);
 
   const colorPalette = [
     theme.palette.success.main,
     theme.palette.info.main,
     theme.palette.warning.main,
+    theme.palette.secondary.main,
+    theme.palette.error.main,
+    theme.palette.primary.main,
   ];
+
+  const series = allAgentIds.map((agentId) => {
+    const agentData = data.map(
+      (entry) => entry.creditsByAgent.find((c) => c.agentId === agentId)?.credits ?? 0
+    );
+
+    return {
+      id: agentId,
+      label: `Agent ${agentId}`,
+      data: agentData,
+      showMark: false,
+      curve: 'bumpX' as CurveType,
+      area: true,
+      stack: 'total',
+    };
+  });
+
+
+  const totalSum = series.flatMap((s) => s.data).reduce((acc, val) => acc + val, 0);
 
   return (
     <Card
@@ -87,54 +115,25 @@ export default function CreditsPerDayChart({ data }: CreditsPerDayChartProps) {
                 tickInterval: (_, i) => (i + 1) % 2 === 0,
               },
             ]}
-            series={[
-              {
-                id: 'a1',
-                label: 'Agent a1',
-                data: a1,
-                showMark: false,
-                curve: 'bumpX',
-                area: true,
-                stack: 'total'
-              },
-              {
-                id: 'a2',
-                label: 'Agent a2',
-                data: a2,
-                showMark: false,
-                curve: 'bumpX',
-                area: true,
-                stack: 'total'
-              },
-              {
-                id: 'a3',
-                label: 'Agent a3',
-                data: a3,
-                showMark: false,
-                curve: 'bumpX',
-                area: true,
-                stack: 'total'
-              },
-            ]}
+            series={series}
             colors={colorPalette}
             margin={{ left: 50, right: 20, top: 20, bottom: 20 }}
             grid={{ horizontal: true }}
             sx={{
-              '& .MuiAreaElement-series-a1': {
-                fill: "url('#a1')",
-              },
-              '& .MuiAreaElement-series-a2': {
-                fill: "url('#a2')",
-              },
-              '& .MuiAreaElement-series-a3': {
-                fill: "url('#a3')",
-              },
               height: '99.4%',
+              ...Object.fromEntries(
+                allAgentIds.map((agentId) => [
+                  `& .MuiAreaElement-series-${agentId}`,
+                  { fill: `url('#${agentId}')` },
+                ])
+              ),
             }}
           >
-            <AreaGradient color={colorPalette[0]} id="a1" />
-            <AreaGradient color={colorPalette[1]} id="a2" />
-            <AreaGradient color={colorPalette[2]} id="a3" />
+            {allAgentIds.map((agentId, i) => (
+              <Fragment key={agentId}>
+                <AreaGradient color={colorPalette[i % colorPalette.length]} id={agentId} />
+              </Fragment>
+            ))}
           </LineChart>
         </Box>
       </CardContent>

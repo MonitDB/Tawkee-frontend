@@ -54,8 +54,8 @@ const tabIndexFromName = {
   profile: 0,
   work: 1,
   training: 2,
-  intentions: 3,
-  integrations: 4,
+  integrations: 3,
+  channels: 4,
   settings: 5,
 } as const;
 

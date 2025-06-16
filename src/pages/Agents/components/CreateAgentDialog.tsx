@@ -39,6 +39,7 @@ import {
   School,
   Psychology,
   Settings,
+  Hub
 } from '@mui/icons-material';
 import { newAgent } from '../../../assets';
 
@@ -493,19 +494,26 @@ export default function CreateAgentDialog({
                     <Button
                       variant="outlined"
                       onClick={() =>
-                        navigate(`/agents/${createdAgentId}?tabName=intentions`)
+                        navigate(`/agents/${createdAgentId}?tabName=integrations`)
                       }
-                      disabled
                       startIcon={<Psychology />}
                     >
-                      Intentions
+                      Integrations
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      onClick={() =>
+                        navigate(`/agents/${createdAgentId}?tabName=channels`)
+                      }
+                      startIcon={<Hub />}
+                    >
+                      Channels
                     </Button>
                     <Button
                       variant="outlined"
                       onClick={() =>
                         navigate(`/agents/${createdAgentId}?tabName=settings`)
                       }
-                      disabled
                       startIcon={<Settings />}
                     >
                       Settings
