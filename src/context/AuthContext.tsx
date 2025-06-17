@@ -3,7 +3,7 @@ import {
   useContext,
   useState,
   useEffect,
-  ReactNode,
+  ReactNode
 } from 'react';
 import env from '../config/env';
 import { useHttpResponse } from './ResponseNotifier';
@@ -19,6 +19,8 @@ interface AuthContextType {
   profile: (token: string) => Promise<Result>;
   logout: () => void;
   resetPassword: (input: PasswordResetInput) => Promise<Result>;
+
+  syncWorkspaceCreditsUpdate: (credits: number) => boolean;
 }
 
 interface LoginCredentials {
@@ -45,6 +47,7 @@ interface PasswordResetInput {
 export interface User {
   id: string;
   workspaceId: string;
+  workspaceCredits: number;
   name: string;
   email: string;
   provider: 'google' | 'facebook' | 'password';
@@ -400,6 +403,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const syncWorkspaceCreditsUpdate = (credits: number) => {
+    if (!user) return false;
+
+    const updatedUser: User = { ...user, workspaceCredits: credits };
+
+    setUser(updatedUser);
+    localStorage.setItem('app:user', JSON.stringify(updatedUser));
+
+    return true;
+  };
+
   // The context value object that will be provided
   const authContextValue: AuthContextType = {
     token,
@@ -412,6 +426,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     profile,
     logout,
     resetPassword,
+
+    syncWorkspaceCreditsUpdate
   };
 
   return (

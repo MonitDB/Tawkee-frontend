@@ -6,8 +6,9 @@ import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { Button, ButtonGroup } from '@mui/material';
+import { Button, ButtonGroup, useTheme } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 
 import StatCard from './StatCard';
 import ResolvedChart from './ResolvedChart';
@@ -25,6 +26,8 @@ const ranges = [
 ];
 
 export default function MainGrid() {
+  const theme = useTheme();
+  
   const { token, user } = useAuth();
   const { fetchDashboardMetrics, loading } = useDashboardService(token as string);
 
@@ -34,6 +37,7 @@ export default function MainGrid() {
   const [dashboardData, setDashboardData] = useState<DashboardMetricsDto | null>(null);
 
   const fetchData = async (start: Dayjs, end: Dayjs) => {
+
     try {
       const data = await fetchDashboardMetrics(
         user?.workspaceId as string,
@@ -93,7 +97,29 @@ export default function MainGrid() {
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
-          <Typography component="h2" variant="h6">
+          <Typography
+            variant="h4"
+            sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+          >
+            <Box
+              sx={{
+                width: '1.5rem',
+                height: '1.5rem',
+                bgcolor: 'black',
+                borderRadius: '999px',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                alignSelf: 'center',
+                backgroundImage: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.dark} 100%)`,
+                color: 'hsla(210, 100%, 95%, 0.9)',
+                border: '1px solid',
+                borderColor: 'hsl(210, 100%, 55%)',
+                boxShadow: 'inset 0 2px 5px rgba(255, 255, 255, 0.3)',
+              }}
+            >
+              <DashboardIcon color="inherit" sx={{ fontSize: '1rem' }} />
+            </Box>
             Interactions
           </Typography>
 
@@ -172,7 +198,29 @@ export default function MainGrid() {
               </Grid>
             </Grid>
 
-            <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
+            <Typography
+              variant="h4"
+              sx={{ display: 'flex', alignItems: 'center', gap: 1, marginBottom: 2 }}
+            >
+              <Box
+                sx={{
+                  width: '1.5rem',
+                  height: '1.5rem',
+                  bgcolor: 'black',
+                  borderRadius: '999px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  alignSelf: 'center',
+                  backgroundImage: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.dark} 100%)`,
+                  color: 'hsla(210, 100%, 95%, 0.9)',
+                  border: '1px solid',
+                  borderColor: 'hsl(210, 100%, 55%)',
+                  boxShadow: 'inset 0 2px 5px rgba(255, 255, 255, 0.3)',
+                }}
+              >
+                <DashboardIcon color="inherit" sx={{ fontSize: '1rem' }} />
+              </Box>
               Credits
             </Typography>
             <Grid container spacing={2} columns={12} sx={{ mb: (theme) => theme.spacing(2) }}>

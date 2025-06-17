@@ -38,7 +38,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
   const socketRef = useRef<Socket | null>(null);
 
   const { notify } = useHttpResponse();
-  const { user } = useAuth();
+  const { user, syncWorkspaceCreditsUpdate } = useAuth();
   const {
     syncAgentChannelConnectionUpdate,
     syncAgentMessageChatUpdate,
@@ -88,6 +88,12 @@ export function SocketProvider({ children }: SocketProviderProps) {
       }
     };
 
+    const handleWorkspaceCreditsUpdate = (data: {
+      credits: number
+    }) => {
+      syncWorkspaceCreditsUpdate(data.credits);
+    };
+
     const handleSocketError = (error: ErrorPayload) => {
       console.error('Socket error:', error);
     };
@@ -114,6 +120,11 @@ export function SocketProvider({ children }: SocketProviderProps) {
         handleAgentScheduleSettingsUpdate
       );
 
+      socketRef.current.on(
+        'workspaceCreditsUpdate',
+        handleWorkspaceCreditsUpdate
+      )
+
       socketRef.current.on('error', handleSocketError);
 
       return () => {
@@ -136,6 +147,11 @@ export function SocketProvider({ children }: SocketProviderProps) {
             'agentScheduleSettingsUpdate',
             handleAgentScheduleSettingsUpdate
           );
+
+          socketRef.current.off(
+            'workspaceCreditsUpdate',
+            handleWorkspaceCreditsUpdate
+          )          
 
           socketRef.current.off('error', handleSocketError);
 

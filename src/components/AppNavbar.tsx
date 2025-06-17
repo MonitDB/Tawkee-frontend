@@ -24,6 +24,7 @@ import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
 import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
+import CreditsBadge from './CreditsBadge';
 
 const ListItems = {
   Dashboard: <DashboardIcon color="inherit" sx={{ fontSize: '1rem' }} />,
@@ -109,6 +110,8 @@ export default function AppNavbar() {
               {formatRouteName(location.pathname)}
             </Typography>
           </Stack>
+          <CreditsBadge />
+          
           <ColorModeIconDropdown />
           <MenuButton aria-label="menu" onClick={toggleDrawer(true)}>
             <MenuRoundedIcon />

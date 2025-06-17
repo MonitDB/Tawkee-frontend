@@ -1,11 +1,10 @@
 import Stack from '@mui/material/Stack';
 import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded';
-import CustomDatePicker from './CustomDatePicker';
 import NavbarBreadcrumbs from './NavbarBreadcrumbs';
 import MenuButton from './MenuButton';
 import ColorModeIconDropdown from './shared-theme/ColorModeIconDropdown';
-
-import Search from '../pages/Dashboard/components/Search';
+import CreditsBadge from './CreditsBadge';
+import { Box } from '@mui/material';
 
 export default function Header({
   overrideLatestSegment,
@@ -26,14 +25,13 @@ export default function Header({
       spacing={2}
     >
       <NavbarBreadcrumbs overrideLatestSegment={overrideLatestSegment || ''} />
-      <Stack direction="row" sx={{ gap: 1 }}>
-        <Search />
-        <CustomDatePicker />
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+        <CreditsBadge />
         <MenuButton showBadge aria-label="Open notifications">
           <NotificationsRoundedIcon />
         </MenuButton>
         <ColorModeIconDropdown />
-      </Stack>
+      </Box>
     </Stack>
   );
 }
