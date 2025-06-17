@@ -53,7 +53,7 @@ export default function MenuContent() {
     if (!chats) return total;
 
     const agentUnread = chats.reduce(
-      (sum, chat) => sum + (chat.unReadCount || 0),
+      (sum, chat) => sum + (!chat.finished && chat.unReadCount || 0),
       0
     );
     return total + agentUnread;

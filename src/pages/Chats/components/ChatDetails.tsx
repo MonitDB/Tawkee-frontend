@@ -1,6 +1,4 @@
 import {
-  Dispatch,
-  SetStateAction,
   useCallback,
   useEffect,
   useMemo,
@@ -87,7 +85,6 @@ const InteractionDivider = styled(Divider)(({ theme }) => ({
 
 interface ChatDetailsProps {
   selectedChat: ChatDto;
-  setSelectedChat: Dispatch<SetStateAction<ChatDto | null>>;
   totalInteractions: number;
   interactionLoading: boolean;
   onScrollToTop?: () => void;
@@ -95,7 +92,6 @@ interface ChatDetailsProps {
 
 export function ChatDetails({
   selectedChat,
-  setSelectedChat,
   totalInteractions,
   interactionLoading,
   onScrollToTop,
@@ -123,42 +119,11 @@ export function ChatDetails({
     async (chatId: string) => {
       try {
         await startChatHumanAttendance(chatId);
-
-        setSelectedChat((prevState) => {
-          if (prevState === null) return null;
-
-          const updatedPaginatedInteractions = prevState.paginatedInteractions
-            ? {
-                ...prevState.paginatedInteractions,
-                data: prevState.paginatedInteractions.data.map(
-                  (interaction, index) => {
-                    if (
-                      index ===
-                      (prevState.paginatedInteractions?.data.length || 0) - 1
-                    ) {
-                      return {
-                        ...interaction,
-                        status: 'WAITING' as InteractionStatus,
-                      };
-                    }
-                    return interaction;
-                  }
-                ),
-              }
-            : prevState.paginatedInteractions;
-
-          return {
-            ...prevState,
-            humanTalk: true,
-            finished: false,
-            paginatedInteractions: updatedPaginatedInteractions,
-          };
-        });
       } catch (error) {
         console.log(error);
       }
     },
-    [startChatHumanAttendance, setSelectedChat]
+    [startChatHumanAttendance]
   );
 
   // Separate scroll-related state to minimize re-renders
@@ -387,18 +352,15 @@ export function ChatDetails({
 
   // Auto-scroll to bottom on chat change
   useEffect(() => {
-    // console.log("Running useEffect... (1)")
     if (
       messagesContainerRef.current &&
       selectedChat.paginatedInteractions?.data &&
       selectedChat.paginatedInteractions?.data.length > 0
     ) {
-      // console.log("Running useEffect... (2)")
       const container = messagesContainerRef.current;
       // Only scroll to bottom if not preserving scroll position
       if (preservationRef.current?.shouldPreserve) {
         container.scrollTop = container.scrollHeight;
-        // console.log("Running useEffect... (3)")
       }
     }
   }, [selectedChat.id, selectedChat.paginatedInteractions?.data]);
@@ -453,78 +415,94 @@ export function ChatDetails({
 
   // Memoize message input section to prevent unnecessary re-renders
   const messageInputSection = useMemo(
-    () => (
-      <Paper
-        sx={{
-          p: 2,
-          borderRadius: 0,
-          borderTop: 1,
-          borderColor: 'divider',
-          display: 'flex',
-          gap: 1,
-          flexDirection: 'column',
-        }}
-      >
-        {chatLoading && (
-          <LinearProgress color="secondary" sx={{ width: '100%' }} />
-        )}
-
-        <Box
+    () => ( !selectedChat.finished
+      ? (
+        <Paper
           sx={{
+            p: 2,
+            borderRadius: 0,
+            borderTop: 1,
+            borderColor: 'divider',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
             gap: 1,
+            flexDirection: 'column',
           }}
         >
-          {selectedChat.humanTalk ? (
-            <>
-              <TextField
-                fullWidth
-                placeholder="Type a message..."
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-                multiline
-                maxRows={4}
-              />
-              <IconButton
-                color="primary"
-                onClick={handleSendMessage}
-                disabled={!newMessage.trim()}
-              >
-                <SendIcon />
-              </IconButton>
-            </>
-          ) : (
-            <>
-              {!isLargeScreen && (
-                <Typography>
-                  Chat held by Agent {selectedChat.agentName}
-                </Typography>
-              )}
-              <Button
-                variant="outlined"
-                onClick={() => handleStartHumanAttendance(selectedChat.id)}
-                disabled={chatLoading}
-              >
-                {!isSmallScreen
-                  ? chatLoading
-                    ? 'Wait a moment...'
-                    : 'Start Human Attendance'
-                  : chatLoading
-                    ? 'Wait...'
-                    : 'Start attendance'}
-              </Button>
-            </>
+          {chatLoading && (
+            <LinearProgress color="secondary" sx={{ width: '100%' }} />
           )}
-        </Box>
+
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 1,
+            }}
+          >
+            {selectedChat.humanTalk ? (
+              <>
+                <TextField
+                  fullWidth
+                  placeholder="Type a message..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  multiline
+                  maxRows={4}
+                />
+                <IconButton
+                  color="primary"
+                  onClick={handleSendMessage}
+                  disabled={!newMessage.trim()}
+                >
+                  <SendIcon />
+                </IconButton>
+              </>
+            ) : (
+              <>
+                {!isLargeScreen && (
+                  <Typography>
+                    Chat held by Agent {selectedChat.agentName}
+                  </Typography>
+                )}
+                <Button
+                  variant="outlined"
+                  onClick={() => handleStartHumanAttendance(selectedChat.id)}
+                  disabled={chatLoading}
+                >
+                  {!isSmallScreen
+                    ? chatLoading
+                      ? 'Wait a moment...'
+                      : 'Start Human Attendance'
+                    : chatLoading
+                      ? 'Wait...'
+                      : 'Start attendance'}
+                </Button>
+              </>
+            )}
+          </Box>
+        </Paper>        
+      ) : (
+        <Paper
+          sx={{
+            p: 2,
+            borderRadius: 0,
+            borderTop: 1,
+            borderColor: 'divider',
+            display: 'flex',
+            gap: 1,
+            flexDirection: 'column',
+          }}
+      >
+        <Typography>You cannot send messages to finished chats. Mark this chat as unfinished before resuming conversation.</Typography>
       </Paper>
+      )
     ),
     [
       chatLoading,
@@ -638,7 +616,7 @@ export function ChatDetails({
       )}
       <Box ref={messagesContainerRef} sx={{ flex: 1, overflow: 'auto', p: 2 }}>
         {selectedChat.paginatedInteractions?.data &&
-          selectedChat.paginatedInteractions?.data.map(
+          [...selectedChat.paginatedInteractions?.data].reverse().map(
             (interaction, interactionIndex) => (
               <Box
                 key={interaction.id}

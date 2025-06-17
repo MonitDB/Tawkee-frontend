@@ -2,22 +2,21 @@ import {
   Dispatch,
   SetStateAction,
   SyntheticEvent,
-  useCallback,
-  useDeferredValue,
-  useEffect,
   useMemo,
   useState,
+  useDeferredValue,
 } from 'react';
 
 import { useAuth } from '../../../context/AuthContext';
-import { Agent, useAgents } from '../../../context/AgentsContext';
-
-import { useChatService } from '../../../hooks/useChatService';
+import { useAgents } from '../../../context/AgentsContext';
 
 import {
   ChatDto,
   PaginatedInteractionsWithMessagesResponseDto,
 } from '../../../services/chatService';
+
+import { Agent } from '../../../context/AgentsContext';
+import { useChatService } from '../../../hooks/useChatService';
 
 import { ChatMenu } from './ChatMenu';
 
@@ -28,7 +27,6 @@ import {
   Button,
   Chip,
   InputAdornment,
-  LinearProgress,
   List,
   ListItem,
   ListItemAvatar,
@@ -40,6 +38,7 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
+
 import {
   Chat as ChatIcon,
   Search as SearchIcon,
@@ -49,7 +48,10 @@ import {
 
 interface ChatListProps {
   selectedChat: ChatDto | null;
-  setSelectedChat: Dispatch<SetStateAction<ChatDto | null>>;
+  setSelectedChatId: Dispatch<SetStateAction<string | null>>;
+  chats: ChatDto[];
+  totalChats: number;
+  setChatPage: Dispatch<SetStateAction<number>>;
 }
 
 const formatDate = (date: number) => {
@@ -61,40 +63,36 @@ const formatDate = (date: number) => {
   }).format(new Date(date));
 };
 
-export function ChatList({ selectedChat, setSelectedChat }: ChatListProps) {
+export function ChatList({
+  selectedChat,
+  setSelectedChatId,
+  chats,
+  totalChats,
+  setChatPage,
+}: ChatListProps) {
   const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down('md')); // or 'md', 'lg', etc.
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
 
-  const { token, user } = useAuth();
+  const { token } = useAuth();
   const { paginatedAgents } = useAgents();
-
   const { agents } = paginatedAgents;
 
   const {
-    fetchChats,
-    finishChat,
     unfinishChat,
-    readChat,
+    finishChat,
     stopChatHumanAttendance,
     deleteChat,
-    chatLoading,
-
     fetchInteractionsWithMessagesOfChat,
+    readChat,
   } = useChatService(token as string);
 
   const [tab, setTab] = useState(0);
-
-  const [chats, setChats] = useState<ChatDto[]>([]);
-  const [totalChats, setTotalChats] = useState<number>(0);
-
-  const [chatPage, setChatPage] = useState<number>(1);
-
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const handleTabChange = (_: SyntheticEvent, newValue: number) => {
     setTab(newValue);
-    setSelectedChat(null);
+    setSelectedChatId(null);
   };
 
   const filteredChats = useMemo(() => {
@@ -102,18 +100,12 @@ export function ChatList({ selectedChat, setSelectedChat }: ChatListProps) {
       chats?.filter((chat) => {
         const matchesSearch =
           !deferredSearchQuery ||
-          chat.userName
-            ?.toLowerCase()
-            .includes(deferredSearchQuery.toLowerCase()) ||
-          chat.title
-            ?.toLowerCase()
-            .includes(deferredSearchQuery.toLowerCase()) ||
-          chat.agentName
-            ?.toLowerCase()
-            .includes(deferredSearchQuery.toLowerCase());
+          chat.userName?.toLowerCase().includes(deferredSearchQuery.toLowerCase()) ||
+          chat.title?.toLowerCase().includes(deferredSearchQuery.toLowerCase()) ||
+          chat.agentName?.toLowerCase().includes(deferredSearchQuery.toLowerCase());
 
-        if (tab === 1) return matchesSearch && !chat.read;
-        if (tab === 2) return matchesSearch && chat.humanTalk;
+        if (tab === 1) return matchesSearch && chat.humanTalk;
+        if (tab === 2) return matchesSearch && !chat.finished;
         if (tab === 3) return matchesSearch && chat.finished;
         return matchesSearch;
       }) || []
@@ -121,12 +113,10 @@ export function ChatList({ selectedChat, setSelectedChat }: ChatListProps) {
   }, [chats, tab, deferredSearchQuery]);
 
   const handleChatSelect = async (chat: ChatDto) => {
-    const agentOfChat = agents.find(
-      (wrapper) => wrapper.agent.id == chat.agentId
-    )?.agent as Agent;
+    const agentOfChat = agents.find((w) => w.agent.id === chat.agentId)?.agent as Agent;
 
     const paginatedInteractions = agentOfChat.paginatedChats?.data.find(
-      (existingChat) => existingChat.id == chat.id
+      (existingChat) => existingChat.id === chat.id
     )?.paginatedInteractions as PaginatedInteractionsWithMessagesResponseDto;
 
     let chatWithInteractions;
@@ -152,76 +142,22 @@ export function ChatList({ selectedChat, setSelectedChat }: ChatListProps) {
       }
     }
 
-    setSelectedChat(chatWithInteractions);
+    setSelectedChatId(chat.id);
+    await readChat(chat.id);
+    // setSelectedChat(chatWithInteractions);
   };
 
-  const handleMarkChatResolution = (chatId: string, chatFinished: boolean) => {
-    {
-      chatFinished ? unfinishChat(chatId) : finishChat(chatId);
-    }
+  const handleMarkChatResolution = (chatId: string, finished: boolean) => {
+    finished ? unfinishChat(chatId) : finishChat(chatId);  
   };
 
-  const handleStopHumanAttedance = (chatId: string) => {
-    stopChatHumanAttendance(chatId);
+  const handleStopHumanAttendance = (chatId: string) => {
+    stopChatHumanAttendance(chatId); 
   };
 
   const handleDelete = async (chatId: string) => {
     await deleteChat(chatId);
   };
-
-  const fetchChatList = useCallback(async () => {
-    try {
-      const response = await fetchChats(user?.workspaceId as string, chatPage);
-      setChats(response?.data as ChatDto[]);
-      setTotalChats(response?.meta?.total as number);
-    } catch {
-      setChats([]);
-      setTotalChats(0);
-    }
-  }, [fetchChats, user?.workspaceId, chatPage]);
-
-  useEffect(() => {
-    const hasPaginatedChats = agents.some(
-      (wrapper) => wrapper.agent?.paginatedChats != undefined
-    );
-
-    if (agents.length == 0 || hasPaginatedChats) {
-      const chats =
-        agents.flatMap(
-          (wrapper) => wrapper.agent?.paginatedChats?.data || []
-        ) || [];
-      const totalChatAmount = agents.reduce((sum, wrapper) => {
-        const total = wrapper.agent?.paginatedChats?.meta?.total;
-        return sum + (typeof total === 'number' ? total : 0);
-      }, 0);
-      setChats(chats);
-      setTotalChats(totalChatAmount);
-
-      if (selectedChat != undefined) {
-        setSelectedChat(
-          chats?.find((chat) => chat.id == selectedChat.id) || null
-        );
-      }
-    } else {
-      fetchChatList();
-    }
-  }, [fetchChatList, agents]);
-
-  useEffect(() => {
-    if (chatPage == 1) return;
-
-    fetchChatList();
-  }, [fetchChatList, chatPage]);
-
-  useEffect(() => {
-    async function markChatAsRead(chatId: string) {
-      await readChat(chatId);
-    }
-
-    if (selectedChat && !selectedChat.read) {
-      markChatAsRead(selectedChat.id);
-    }
-  }, [selectedChat]);
 
   return (
     <Box
@@ -289,18 +225,11 @@ export function ChatList({ selectedChat, setSelectedChat }: ChatListProps) {
           }}
         >
           <Tab label="All" />
-          <Tab label="Unread" />
           <Tab label="Human" />
+          <Tab label="Unfinished" />
           <Tab label="Finished" />
         </Tabs>
       </Box>
-
-      {chatLoading && (
-        <LinearProgress
-          color="secondary"
-          sx={{ width: '100%', mt: 1, mb: 1 }}
-        />
-      )}
 
       <Box sx={{ flex: 1, overflow: 'auto' }}>
         <List sx={{ p: 0 }}>
@@ -327,10 +256,7 @@ export function ChatList({ selectedChat, setSelectedChat }: ChatListProps) {
                   color="error"
                   invisible={chat.unReadCount === 0 || chat.finished}
                 >
-                  <Avatar
-                    src={chat.userPicture || undefined}
-                    alt={chat.userName}
-                  >
+                  <Avatar src={chat.userPicture || undefined} alt={chat.userName}>
                     {chat.userName?.[0] || <PersonIcon />}
                   </Avatar>
                 </Badge>
@@ -366,17 +292,8 @@ export function ChatList({ selectedChat, setSelectedChat }: ChatListProps) {
                     <Typography variant="body2" color="text.secondary" noWrap>
                       {chat.latestMessage?.text || 'No messages'}
                     </Typography>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        mt: 0.5,
-                      }}
-                    >
-                      <PhoneIcon
-                        sx={{ fontSize: 12, color: 'text.secondary' }}
-                      />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                      <PhoneIcon sx={{ fontSize: 12, color: 'text.secondary' }} />
                       <Typography variant="caption" color="text.secondary">
                         {chat.whatsappPhone}
                       </Typography>
@@ -395,7 +312,7 @@ export function ChatList({ selectedChat, setSelectedChat }: ChatListProps) {
               <ChatMenu
                 chat={chat}
                 handleMarkChatResolution={handleMarkChatResolution}
-                handleStopHumanAttendance={handleStopHumanAttedance}
+                handleStopHumanAttendance={handleStopHumanAttendance}
                 handleDelete={handleDelete}
               />
             </ListItem>
@@ -420,12 +337,10 @@ export function ChatList({ selectedChat, setSelectedChat }: ChatListProps) {
         >
           <Button
             variant={chats?.length === totalChats ? 'text' : 'outlined'}
-            onClick={() => setChatPage((prevState) => prevState + 1)}
+            onClick={() => setChatPage((prev) => prev + 1)}
             disabled={chats?.length === totalChats}
           >
-            {chats?.length === totalChats
-              ? 'No more data to fetch'
-              : 'Fetch more...'}
+            {chats?.length === totalChats ? 'No more data to fetch' : 'Fetch more...'}
           </Button>
         </Box>
       </Box>

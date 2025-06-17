@@ -119,7 +119,7 @@ export default function StatCard({
               <ListItemButton
                 key={interaction.id}
                 onClick={() => {
-                  window.location.href = `/chats/${interaction.id}`;
+                  window.location.href = `/chats?chatId=${interaction.id}`;
                 }}
               >
                 <ListItemText

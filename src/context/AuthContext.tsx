@@ -20,6 +20,7 @@ interface AuthContextType {
   logout: () => void;
   resetPassword: (input: PasswordResetInput) => Promise<Result>;
 
+  workspaceCredits: number;
   syncWorkspaceCreditsUpdate: (credits: number) => boolean;
 }
 
@@ -47,7 +48,6 @@ interface PasswordResetInput {
 export interface User {
   id: string;
   workspaceId: string;
-  workspaceCredits: number;
   name: string;
   email: string;
   provider: 'google' | 'facebook' | 'password';
@@ -76,6 +76,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // State to track latest provider
   const [latestProvider, setLatestProvider] = useState<string | null>(null);
 
+
+  const [workspaceCredits, setWorkspaceCredits] = useState<number>(0);
+
   // On component mount, check if token exists in localStorage
   useEffect(() => {
     const storedToken = localStorage.getItem('app:auth-token');
@@ -93,6 +96,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setLatestProvider(latestProvider);
     setLoading(false);
   }, []);
+
+  // On component mount, fetch up-to-date workspace credits;
+  useEffect(() => {
+    const fetchWorkspaceCredits = async (workspaceId: string) => {
+      const response = await fetch(`${env.API_URL}/workspaces/${workspaceId}/credits`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        } as const,
+      });
+
+      const data = await response.json();
+  
+      if (data.error) {
+        throw new Error(data.error);
+      }
+  
+      setWorkspaceCredits(data.data.credits);
+    }
+
+    if (user?.workspaceId) {
+      fetchWorkspaceCredits(user.workspaceId);
+    }
+
+  }, [user?.workspaceId]);
 
   const login = async (credentials: LoginCredentials): Promise<Result> => {
     try {
@@ -406,10 +435,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const syncWorkspaceCreditsUpdate = (credits: number) => {
     if (!user) return false;
 
-    const updatedUser: User = { ...user, workspaceCredits: credits };
-
-    setUser(updatedUser);
-    localStorage.setItem('app:user', JSON.stringify(updatedUser));
+    setWorkspaceCredits(credits);
 
     return true;
   };
@@ -427,6 +453,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout,
     resetPassword,
 
+    workspaceCredits,
     syncWorkspaceCreditsUpdate
   };
 

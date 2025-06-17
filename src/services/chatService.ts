@@ -71,6 +71,7 @@ export interface ChatDto {
   recipient: string;
   id: string;
   time: number;
+  updatedAt: string;
   unReadCount: number;
   conversation: string;
   latestMessage?: MessageDto;

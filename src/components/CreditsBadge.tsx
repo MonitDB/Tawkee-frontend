@@ -1,24 +1,25 @@
 import { useAuth } from '../context/AuthContext';
 import { Box, Chip, Typography, Skeleton } from '@mui/material';
 import { useDeferredValue, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function CreditsBadge() {
-  const { user } = useAuth();
-  const credits = user?.workspaceCredits || 0;
+  const navigate = useNavigate();
+  const { workspaceCredits } = useAuth();
 
-  const [pendingCredits, setPendingCredits] = useState<number>(credits);
+  const [pendingCredits, setPendingCredits] = useState<number>(workspaceCredits);
   const deferredCredits = useDeferredValue(pendingCredits);
 
   useEffect(() => {
-    if (credits !== pendingCredits) {
-      setPendingCredits(credits);
+    if (workspaceCredits !== pendingCredits) {
+      setPendingCredits(workspaceCredits);
     }
-  }, [credits, pendingCredits]);
+  }, [workspaceCredits, pendingCredits]);
 
   const isUpdating = pendingCredits !== deferredCredits;
 
   const chipColor =
-    credits > 1000 ? 'success' : credits > 500 ? 'warning' : 'error';
+    workspaceCredits > 1000 ? 'success' : workspaceCredits > 500 ? 'warning' : 'error';
 
   return isUpdating ? (
     <Skeleton variant="rounded" width={100} height={32} />
@@ -28,7 +29,7 @@ export default function CreditsBadge() {
       label={
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <Typography variant="body2" fontWeight="bold">
-            {credits.toLocaleString()}
+            {workspaceCredits.toLocaleString()}
           </Typography>
           <Typography variant="caption">credits</Typography>
         </Box>
@@ -40,6 +41,7 @@ export default function CreditsBadge() {
         fontWeight: 'bold',
       }}
       size="medium"
+      onClick={() => navigate('/')}
     />
   );
 }

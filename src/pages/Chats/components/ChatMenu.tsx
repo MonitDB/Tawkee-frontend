@@ -98,7 +98,7 @@ export function ChatMenu({
             )}
           </ListItemIcon>
           <ListItemText>
-            Mark as {chat.finished ? 'Unread' : 'Finished'}
+            Mark as {chat.finished ? 'Unfinished' : 'Finished'}
           </ListItemText>
         </MenuItem>
         {chat.humanTalk && (
