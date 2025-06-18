@@ -1320,15 +1320,18 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
   const syncAgentMessageChatUpdate = (chat: ChatDto): boolean => {
     let updateApplied = false;
+    console.log("Chat: ", chat);
     try {
       setPaginatedAgents((prev) => {
         const agentId = chat.agentId;
         const chatId = chat.id;
 
+        console.log(prev.agents);
         const agentIndex = prev.agents.findIndex(
           (wrapper) => wrapper.agent.id === agentId
         );
-
+        
+        console.log(agentIndex);
         if (agentIndex === -1) {
           console.warn(
             `Agent with ID ${agentId} not found. Skipping chat update for chat ID ${chatId}.`
@@ -1460,7 +1463,6 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       return false;
     }
   };
-
 
   const syncAgentScheduleSettingsUpdate = ({
     agentId,

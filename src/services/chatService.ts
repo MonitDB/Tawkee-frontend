@@ -402,7 +402,6 @@ export class ChatService {
 
   async stopHumanAttendanceChat(id: string): Promise<boolean> {
     try {
-      console.log(`PUT ${this.apiUrl}/chats/${id}/stop-human...`);
       const response = await fetch(
         `${this.apiUrl}/chats/${id}/stop-human/${this.userId}`,
         {
@@ -422,7 +421,6 @@ export class ChatService {
       }
 
       const data = await response.json().catch(() => ({}));
-      console.log(`PUT ${this.apiUrl}/chats/${id}/stop-human... res: ${data}`);
       if (data.error) {
         throw new Error(data.error);
       }

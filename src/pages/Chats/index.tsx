@@ -95,8 +95,6 @@ export default function Chats() {
         },
       };
 
-      console.log({merged});
-
       setSelectedChatId(updatedChat.id);
     } catch (error) {
       console.log(error);

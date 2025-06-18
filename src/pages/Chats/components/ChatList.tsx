@@ -119,32 +119,15 @@ export function ChatList({
       (existingChat) => existingChat.id === chat.id
     )?.paginatedInteractions as PaginatedInteractionsWithMessagesResponseDto;
 
-    let chatWithInteractions;
-    if ((paginatedInteractions?.data?.length || 0) > 0) {
-      chatWithInteractions = {
-        ...chat,
-        paginatedInteractions,
-      };
-    } else {
-      try {
-        const response = await fetchInteractionsWithMessagesOfChat({
-          chatId: chat.id,
-          page: 1,
-        });
-
-        chatWithInteractions = {
-          ...chat,
-          paginatedInteractions:
-            response as PaginatedInteractionsWithMessagesResponseDto,
-        };
-      } catch {
-        chatWithInteractions = null;
-      }
+    if ((paginatedInteractions?.data?.length || 0) == 0) {
+      await fetchInteractionsWithMessagesOfChat({
+        chatId: chat.id,
+        page: 1,
+      });
     }
 
     setSelectedChatId(chat.id);
     await readChat(chat.id);
-    // setSelectedChat(chatWithInteractions);
   };
 
   const handleMarkChatResolution = (chatId: string, finished: boolean) => {

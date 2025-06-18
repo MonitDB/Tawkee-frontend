@@ -77,7 +77,7 @@ export const useChatService = (token: string) => {
         const response = await service.unfinishChat(chatId);
         syncAgentChatFinishStatus(chatId, false);
 
-        notify('Chat marked as unread!', 'info');
+        notify('Chat marked as unfinished!', 'info');
         return response;
       } catch (error: unknown) {
         notify(error as string, 'error');

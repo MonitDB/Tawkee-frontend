@@ -9,15 +9,12 @@ import { ChatDto, InteractionStatus } from '../../../services/chatService';
 import {
   Avatar,
   Box,
-  Button,
   Chip,
   Divider,
-  IconButton,
   LinearProgress,
   Paper,
   Stack,
   styled,
-  TextField,
   Typography,
   useMediaQuery,
   useTheme,
@@ -26,7 +23,6 @@ import { useAuth } from '../../../context/AuthContext';
 import { useChatService } from '../../../hooks/useChatService';
 
 import {
-  Send as SendIcon,
   Person as PersonIcon,
   SmartToy as BotIcon,
   Phone as PhoneIcon,
@@ -34,6 +30,8 @@ import {
   Schedule as ScheduleIcon,
   Error as ErrorIcon,
 } from '@mui/icons-material';
+import ChatInput from './ChatInput';
+import { useAgents } from '../../../context/AgentsContext';
 
 // Helper function for throttling
 function throttle<T extends (...args: any[]) => any>(
@@ -101,19 +99,10 @@ export function ChatDetails({
   const isLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
 
   const { token } = useAuth();
+  const { syncAgentMessageChatUpdate } = useAgents();
   const { startChatHumanAttendance, chatLoading } = useChatService(
     token as string
   );
-
-  // Remove useDeferredValue - direct state is faster for input
-  const [newMessage, setNewMessage] = useState('');
-
-  const handleSendMessage = useCallback(() => {
-    if (newMessage.trim()) {
-      // This would normally send the message
-      setNewMessage('');
-    }
-  }, [newMessage]);
 
   const handleStartHumanAttendance = useCallback(
     async (chatId: string) => {
@@ -413,110 +402,6 @@ export function ChatDetails({
     scrollState.visibleInteraction,
   ]);
 
-  // Memoize message input section to prevent unnecessary re-renders
-  const messageInputSection = useMemo(
-    () => ( !selectedChat.finished
-      ? (
-        <Paper
-          sx={{
-            p: 2,
-            borderRadius: 0,
-            borderTop: 1,
-            borderColor: 'divider',
-            display: 'flex',
-            gap: 1,
-            flexDirection: 'column',
-          }}
-        >
-          {chatLoading && (
-            <LinearProgress color="secondary" sx={{ width: '100%' }} />
-          )}
-
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 1,
-            }}
-          >
-            {selectedChat.humanTalk ? (
-              <>
-                <TextField
-                  fullWidth
-                  placeholder="Type a message..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                  multiline
-                  maxRows={4}
-                />
-                <IconButton
-                  color="primary"
-                  onClick={handleSendMessage}
-                  disabled={!newMessage.trim()}
-                >
-                  <SendIcon />
-                </IconButton>
-              </>
-            ) : (
-              <>
-                {!isLargeScreen && (
-                  <Typography>
-                    Chat held by Agent {selectedChat.agentName}
-                  </Typography>
-                )}
-                <Button
-                  variant="outlined"
-                  onClick={() => handleStartHumanAttendance(selectedChat.id)}
-                  disabled={chatLoading}
-                >
-                  {!isSmallScreen
-                    ? chatLoading
-                      ? 'Wait a moment...'
-                      : 'Start Human Attendance'
-                    : chatLoading
-                      ? 'Wait...'
-                      : 'Start attendance'}
-                </Button>
-              </>
-            )}
-          </Box>
-        </Paper>        
-      ) : (
-        <Paper
-          sx={{
-            p: 2,
-            borderRadius: 0,
-            borderTop: 1,
-            borderColor: 'divider',
-            display: 'flex',
-            gap: 1,
-            flexDirection: 'column',
-          }}
-      >
-        <Typography>You cannot send messages to finished chats. Mark this chat as unfinished before resuming conversation.</Typography>
-      </Paper>
-      )
-    ),
-    [
-      chatLoading,
-      selectedChat.humanTalk,
-      selectedChat.agentName,
-      selectedChat.id,
-      newMessage,
-      handleSendMessage,
-      handleStartHumanAttendance,
-      isLargeScreen,
-      isSmallScreen,
-    ]
-  );
-
   return (
     <Box
       sx={{
@@ -795,7 +680,17 @@ export function ChatDetails({
       </Box>
 
       {/* Message Input */}
-      {messageInputSection}
+      <ChatInput
+        selectedChat={selectedChat}
+        chatLoading={chatLoading}
+        isLargeScreen={isLargeScreen}
+        isSmallScreen={isSmallScreen}
+        handleStartHumanAttendance={handleStartHumanAttendance}
+        onMessageSent={(data) => {
+          syncAgentMessageChatUpdate(data);
+          console.log(data);
+        }}  
+      />
     </Box>
   );
 }
