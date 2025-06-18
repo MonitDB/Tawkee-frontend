@@ -100,9 +100,15 @@ export function ChatList({
       chats?.filter((chat) => {
         const matchesSearch =
           !deferredSearchQuery ||
-          chat.userName?.toLowerCase().includes(deferredSearchQuery.toLowerCase()) ||
-          chat.title?.toLowerCase().includes(deferredSearchQuery.toLowerCase()) ||
-          chat.agentName?.toLowerCase().includes(deferredSearchQuery.toLowerCase());
+          chat.userName
+            ?.toLowerCase()
+            .includes(deferredSearchQuery.toLowerCase()) ||
+          chat.title
+            ?.toLowerCase()
+            .includes(deferredSearchQuery.toLowerCase()) ||
+          chat.agentName
+            ?.toLowerCase()
+            .includes(deferredSearchQuery.toLowerCase());
 
         if (tab === 1) return matchesSearch && chat.humanTalk;
         if (tab === 2) return matchesSearch && !chat.finished;
@@ -113,7 +119,8 @@ export function ChatList({
   }, [chats, tab, deferredSearchQuery]);
 
   const handleChatSelect = async (chat: ChatDto) => {
-    const agentOfChat = agents.find((w) => w.agent.id === chat.agentId)?.agent as Agent;
+    const agentOfChat = agents.find((w) => w.agent.id === chat.agentId)
+      ?.agent as Agent;
 
     const paginatedInteractions = agentOfChat.paginatedChats?.data.find(
       (existingChat) => existingChat.id === chat.id
@@ -131,11 +138,11 @@ export function ChatList({
   };
 
   const handleMarkChatResolution = (chatId: string, finished: boolean) => {
-    finished ? unfinishChat(chatId) : finishChat(chatId);  
+    finished ? unfinishChat(chatId) : finishChat(chatId);
   };
 
   const handleStopHumanAttendance = (chatId: string) => {
-    stopChatHumanAttendance(chatId); 
+    stopChatHumanAttendance(chatId);
   };
 
   const handleDelete = async (chatId: string) => {
@@ -239,7 +246,10 @@ export function ChatList({
                   color="error"
                   invisible={chat.unReadCount === 0 || chat.finished}
                 >
-                  <Avatar src={chat.userPicture || undefined} alt={chat.userName}>
+                  <Avatar
+                    src={chat.userPicture || undefined}
+                    alt={chat.userName}
+                  >
                     {chat.userName?.[0] || <PersonIcon />}
                   </Avatar>
                 </Badge>
@@ -275,8 +285,17 @@ export function ChatList({
                     <Typography variant="body2" color="text.secondary" noWrap>
                       {chat.latestMessage?.text || 'No messages'}
                     </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                      <PhoneIcon sx={{ fontSize: 12, color: 'text.secondary' }} />
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        mt: 0.5,
+                      }}
+                    >
+                      <PhoneIcon
+                        sx={{ fontSize: 12, color: 'text.secondary' }}
+                      />
                       <Typography variant="caption" color="text.secondary">
                         {chat.whatsappPhone}
                       </Typography>
@@ -323,7 +342,9 @@ export function ChatList({
             onClick={() => setChatPage((prev) => prev + 1)}
             disabled={chats?.length === totalChats}
           >
-            {chats?.length === totalChats ? 'No more data to fetch' : 'Fetch more...'}
+            {chats?.length === totalChats
+              ? 'No more data to fetch'
+              : 'Fetch more...'}
           </Button>
         </Box>
       </Box>

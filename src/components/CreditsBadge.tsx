@@ -7,7 +7,8 @@ export default function CreditsBadge() {
   const navigate = useNavigate();
   const { workspaceCredits } = useAuth();
 
-  const [pendingCredits, setPendingCredits] = useState<number>(workspaceCredits);
+  const [pendingCredits, setPendingCredits] =
+    useState<number>(workspaceCredits);
   const deferredCredits = useDeferredValue(pendingCredits);
 
   useEffect(() => {
@@ -19,7 +20,11 @@ export default function CreditsBadge() {
   const isUpdating = pendingCredits !== deferredCredits;
 
   const chipColor =
-    workspaceCredits > 1000 ? 'success' : workspaceCredits > 500 ? 'warning' : 'error';
+    workspaceCredits > 1000
+      ? 'success'
+      : workspaceCredits > 500
+        ? 'warning'
+        : 'error';
 
   return isUpdating ? (
     <Skeleton variant="rounded" width={100} height={32} />

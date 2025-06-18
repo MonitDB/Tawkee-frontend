@@ -25,7 +25,14 @@ export default function Header({
       spacing={2}
     >
       <NavbarBreadcrumbs overrideLatestSegment={overrideLatestSegment || ''} />
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 1,
+        }}
+      >
         <CreditsBadge />
         <MenuButton showBadge aria-label="Open notifications">
           <NotificationsRoundedIcon />

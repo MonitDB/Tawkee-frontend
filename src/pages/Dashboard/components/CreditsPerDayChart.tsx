@@ -144,7 +144,8 @@ export default function CreditsPerDayChart({
 
   const series = allAgentIds.map((agentId) => {
     const agentData = adjustedData.map(
-      (entry) => entry.creditsByAgent.find((c) => c.agentId === agentId)?.credits ?? 0
+      (entry) =>
+        entry.creditsByAgent.find((c) => c.agentId === agentId)?.credits ?? 0
     );
 
     const agentName = agentIdToNameMap.get(agentId) || 'Unknown';
@@ -160,7 +161,9 @@ export default function CreditsPerDayChart({
     };
   });
 
-  const totalSum = series.flatMap((s) => s.data).reduce((acc, val) => acc + val, 0);
+  const totalSum = series
+    .flatMap((s) => s.data)
+    .reduce((acc, val) => acc + val, 0);
 
   return (
     <Card
@@ -232,7 +235,10 @@ export default function CreditsPerDayChart({
           >
             {allAgentIds.map((agentId, i) => (
               <Fragment key={agentId}>
-                <AreaGradient color={colorPalette[i % colorPalette.length]} id={agentId} />
+                <AreaGradient
+                  color={colorPalette[i % colorPalette.length]}
+                  id={agentId}
+                />
               </Fragment>
             ))}
           </LineChart>

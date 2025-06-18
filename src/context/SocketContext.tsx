@@ -88,9 +88,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
       }
     };
 
-    const handleWorkspaceCreditsUpdate = (data: {
-      credits: number
-    }) => {
+    const handleWorkspaceCreditsUpdate = (data: { credits: number }) => {
       syncWorkspaceCreditsUpdate(data.credits);
     };
 
@@ -123,7 +121,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
       socketRef.current.on(
         'workspaceCreditsUpdate',
         handleWorkspaceCreditsUpdate
-      )
+      );
 
       socketRef.current.on('error', handleSocketError);
 
@@ -151,7 +149,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
           socketRef.current.off(
             'workspaceCreditsUpdate',
             handleWorkspaceCreditsUpdate
-          )          
+          );
 
           socketRef.current.off('error', handleSocketError);
 

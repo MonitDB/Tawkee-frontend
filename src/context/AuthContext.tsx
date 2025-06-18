@@ -3,7 +3,7 @@ import {
   useContext,
   useState,
   useEffect,
-  ReactNode
+  ReactNode,
 } from 'react';
 import env from '../config/env';
 import { useHttpResponse } from './ResponseNotifier';
@@ -76,7 +76,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // State to track latest provider
   const [latestProvider, setLatestProvider] = useState<string | null>(null);
 
-
   const [workspaceCredits, setWorkspaceCredits] = useState<number>(0);
 
   // On component mount, check if token exists in localStorage
@@ -100,27 +99,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // On component mount, fetch up-to-date workspace credits;
   useEffect(() => {
     const fetchWorkspaceCredits = async (workspaceId: string) => {
-      const response = await fetch(`${env.API_URL}/workspaces/${workspaceId}/credits`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        } as const,
-      });
+      const response = await fetch(
+        `${env.API_URL}/workspaces/${workspaceId}/credits`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          } as const,
+        }
+      );
 
       const data = await response.json();
-  
+
       if (data.error) {
         throw new Error(data.error);
       }
-  
+
       setWorkspaceCredits(data.data.credits);
-    }
+    };
 
     if (user?.workspaceId) {
       fetchWorkspaceCredits(user.workspaceId);
     }
-
   }, [user?.workspaceId]);
 
   const login = async (credentials: LoginCredentials): Promise<Result> => {
@@ -454,7 +455,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     resetPassword,
 
     workspaceCredits,
-    syncWorkspaceCreditsUpdate
+    syncWorkspaceCreditsUpdate,
   };
 
   return (

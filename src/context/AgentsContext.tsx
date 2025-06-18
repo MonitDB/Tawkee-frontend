@@ -1051,7 +1051,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
                               if (isMostRecent) {
                                 return {
                                   ...interaction,
-                                  status: 'RUNNING' as InteractionStatus
+                                  status: 'RUNNING' as InteractionStatus,
                                 };
                               }
                             }
@@ -1320,7 +1320,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
   const syncAgentMessageChatUpdate = (chat: ChatDto): boolean => {
     let updateApplied = false;
-    console.log("Chat: ", chat);
+    console.log('Chat: ', chat);
     try {
       setPaginatedAgents((prev) => {
         const agentId = chat.agentId;
@@ -1330,7 +1330,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
         const agentIndex = prev.agents.findIndex(
           (wrapper) => wrapper.agent.id === agentId
         );
-        
+
         console.log(agentIndex);
         if (agentIndex === -1) {
           console.warn(
@@ -1369,7 +1369,8 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
             const incomingInteractionsData = chat.paginatedInteractions.data;
             const existingInteractions =
               existingChat.paginatedInteractions?.data || [];
-            const baseInteractionMeta = existingChat.paginatedInteractions?.meta || {
+            const baseInteractionMeta = existingChat.paginatedInteractions
+              ?.meta || {
               page: 1,
               pageSize: 10,
               total: 0,
@@ -1392,7 +1393,10 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
             const finalInteractionsData = Array.from(interactionsMap.values());
             const finalTotal = finalInteractionsData.length;
-            const interactionPageSize = Math.max(1, baseInteractionMeta.pageSize);
+            const interactionPageSize = Math.max(
+              1,
+              baseInteractionMeta.pageSize
+            );
             const finalTotalPages = Math.ceil(finalTotal / interactionPageSize);
 
             updatedPaginatedInteractions = {
@@ -1423,8 +1427,9 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
         }
 
         // Sort chats by updatedAt descending (most recent first)
-        updatedAgentChatsData.sort((a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        updatedAgentChatsData.sort(
+          (a, b) =>
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
         );
 
         updatedAgentChatsMeta.totalPages = Math.ceil(

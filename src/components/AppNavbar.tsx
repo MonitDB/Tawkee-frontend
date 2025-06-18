@@ -96,7 +96,11 @@ export default function AppNavbar() {
           <Stack
             direction="row"
             spacing={1}
-            sx={{ justifyContent: 'center', mr: 'auto', display: {xs: 'none', sm: 'flex'} }}
+            sx={{
+              justifyContent: 'center',
+              mr: 'auto',
+              display: { xs: 'none', sm: 'flex' },
+            }}
           >
             <CustomIcon
               location={
@@ -113,7 +117,7 @@ export default function AppNavbar() {
           </Stack>
 
           <CreditsBadge />
-          
+
           <ColorModeIconDropdown />
           <MenuButton aria-label="menu" onClick={toggleDrawer(true)}>
             <MenuRoundedIcon />

@@ -515,7 +515,7 @@ export function ElevenLabsSettingsDialog({
               <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
                 Select Voice ({getFilteredVoices().length} available)
               </Typography>
-              { selectedVoice?.name && (
+              {selectedVoice?.name && (
                 <Chip
                   color="secondary"
                   label={`Selected ${selectedVoice?.name}`}
@@ -574,27 +574,27 @@ export function ElevenLabsSettingsDialog({
                           {voice.labels.description}
                         </Typography>
                         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                          { voice?.category && (
+                          {voice?.category && (
                             <Chip
                               size="small"
                               label={voice.category}
                               color={getCategoryColor(voice.category)}
                             />
                           )}
-                          { voice?.labels?.gender && (
+                          {voice?.labels?.gender && (
                             <Chip size="small" label={voice.labels.gender} />
                           )}
-                          { voice?.labels?.age && (
+                          {voice?.labels?.age && (
                             <Chip size="small" label={voice.labels.age} />
                           )}
-                          { voice?.labels?.accent && (
+                          {voice?.labels?.accent && (
                             <Chip
                               size="small"
                               label={voice.labels.accent.replace('-', ' ')}
                               variant="outlined"
                             />
                           )}
-                          { voice?.labels?.use_case && (
+                          {voice?.labels?.use_case && (
                             <Chip
                               size="small"
                               label={voice.labels.use_case.replace('_', ' ')}

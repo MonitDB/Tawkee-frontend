@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChatDto, InteractionStatus } from '../../../services/chatService';
 import {
   Avatar,
@@ -501,8 +495,9 @@ export function ChatDetails({
       )}
       <Box ref={messagesContainerRef} sx={{ flex: 1, overflow: 'auto', p: 2 }}>
         {selectedChat.paginatedInteractions?.data &&
-          [...selectedChat.paginatedInteractions?.data].reverse().map(
-            (interaction, interactionIndex) => (
+          [...(selectedChat?.paginatedInteractions?.data || [])]
+            .reverse()
+            .map((interaction, interactionIndex) => (
               <Box
                 key={interaction.id}
                 ref={(el: HTMLDivElement | null) => {
@@ -675,8 +670,7 @@ export function ChatDetails({
                   })}
                 </Stack>
               </Box>
-            )
-          )}
+            ))}
       </Box>
 
       {/* Message Input */}
@@ -689,7 +683,7 @@ export function ChatDetails({
         onMessageSent={(data) => {
           syncAgentMessageChatUpdate(data);
           console.log(data);
-        }}  
+        }}
       />
     </Box>
   );

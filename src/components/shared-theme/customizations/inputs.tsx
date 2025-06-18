@@ -370,7 +370,7 @@ export const inputsCustomizations: Components<Theme> = {
         },
       },
     },
-  },  
+  },
   // MuiInputBase: {
   //   styleOverrides: {
   //     root: {

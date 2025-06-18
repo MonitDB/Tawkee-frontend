@@ -39,7 +39,7 @@ import {
   School,
   Psychology,
   Settings,
-  Hub
+  Hub,
 } from '@mui/icons-material';
 import { newAgent } from '../../../assets';
 
@@ -494,7 +494,9 @@ export default function CreateAgentDialog({
                     <Button
                       variant="outlined"
                       onClick={() =>
-                        navigate(`/agents/${createdAgentId}?tabName=integrations`)
+                        navigate(
+                          `/agents/${createdAgentId}?tabName=integrations`
+                        )
                       }
                       startIcon={<Psychology />}
                     >

@@ -87,10 +87,14 @@ export class DashboardService {
     this.apiUrl = config.apiUrl;
   }
 
-  async getDashboardMetrics(params: DashboardMetricsParams): Promise<DashboardMetricsDto> {
+  async getDashboardMetrics(
+    params: DashboardMetricsParams
+  ): Promise<DashboardMetricsDto> {
     const { workspaceId, startDate, endDate } = params;
 
-    console.log(`GET ${this.apiUrl}/workspaces/${workspaceId}/dashboard-metrics?startDate=${startDate}&endDate=${endDate}...`)
+    console.log(
+      `GET ${this.apiUrl}/workspaces/${workspaceId}/dashboard-metrics?startDate=${startDate}&endDate=${endDate}...`
+    );
     const url = `${this.apiUrl}/workspaces/${workspaceId}/dashboard-metrics?startDate=${startDate}&endDate=${endDate}`;
 
     try {
@@ -104,7 +108,8 @@ export class DashboardService {
 
       if (!response.ok) {
         const errorPayload = await response.json().catch(() => ({}));
-        const message = errorPayload.error || 'Failed to fetch dashboard metrics';
+        const message =
+          errorPayload.error || 'Failed to fetch dashboard metrics';
         throw new Error(message);
       }
 
@@ -113,12 +118,16 @@ export class DashboardService {
     } catch (error: unknown) {
       if (error instanceof Error) {
         if (error.message.includes('Failed to fetch')) {
-          throw new Error('Network error. Please check your internet connection.');
+          throw new Error(
+            'Network error. Please check your internet connection.'
+          );
         }
         throw new Error(error.message);
       }
 
-      throw new Error('Unexpected error occurred while fetching dashboard metrics');
+      throw new Error(
+        'Unexpected error occurred while fetching dashboard metrics'
+      );
     }
   }
 }

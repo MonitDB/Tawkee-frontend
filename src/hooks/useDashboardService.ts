@@ -23,7 +23,11 @@ export const useDashboardService = (token: string) => {
     async (workspaceId: string, startDate: string, endDate: string) => {
       try {
         setLoading(true);
-        const metrics = await service.getDashboardMetrics({ workspaceId, startDate, endDate });
+        const metrics = await service.getDashboardMetrics({
+          workspaceId,
+          startDate,
+          endDate,
+        });
         return metrics;
       } catch (error: unknown) {
         notify((error as Error).message, 'error');

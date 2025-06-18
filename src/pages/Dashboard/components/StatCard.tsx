@@ -47,7 +47,9 @@ export default function StatCard({
   };
 
   const trendLabel =
-    trendValue !== undefined ? `${trendValue > 0 ? '+' : ''}${trendValue}%` : '';
+    trendValue !== undefined
+      ? `${trendValue > 0 ? '+' : ''}${trendValue}%`
+      : '';
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(anchorEl ? null : event.currentTarget);
@@ -62,16 +64,27 @@ export default function StatCard({
         sx={{
           width: '100%',
           minHeight: 175,
-          cursor: !loading && interactions && interactions.length > 0 ? 'pointer' : 'default',
+          cursor:
+            !loading && interactions && interactions.length > 0
+              ? 'pointer'
+              : 'default',
         }}
-        onClick={!loading && interactions && interactions.length > 0 ? handleClick : undefined}
+        onClick={
+          !loading && interactions && interactions.length > 0
+            ? handleClick
+            : undefined
+        }
       >
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Typography component="h2" variant="subtitle2" gutterBottom>
             {loading ? <Skeleton width="60%" /> : title}
           </Typography>
           <Stack spacing={0.5}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+            >
               {loading ? (
                 <Skeleton variant="text" width={80} height={40} />
               ) : (
@@ -80,7 +93,11 @@ export default function StatCard({
                 </Typography>
               )}
               {!loading && trend && trendLabel && (
-                <Chip size="small" color={labelColors[trend]} label={trendLabel} />
+                <Chip
+                  size="small"
+                  color={labelColors[trend]}
+                  label={trendLabel}
+                />
               )}
             </Stack>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>

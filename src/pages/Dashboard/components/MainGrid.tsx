@@ -27,14 +27,17 @@ const ranges = [
 
 export default function MainGrid() {
   const theme = useTheme();
-  
+
   const { token, user } = useAuth();
-  const { fetchDashboardMetrics, loading } = useDashboardService(token as string);
+  const { fetchDashboardMetrics, loading } = useDashboardService(
+    token as string
+  );
 
   const [selectedRange, setSelectedRange] = useState<number>(7);
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
   const [endDate, setEndDate] = useState<Dayjs | null>(null);
-  const [dashboardData, setDashboardData] = useState<DashboardMetricsDto | null>(null);
+  const [dashboardData, setDashboardData] =
+    useState<DashboardMetricsDto | null>(null);
 
   const fetchData = async (start: Dayjs, end: Dayjs) => {
     try {
@@ -64,8 +67,11 @@ export default function MainGrid() {
     setSelectedRange(days);
   };
 
-  const handleCustomDateChange = async (newValue: Dayjs | null, type: 'start' | 'end') => {
-    console.log({newValue, type})
+  const handleCustomDateChange = async (
+    newValue: Dayjs | null,
+    type: 'start' | 'end'
+  ) => {
+    console.log({ newValue, type });
     if (!newValue) return;
 
     let finalStartDate = startDate;
@@ -131,45 +137,76 @@ export default function MainGrid() {
             Interactions
           </Typography>
 
-          <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} sx={{ justifyContent: 'flex-end' }} >
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ justifyContent: 'flex-end' }} >
+          <Stack
+            direction={{ xs: 'column', lg: 'row' }}
+            spacing={2}
+            sx={{ justifyContent: 'flex-end' }}
+          >
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={2}
+              sx={{ justifyContent: 'flex-end' }}
+            >
               <DatePicker
                 label="Start Date"
                 value={startDate}
-                onChange={(newValue) => handleCustomDateChange(newValue, 'start')}
-                sx={{ width: { xs: '100%', md: 'fit-content'}}}
+                onChange={(newValue) =>
+                  handleCustomDateChange(newValue, 'start')
+                }
+                sx={{ width: { xs: '100%', md: 'fit-content' } }}
               />
 
               <DatePicker
                 label="End Date"
                 value={endDate}
                 onChange={(newValue) => handleCustomDateChange(newValue, 'end')}
-                sx={{ width: { xs: '100%', md: 'fit-content'}}}
+                sx={{ width: { xs: '100%', md: 'fit-content' } }}
               />
             </Stack>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 2 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                gap: 2,
+              }}
+            >
               <ButtonGroup variant="outlined" size="small">
                 {ranges.map((range) => (
                   <Button
                     key={range.days}
                     onClick={() => handleRangeChange(range.days)}
-                    variant={selectedRange === range.days ? 'contained' : 'outlined'}
+                    variant={
+                      selectedRange === range.days ? 'contained' : 'outlined'
+                    }
                   >
                     {range.label}
                   </Button>
                 ))}
-              </ButtonGroup>           
+              </ButtonGroup>
             </Box>
           </Stack>
-
         </Box>
 
-        { data && (
+        {data && (
           <>
-            <Grid container spacing={2} columns={12} sx={{ mb: (theme) => theme.spacing(2) }}>
-              <Grid size={{ xs: 12, md: 3}}>
-                <Stack direction={{ xs: 'column', sm: 'row', md: 'column' }} sx={{ height: '100%', justifyContent: 'center', gap: 2, flex: 1 }}>
+            <Grid
+              container
+              spacing={2}
+              columns={12}
+              sx={{ mb: (theme) => theme.spacing(2) }}
+            >
+              <Grid size={{ xs: 12, md: 3 }}>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row', md: 'column' }}
+                  sx={{
+                    height: '100%',
+                    justifyContent: 'center',
+                    gap: 2,
+                    flex: 1,
+                  }}
+                >
                   <StatCard
                     title="In Progress"
                     value={data.running.total.toString()}
@@ -181,7 +218,9 @@ export default function MainGrid() {
                     title="Waiting for Reply"
                     value={data.running.waiting.toString()}
                     interval="Current"
-                    interactions={data.running.interactions.filter(i => i.isWaiting)}
+                    interactions={data.running.interactions.filter(
+                      (i) => i.isWaiting
+                    )}
                     loading={loading}
                   />
                   <StatCard
@@ -194,7 +233,7 @@ export default function MainGrid() {
                   />
                 </Stack>
               </Grid>
-              <Grid size={{ xs: 12, md: 9}}>
+              <Grid size={{ xs: 12, md: 9 }}>
                 <ResolvedChart
                   data={data.resolved}
                   loading={loading}
@@ -206,7 +245,12 @@ export default function MainGrid() {
 
             <Typography
               variant="h4"
-              sx={{ display: 'flex', alignItems: 'center', gap: 1, marginBottom: 2 }}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                marginBottom: 2,
+              }}
             >
               <Box
                 sx={{
@@ -230,14 +274,27 @@ export default function MainGrid() {
               Credits
             </Typography>
 
-            <Grid container spacing={2} columns={12} sx={{ mb: (theme) => theme.spacing(2) }}>
-              <Grid size={{ xs: 12, md: 3}}>
-                <Stack direction={{ xs: 'column', sm: 'row', md: 'column' }} sx={{ height: '100%', justifyContent: 'center', gap: 2, flex: 1 }}>
+            <Grid
+              container
+              spacing={2}
+              columns={12}
+              sx={{ mb: (theme) => theme.spacing(2) }}
+            >
+              <Grid size={{ xs: 12, md: 3 }}>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row', md: 'column' }}
+                  sx={{
+                    height: '100%',
+                    justifyContent: 'center',
+                    gap: 2,
+                    flex: 1,
+                  }}
+                >
                   <TopAgentsBarChart data={data.topAgents} />
                   <TopModelsBarChart data={data.topModels} />
                 </Stack>
               </Grid>
-              <Grid size={{ xs: 12, md: 9}}>
+              <Grid size={{ xs: 12, md: 9 }}>
                 <CreditsPerDayChart
                   data={data.creditsPerDay}
                   startDate={startDate?.format('YYYY-MM-DD') ?? ''}

@@ -104,7 +104,10 @@ export default function ResolvedChart({
     [data.timeSeries, startDate, endDate]
   );
 
-  const labels = useMemo(() => adjustedTimeSeries.map((d) => d.date), [adjustedTimeSeries]);
+  const labels = useMemo(
+    () => adjustedTimeSeries.map((d) => d.date),
+    [adjustedTimeSeries]
+  );
 
   const totals = adjustedTimeSeries.map((d) => d.total);
   const ai = adjustedTimeSeries.map((d) => d.byAI);
@@ -144,16 +147,39 @@ export default function ResolvedChart({
           overflow: 'hidden',
         }}
       >
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
           <Typography component="h2" variant="subtitle2" gutterBottom>
             Resolved Interactions
           </Typography>
-          <Stack direction="row" spacing={1} sx={{ display: { xs: 'none', sm: 'flex' }}}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ display: { xs: 'none', sm: 'flex' } }}
+          >
             {loading ? (
               <>
-                <Skeleton variant="rounded" width={110} height={28} sx={{ borderRadius: 16 }} />
-                <Skeleton variant="rounded" width={90} height={28} sx={{ borderRadius: 16 }} />
-                <Skeleton variant="rounded" width={110} height={28} sx={{ borderRadius: 16 }} />
+                <Skeleton
+                  variant="rounded"
+                  width={110}
+                  height={28}
+                  sx={{ borderRadius: 16 }}
+                />
+                <Skeleton
+                  variant="rounded"
+                  width={90}
+                  height={28}
+                  sx={{ borderRadius: 16 }}
+                />
+                <Skeleton
+                  variant="rounded"
+                  width={110}
+                  height={28}
+                  sx={{ borderRadius: 16 }}
+                />
               </>
             ) : (
               <>
@@ -188,7 +214,10 @@ export default function ResolvedChart({
               height="100%"
               sx={{ borderRadius: 2 }}
             />
-          ) : totals.length === 0 || (totals.every(v => v === 0) && ai.every(v => v === 0) && human.every(v => v === 0)) ? (
+          ) : totals.length === 0 ||
+            (totals.every((v) => v === 0) &&
+              ai.every((v) => v === 0) &&
+              human.every((v) => v === 0)) ? (
             <Box
               sx={{
                 height: '100%',

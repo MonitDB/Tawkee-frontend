@@ -22,12 +22,17 @@ export default function Chats() {
   const { paginatedAgents } = useAgents();
   const { agents } = paginatedAgents;
 
-  const { interactionLoading, fetchInteractionsWithMessagesOfChat, fetchChats } =
-    useChatService(token as string);
+  const {
+    interactionLoading,
+    fetchInteractionsWithMessagesOfChat,
+    fetchChats,
+  } = useChatService(token as string);
 
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
 
-  const chats = agents.flatMap(wrapper => wrapper.agent.paginatedChats?.data || []);
+  const chats = agents.flatMap(
+    (wrapper) => wrapper.agent.paginatedChats?.data || []
+  );
 
   const [totalChats, setTotalChats] = useState<number>(0);
   const [chatPage, setChatPage] = useState<number>(1);
@@ -119,15 +124,15 @@ export default function Chats() {
   useEffect(() => {
     if (!chatIdParam || selectedChatId || chats.length === 0) return;
 
-    const chat = chats.find(c => c.id === chatIdParam);
+    const chat = chats.find((c) => c.id === chatIdParam);
     if (chat) {
       (async () => {
         try {
-          await fetchInteractionsWithMessagesOfChat({
+          (await fetchInteractionsWithMessagesOfChat({
             chatId: chat.id,
             page: 1,
-          }) as PaginatedInteractionsWithMessagesResponseDto;
-         
+          })) as PaginatedInteractionsWithMessagesResponseDto;
+
           setSelectedChatId(chat.id);
         } catch (err) {
           console.error('Failed to fetch chat by chatId param:', err);
@@ -136,7 +141,7 @@ export default function Chats() {
     }
   }, [chatIdParam, chats, selectedChatId, fetchInteractionsWithMessagesOfChat]);
 
-  const selectedChat = chats.find(chat => chat.id == selectedChatId) || null;
+  const selectedChat = chats.find((chat) => chat.id == selectedChatId) || null;
 
   return (
     <Card
