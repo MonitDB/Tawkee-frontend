@@ -128,6 +128,7 @@ export default function ResolvedChart({
       sx={{
         width: '100%',
         minHeight: 300,
+        maxHeight: 1000,
         height: '100%',
         flex: 1,
         display: 'flex',
@@ -147,7 +148,7 @@ export default function ResolvedChart({
           <Typography component="h2" variant="subtitle2" gutterBottom>
             Resolved Interactions
           </Typography>
-          <Stack direction="row" spacing={1}>
+          <Stack direction="row" spacing={1} sx={{ display: { xs: 'none', sm: 'flex' }}}>
             {loading ? (
               <>
                 <Skeleton variant="rounded" width={110} height={28} sx={{ borderRadius: 16 }} />
@@ -159,17 +160,17 @@ export default function ResolvedChart({
                 <Chip
                   size="small"
                   color="default"
-                  label={`Total: (${totalSum}) ${trendLabel(data.trend.total)}`}
+                  label={`Total: (${totalSum})${data.trend.total ? ` ${trendLabel(data.trend.total)}` : ''}`}
                 />
                 <Chip
                   size="small"
                   color="success"
-                  label={`AI: (${aiSum}) ${trendLabel(data.trend.byAI)}`}
+                  label={`Total by AI: (${aiSum})${data.trend.byAI ? ` ${trendLabel(data.trend.byAI)}` : ''}`}
                 />
                 <Chip
                   size="small"
                   color="warning"
-                  label={`Human: (${humanSum}) ${trendLabel(data.trend.byHuman)}`}
+                  label={`Total by Human: (${humanSum})${data.trend.byHuman ? ` ${trendLabel(data.trend.byHuman)}` : ''}`}
                 />
               </>
             )}

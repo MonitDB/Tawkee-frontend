@@ -87,6 +87,7 @@ export default function AppNavbar() {
           direction="row"
           sx={{
             alignItems: 'center',
+            justifyContent: 'flex-end',
             flexGrow: 1,
             width: '100%',
             gap: 1,
@@ -95,7 +96,7 @@ export default function AppNavbar() {
           <Stack
             direction="row"
             spacing={1}
-            sx={{ justifyContent: 'center', mr: 'auto' }}
+            sx={{ justifyContent: 'center', mr: 'auto', display: {xs: 'none', sm: 'flex'} }}
           >
             <CustomIcon
               location={
@@ -110,6 +111,7 @@ export default function AppNavbar() {
               {formatRouteName(location.pathname)}
             </Typography>
           </Stack>
+
           <CreditsBadge />
           
           <ColorModeIconDropdown />

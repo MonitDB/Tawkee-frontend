@@ -168,6 +168,7 @@ export default function CreditsPerDayChart({
       sx={{
         width: '100%',
         minHeight: 300,
+        maxHeight: 1000,
         height: '100%',
         flex: 1,
         display: 'flex',

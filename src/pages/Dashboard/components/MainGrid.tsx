@@ -37,7 +37,6 @@ export default function MainGrid() {
   const [dashboardData, setDashboardData] = useState<DashboardMetricsDto | null>(null);
 
   const fetchData = async (start: Dayjs, end: Dayjs) => {
-
     try {
       const data = await fetchDashboardMetrics(
         user?.workspaceId as string,
@@ -52,6 +51,8 @@ export default function MainGrid() {
 
   // Initialize date range and fetch data on mount or when selectedRange changes
   useEffect(() => {
+    if (selectedRange == -1) return;
+
     const today = dayjs();
     const newStart = today.subtract(selectedRange - 1, 'day');
     setStartDate(newStart);
@@ -63,31 +64,38 @@ export default function MainGrid() {
     setSelectedRange(days);
   };
 
-  const handleCustomDateChange = (newValue: Dayjs | null, type: 'start' | 'end') => {
+  const handleCustomDateChange = async (newValue: Dayjs | null, type: 'start' | 'end') => {
+    console.log({newValue, type})
     if (!newValue) return;
 
+    let finalStartDate = startDate;
+    let finalEndDate = endDate;
+
     if (type === 'start') {
+      finalStartDate = newValue;
       setStartDate(newValue);
 
       if (endDate && newValue.isAfter(endDate, 'day')) {
         const adjustedEnd = newValue.endOf('month');
+        finalEndDate = adjustedEnd;
         setEndDate(adjustedEnd);
       }
     } else {
+      finalEndDate = newValue;
       setEndDate(newValue);
 
       if (startDate && newValue.isBefore(startDate, 'day')) {
         const adjustedStart = newValue.startOf('month');
+        finalStartDate = adjustedStart;
         setStartDate(adjustedStart);
       }
     }
 
     setSelectedRange(-1); // Deselect preset
-  };
 
-  const handleSearch = async () => {
-    if (startDate && endDate) {
-      await fetchData(startDate, endDate);
+    // Fetch data with the final calculated dates
+    if (finalStartDate && finalEndDate) {
+      await fetchData(finalStartDate, finalEndDate);
     }
   };
 
@@ -123,26 +131,24 @@ export default function MainGrid() {
             Interactions
           </Typography>
 
-          <Stack direction={{ xs: 'column', lg: 'row-reverse' }} spacing={2}>
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+          <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} sx={{ justifyContent: 'flex-end' }} >
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ justifyContent: 'flex-end' }} >
               <DatePicker
                 label="Start Date"
                 value={startDate}
                 onChange={(newValue) => handleCustomDateChange(newValue, 'start')}
+                sx={{ width: { xs: '100%', md: 'fit-content'}}}
               />
 
               <DatePicker
                 label="End Date"
                 value={endDate}
                 onChange={(newValue) => handleCustomDateChange(newValue, 'end')}
+                sx={{ width: { xs: '100%', md: 'fit-content'}}}
               />
-
-              <Button variant="contained" onClick={handleSearch} disabled={!startDate || !endDate} sx={{ width: 'fit-content' }}>
-                Update
-              </Button>
             </Stack>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 2 }}>
               <ButtonGroup variant="outlined" size="small">
                 {ranges.map((range) => (
                   <Button
@@ -163,7 +169,7 @@ export default function MainGrid() {
           <>
             <Grid container spacing={2} columns={12} sx={{ mb: (theme) => theme.spacing(2) }}>
               <Grid size={{ xs: 12, md: 3}}>
-                <Stack direction={{ xs: 'row', md: 'column' }} sx={{ height: '100%', justifyContent: 'center', gap: 2, flex: 1 }}>
+                <Stack direction={{ xs: 'column', sm: 'row', md: 'column' }} sx={{ height: '100%', justifyContent: 'center', gap: 2, flex: 1 }}>
                   <StatCard
                     title="In Progress"
                     value={data.running.total.toString()}
@@ -223,9 +229,10 @@ export default function MainGrid() {
               </Box>
               Credits
             </Typography>
+
             <Grid container spacing={2} columns={12} sx={{ mb: (theme) => theme.spacing(2) }}>
               <Grid size={{ xs: 12, md: 3}}>
-                <Stack direction={{ xs: 'row', md: 'column' }} sx={{ height: '100%', justifyContent: 'center', gap: 2, flex: 1 }}>
+                <Stack direction={{ xs: 'column', sm: 'row', md: 'column' }} sx={{ height: '100%', justifyContent: 'center', gap: 2, flex: 1 }}>
                   <TopAgentsBarChart data={data.topAgents} />
                   <TopModelsBarChart data={data.topModels} />
                 </Stack>
