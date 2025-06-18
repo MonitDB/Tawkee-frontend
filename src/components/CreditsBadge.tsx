@@ -1,10 +1,8 @@
 import { useAuth } from '../context/AuthContext';
 import { Box, Chip, Typography, Skeleton } from '@mui/material';
 import { useDeferredValue, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 export default function CreditsBadge() {
-  const navigate = useNavigate();
   const { workspaceCredits } = useAuth();
 
   const [pendingCredits, setPendingCredits] =
@@ -46,7 +44,6 @@ export default function CreditsBadge() {
         fontWeight: 'bold',
       }}
       size="medium"
-      onClick={() => navigate('/')}
     />
   );
 }

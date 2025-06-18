@@ -99,7 +99,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
     if (user) {
       socketRef.current = io(SOCKET_SERVER_URL, {
         auth: { workspaceId: user.workspaceId },
-        // transports: ['websocket'], // Forçar websocket, por exemplo
+        transports: ['websocket']
       });
 
       socketRef.current.on('connect', handleSocketConnect);
