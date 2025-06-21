@@ -226,6 +226,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
         ...(query && { query }),
       });
 
+      console.log('fetchingAgents....')
       const response = await fetch(
         `${env.API_URL}/workspace/${user?.workspaceId}/agents?${queryParams}`,
         {
@@ -1588,10 +1589,10 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
   };
 
   useEffect(() => {
-    if (user) {
+    if (token) {
       fetchAgents();
     }
-  }, [user, page, pageSize, query]);
+  }, [token, page, pageSize, query]);
 
   const contextValue: AgentsContextType = {
     paginatedAgents,

@@ -3,7 +3,8 @@ import { Box, Chip, Typography, Skeleton } from '@mui/material';
 import { useDeferredValue, useState, useEffect } from 'react';
 
 export default function CreditsBadge() {
-  const { workspaceCredits } = useAuth();
+  const { workspacePlanCredits, workspaceExtraCredits } = useAuth();
+  const workspaceCredits = workspacePlanCredits + workspaceExtraCredits;
 
   const [pendingCredits, setPendingCredits] =
     useState<number>(workspaceCredits);
@@ -32,7 +33,7 @@ export default function CreditsBadge() {
       label={
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <Typography variant="body2" fontWeight="bold">
-            {workspaceCredits.toLocaleString()}
+            {workspaceCredits.toLocaleString('en-US')}
           </Typography>
           <Typography variant="caption">credits</Typography>
         </Box>

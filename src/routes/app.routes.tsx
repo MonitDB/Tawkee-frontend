@@ -10,9 +10,10 @@ import OAuthCallbackPage from '../pages/OAuthCallback';
 import VerifyAccount from '../pages/VerifyAccount';
 import ResetPassword from '../pages/ResetPassword';
 import AgentDetails from '../pages/AgentDetails';
-import ChatComponent from '../components/ChatComponent';
 import Chats from '../pages/Chats';
 import Dashboard from '../pages/Dashboard';
+import Billing from '../pages/Billing';
+import SubscriptionUpdated from '../pages/SubscriptionUpdated';
 
 export default function AppRoutes() {
   return (
@@ -56,8 +57,6 @@ export default function AppRoutes() {
           }
         />
 
-        <Route key="4x" path="/socket" element={<ChatComponent />} />
-
         <Route
           key="4"
           path="/chats"
@@ -70,12 +69,23 @@ export default function AppRoutes() {
 
         <Route
           key="5"
+          path="/billing"
+          element={
+            <AppPageLayout>
+              <Billing />
+            </AppPageLayout>
+          }
+        />
+
+        <Route
+          key="5"
           path="/auth/oauth-result"
           element={<OAuthCallbackPage />}
         />
 
         <Route key="6" path="/verify-email" element={<VerifyAccount />} />
         <Route key="7" path="/reset-password" element={<ResetPassword />} />
+        <Route key="8" path="/billing-success" element={<SubscriptionUpdated />} />
 
         <Route
           key="*"

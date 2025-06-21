@@ -20,8 +20,10 @@ interface AuthContextType {
   logout: () => void;
   resetPassword: (input: PasswordResetInput) => Promise<Result>;
 
-  workspaceCredits: number;
-  syncWorkspaceCreditsUpdate: (credits: number) => boolean;
+  workspacePlanCredits: number;
+  workspaceExtraCredits: number;
+  syncWorkspaceCreditsUpdate: (planCredits: number, extraCredits: number) => boolean;
+  syncWorkspaceSubscriptionUpdate: (subscription: User['subscription'], plan: User['plan']) => boolean;
 }
 
 interface LoginCredentials {
@@ -50,8 +52,64 @@ export interface User {
   workspaceId: string;
   name: string;
   email: string;
-  provider: 'google' | 'facebook' | 'password';
-  emailVerified: boolean;
+  provider?: 'google' | 'facebook' | 'password';
+  emailVerified?: boolean;
+
+  workspacePlanCredits: number;
+  workspaceExtraCredits: number;
+
+  firstName?: string;
+  lastName?: string;
+  avatar?: string;
+
+  smartRecharge?: {
+    threshold: number;
+    rechargeAmount: number;
+    active: boolean;
+  };
+
+  subscription?: {
+    status: string;
+    currentPeriodEnd: string;
+    trialEnd?: string;
+    customStripePriceId?: string | null;
+    featureOverrides?: string[] | null;
+    creditsLimitOverrides?: number | null;
+    agentLimitOverrides?: number | null;
+    trainingTextLimitOverrides?: number | null;
+    trainingWebsiteLimitOverrides?: number | null;
+    trainingVideoLimitOverrides?: number | null;
+    trainingDocumentLimitOverrides?: number | null;
+    cancelAtPeriodEnd: boolean | null,
+    canceledAt: string | null,
+  };
+
+  plan?: {
+    agentLimit: number;
+    amount: number;
+    creditsLimit: number;
+    currency: string;
+    description: string;
+    features?: string[];
+    id: string;
+    interval: string;
+    intervalCount: number;
+    isEnterprise: boolean;
+    name: string;
+    trainingDocumentLimit: number;
+    trainingTextLimit: number;
+    trainingVideoLimit: number;
+    trainingWebsiteLimit: number;
+    trialDays: number;
+  };
+
+  stripePriceDetails?: {
+    id: string;
+    amount: number;
+    currency: string;
+    interval: string;
+    intervalCount: number;
+  };
 }
 
 interface AuthProviderProps {
@@ -76,7 +134,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // State to track latest provider
   const [latestProvider, setLatestProvider] = useState<string | null>(null);
 
-  const [workspaceCredits, setWorkspaceCredits] = useState<number>(0);
+  const [workspacePlanCredits, setWorkspacePlanCredits] = useState<number>(user?.workspacePlanCredits || 0);
+  const [workspaceExtraCredits, setWorkspaceExtraCredits] = useState<number>(user?.workspaceExtraCredits || 0);
 
   // On component mount, check if token exists in localStorage
   useEffect(() => {
@@ -96,33 +155,53 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setLoading(false);
   }, []);
 
-  // On component mount, fetch up-to-date workspace credits;
+  // On component mount:
+  // 1. fetch up-to-date workspace credits if authenticated
+  // 2. fetch up-to-date subscription and plan data if authenticated
   useEffect(() => {
-    const fetchWorkspaceCredits = async (workspaceId: string) => {
-      const response = await fetch(
-        `${env.API_URL}/workspaces/${workspaceId}/credits`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          } as const,
-        }
-      );
+    const fetchWorkspaceData = async (workspaceId: string) => {
+      try {
+        const [creditsResponse, subscriptionResponse] = await Promise.all([
+          fetch(`${env.API_URL}/credits/remaining/${workspaceId}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            } as const,
+          }),
+          fetch(`${env.API_URL}/stripe/billing/status/${workspaceId}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            } as const,
+          }),
+        ]);
 
-      const data = await response.json();
+        const [creditsData, subscriptionData] = await Promise.all([
+          creditsResponse.json(),
+          subscriptionResponse.json(),
+        ]);
 
-      if (data.error) {
-        throw new Error(data.error);
+        if (creditsData.error) throw new Error(creditsData.error);
+        if (subscriptionData.error) throw new Error(subscriptionData.error);
+
+        setWorkspacePlanCredits(creditsData.data.planCreditsRemaining);
+        setWorkspaceExtraCredits(creditsData.data.extraCreditsRemaining);
+        syncWorkspaceSubscriptionUpdate(
+          subscriptionData.data.subscription,
+          subscriptionData.data.plan
+        );
+      } catch (error) {
+        console.error('Error fetching workspace data:', error);
       }
-
-      setWorkspaceCredits(data.data.credits);
     };
 
     if (user?.workspaceId) {
-      fetchWorkspaceCredits(user.workspaceId);
+      fetchWorkspaceData(user.workspaceId);
     }
   }, [user?.workspaceId]);
+  
 
   const login = async (credentials: LoginCredentials): Promise<Result> => {
     try {
@@ -151,12 +230,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Store user in localStorage
       localStorage.setItem('app:user', JSON.stringify(userData));
       // Store latest provider in localStorage
-      localStorage.setItem('app:latest-provider', userData.provider);
+      localStorage.setItem('app:latest-provider', userData.provider as string);
 
       // Update state
       setToken(newToken);
       setUser(userData);
-      setLatestProvider(userData.provider);
+      setLatestProvider(userData.provider as string);
       setIsAuthenticated(true);
 
       return { success: true };
@@ -217,12 +296,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Store user in localStorage
       localStorage.setItem('app:user', JSON.stringify(userData));
       // Store latest provider in localStorage
-      localStorage.setItem('app:latest-provider', userData.provider);
+      localStorage.setItem('app:latest-provider', userData.provider as string);
 
       // Update state
       setToken(newToken);
       setUser(userData);
-      setLatestProvider(userData.provider);
+      setLatestProvider(userData.provider as string);
+
       setIsAuthenticated(true);
 
       return { success: true };
@@ -276,12 +356,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Store user in localStorage
       localStorage.setItem('app:user', JSON.stringify(userData));
       // Store latest provider in localStorage
-      localStorage.setItem('app:latest-provider', userData.provider);
+      localStorage.setItem('app:latest-provider', userData.provider as string);
 
       // Update state
       setToken(token);
       setUser(userData);
-      setLatestProvider(userData.provider);
+      setLatestProvider(userData.provider as string);
+
       setIsAuthenticated(true);
 
       return { success: true };
@@ -345,6 +426,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setToken(null);
       setUser(null);
       setIsAuthenticated(false);
+      setWorkspacePlanCredits(0);
+      setWorkspaceExtraCredits(0);
 
       return { success: true };
     } catch (error: unknown) {
@@ -433,11 +516,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const syncWorkspaceCreditsUpdate = (credits: number) => {
+  const syncWorkspaceCreditsUpdate = (planCredits: number, extraCredits: number) => {
     if (!user) return false;
 
-    setWorkspaceCredits(credits);
+    setWorkspacePlanCredits(planCredits);
+    setWorkspaceExtraCredits(extraCredits);
 
+    return true;
+  };
+
+  const syncWorkspaceSubscriptionUpdate = (
+    subscription: User['subscription'],
+    plan: User['plan']
+  ): boolean => {
+    if (!user) return false;
+
+    const updatedUser: User = {
+      ...user,
+      subscription,
+      plan,
+    };
+
+    setUser(updatedUser);
+    localStorage.setItem('app:user', JSON.stringify(updatedUser));
     return true;
   };
 
@@ -454,8 +555,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout,
     resetPassword,
 
-    workspaceCredits,
+    workspacePlanCredits,
+    workspaceExtraCredits,
     syncWorkspaceCreditsUpdate,
+
+    syncWorkspaceSubscriptionUpdate
   };
 
   return (

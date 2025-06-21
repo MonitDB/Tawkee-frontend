@@ -2,7 +2,7 @@ import { createContext, useEffect, useRef, ReactNode, useContext } from 'react';
 import { io, Socket } from 'socket.io-client';
 import env from '../config/env';
 
-import { useAuth } from './AuthContext';
+import { useAuth, User } from './AuthContext';
 import { useAgents } from './AgentsContext';
 import { ChatDto } from '../services/chatService';
 import { useHttpResponse } from './ResponseNotifier';
@@ -38,7 +38,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
   const socketRef = useRef<Socket | null>(null);
 
   const { notify } = useHttpResponse();
-  const { user, syncWorkspaceCreditsUpdate } = useAuth();
+  const { user, syncWorkspaceSubscriptionUpdate, syncWorkspaceCreditsUpdate } = useAuth();
   const {
     syncAgentChannelConnectionUpdate,
     syncAgentMessageChatUpdate,
@@ -88,8 +88,12 @@ export function SocketProvider({ children }: SocketProviderProps) {
       }
     };
 
-    const handleWorkspaceCreditsUpdate = (data: { credits: number }) => {
-      syncWorkspaceCreditsUpdate(data.credits);
+    const handleWorkspaceSubscriptionUpdate = (data: { subscription: User["subscription"], plan: User["plan"] }) => {
+      syncWorkspaceSubscriptionUpdate(data.subscription, data.plan);
+    }
+
+    const handleWorkspaceCreditsUpdate = (data: { planCredits: number, extraCredits: number }) => {
+      syncWorkspaceCreditsUpdate(data.planCredits, data.extraCredits);
     };
 
     const handleSocketError = (error: ErrorPayload) => {
@@ -119,6 +123,11 @@ export function SocketProvider({ children }: SocketProviderProps) {
       );
 
       socketRef.current.on(
+        'subscriptionUpdated',
+        handleWorkspaceSubscriptionUpdate
+      )
+
+      socketRef.current.on(
         'workspaceCreditsUpdate',
         handleWorkspaceCreditsUpdate
       );
@@ -145,6 +154,11 @@ export function SocketProvider({ children }: SocketProviderProps) {
             'agentScheduleSettingsUpdate',
             handleAgentScheduleSettingsUpdate
           );
+
+          socketRef.current.off(
+            'subscriptionUpdated',
+            handleWorkspaceSubscriptionUpdate
+          )
 
           socketRef.current.off(
             'workspaceCreditsUpdate',
