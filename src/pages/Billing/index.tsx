@@ -24,7 +24,11 @@ export default function Billing() {
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
 
   const { token, user, workspacePlanCredits, workspaceExtraCredits } = useAuth();
-  const { openCustomerPortal, purchaseCredits } = useStripeService(token as string);
+  const { 
+    openCustomerPortal,
+    purchaseCredits,
+    updateSmartRechargeSetting
+} = useStripeService(token as string);
 
   const { smartRecharge, plan, subscription } = user as User;
 
@@ -62,6 +66,14 @@ export default function Billing() {
 
   const handlePurchaseExtraCredits = async () => {
     await purchaseCredits({ workspaceId: user?.workspaceId as string, credits: rechargeAmount});
+  };
+
+  const handleUpdateSmartRechargeSetting = async () => {
+    await updateSmartRechargeSetting(user?.workspaceId as string, {
+        threshold: autoRechargeThreshold,
+        rechargeAmount: autoRechargeAmount,
+        active: autoRechargeEnabled
+    });
   };
 
   return (
@@ -188,26 +200,25 @@ export default function Billing() {
                     }
                     label={autoRechargeEnabled ? 'Enabled' : 'Not Enabled'}
                   />
-
-                  {autoRechargeEnabled && (
                     <Box sx={{ display: 'flex', gap: 2, mt: 2, alignItems: 'center' }}>
-                      <TextField
-                        label="Trigger when below"
-                        type="number"
-                        value={autoRechargeThreshold}
-                        onChange={(e) => setRechargeThreshold(Number(e.target.value))}
-                        size="small"
-                      />
-                      <TextField
-                        label="Recharge amount"
-                        type="number"
-                        value={autoRechargeAmount}
-                        onChange={(e) => setAutoRechargeAmount(Number(e.target.value))}
-                        size="small"
-                      />
-                      <Button variant="contained">Save</Button>
+                        <TextField
+                            label="Trigger when below"
+                            type="number"
+                            value={autoRechargeThreshold}
+                            onChange={(e) => setRechargeThreshold(Number(e.target.value))}
+                            size="small"
+                            disabled={!autoRechargeEnabled}
+                        />
+                        <TextField
+                            label="Recharge amount"
+                            type="number"
+                            value={autoRechargeAmount}
+                            onChange={(e) => setAutoRechargeAmount(Number(e.target.value))}
+                            size="small"
+                            disabled={!autoRechargeEnabled}
+                        />
+                        <Button variant="contained" onClick={handleUpdateSmartRechargeSetting}>Save</Button>
                     </Box>
-                  )}
                 </CardContent>
               </Card>
             </>

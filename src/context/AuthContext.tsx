@@ -24,6 +24,7 @@ interface AuthContextType {
   workspaceExtraCredits: number;
   syncWorkspaceCreditsUpdate: (planCredits: number, extraCredits: number) => boolean;
   syncWorkspaceSubscriptionUpdate: (subscription: User['subscription'], plan: User['plan']) => boolean;
+  syncWorkspaceSmartRechargeUpdate: (data: any) => boolean;
 }
 
 interface LoginCredentials {
@@ -542,6 +543,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return true;
   };
 
+  const syncWorkspaceSmartRechargeUpdate = (
+    data: User['smartRecharge']
+  ): boolean => {
+    if (!user) return false;
+
+    const updatedUser: User = {
+      ...user,
+      smartRecharge: {
+        threshold: data?.threshold as number,
+        rechargeAmount: data?.rechargeAmount as number,
+        active: data?.active as boolean
+      }
+    };
+
+    setUser(updatedUser);
+    localStorage.setItem('app:user', JSON.stringify(updatedUser));
+    return true;
+  };
+
   // The context value object that will be provided
   const authContextValue: AuthContextType = {
     token,
@@ -559,7 +579,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     workspaceExtraCredits,
     syncWorkspaceCreditsUpdate,
 
-    syncWorkspaceSubscriptionUpdate
+    syncWorkspaceSubscriptionUpdate,
+    syncWorkspaceSmartRechargeUpdate
   };
 
   return (

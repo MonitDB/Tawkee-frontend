@@ -32,6 +32,12 @@ export interface ChangeOrSubscribeResponse {
   subscriptionId?: string;
 }
 
+export interface UpdateSmartRechargeSettingDto {
+  threshold?: number;
+  rechargeAmount?: number;
+  active?: boolean;
+}
+
 // Configuração do serviço Stripe
 
 interface StripeServiceConfig {
@@ -149,6 +155,25 @@ export class StripeService {
     } catch (error) {
         throw error;
     }
+  }
+
+  /**
+   * Atualiza a configuração de recarga inteligente de créditos para um workspace
+   */
+  async updateSmartRechargeSetting(
+    workspaceId: string,
+    data: UpdateSmartRechargeSettingDto
+  ): Promise<{ success: boolean }> {
+    const response = await fetch(
+      `${this.apiUrl}/credits/smart-recharge/${workspaceId}`,
+      {
+        method: 'PATCH',
+        headers: this.headers,
+        body: JSON.stringify(data),
+      }
+    );
+
+    return this.handleJsonResponse<{ success: boolean }>(response);
   }
 
   /**

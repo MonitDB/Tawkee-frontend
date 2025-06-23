@@ -1,9 +1,11 @@
 import { useState, useCallback, useMemo } from 'react';
-import { StripeService } from '../services/stripeService';
+import { StripeService, UpdateSmartRechargeSettingDto } from '../services/stripeService';
 import { env } from '../config/env';
 import { useHttpResponse } from '../context/ResponseNotifier';
+import { useAuth } from '../context/AuthContext';
 
 export const useStripeService = (token: string) => {
+  const { syncWorkspaceSmartRechargeUpdate } = useAuth();
   const { notify } = useHttpResponse();
 
   const [stripeLoading, setStripeLoading] = useState<boolean>(false);
@@ -109,6 +111,31 @@ export const useStripeService = (token: string) => {
     }
   }, [service, notify]);
 
+
+  /**
+   * Atualiza a configuração de recarga automática do workspace
+   */
+  const updateSmartRechargeSetting = useCallback(
+    async (workspaceId: string, data: UpdateSmartRechargeSettingDto) => {
+      try {
+        setStripeLoading(true);
+        const result = await service.updateSmartRechargeSetting(workspaceId, data);
+
+        syncWorkspaceSmartRechargeUpdate(result);
+
+        notify('Smart recharge settings updated successfully!', 'success');
+        return result;
+      } catch (error: unknown) {
+        console.log({error});
+        notify(error as string, 'error');
+        return { success: false };
+      } finally {
+        setStripeLoading(false);
+      }
+    },
+    [service, notify]
+  );
+
   return {
     stripeLoading,
     subscribeOrChangePlan,
@@ -116,5 +143,6 @@ export const useStripeService = (token: string) => {
     getAvailableProducts,
     getBillingStatus,
     openCustomerPortal,
+    updateSmartRechargeSetting
   };
 };
