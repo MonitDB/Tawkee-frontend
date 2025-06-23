@@ -125,9 +125,8 @@ export const useStripeService = (token: string) => {
 
         notify('Smart recharge settings updated successfully!', 'success');
         return result;
-      } catch (error: unknown) {
-        console.log({error});
-        notify(error as string, 'error');
+      } catch {
+        notify('Failure to update smart recharge settings!', 'error');
         return { success: false };
       } finally {
         setStripeLoading(false);

@@ -27,7 +27,8 @@ export default function Billing() {
   const { 
     openCustomerPortal,
     purchaseCredits,
-    updateSmartRechargeSetting
+    updateSmartRechargeSetting,
+    stripeLoading
 } = useStripeService(token as string);
 
   const { smartRecharge, plan, subscription } = user as User;
@@ -195,7 +196,10 @@ export default function Billing() {
                     control={
                       <Switch
                         checked={autoRechargeEnabled}
-                        onChange={() => setAutoRechargeEnabled(!autoRechargeEnabled)}
+                        onChange={() => {
+                            setAutoRechargeEnabled(!autoRechargeEnabled);
+                            handleUpdateSmartRechargeSetting()
+                        }}
                       />
                     }
                     label={autoRechargeEnabled ? 'Enabled' : 'Not Enabled'}
@@ -217,7 +221,21 @@ export default function Billing() {
                             size="small"
                             disabled={!autoRechargeEnabled}
                         />
-                        <Button variant="contained" onClick={handleUpdateSmartRechargeSetting}>Save</Button>
+                        <Button
+                            variant="contained"
+                            onClick={handleUpdateSmartRechargeSetting}
+                            disabled={stripeLoading || !autoRechargeEnabled}
+                            sx={{
+                                '&.Mui-disabled': {
+                                    color:
+                                    resolvedMode == 'dark'
+                                        ? theme.palette.grey[400]
+                                        : theme.palette.grey[500],
+                                }                                
+                            }}
+                        >
+                            Save Settings
+                        </Button>
                     </Box>
                 </CardContent>
               </Card>
