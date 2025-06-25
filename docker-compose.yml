@@ -42,3 +42,7 @@ services:
 # Para rodar em desenvolvimento: docker-compose up frontend-dev --build
 # Para rodar em produção: docker-compose up frontend-prod --build
 # Para parar: docker-compose down
+
+networks:
+  tawkee-network:
+    external: true
