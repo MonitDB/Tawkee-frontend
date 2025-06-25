@@ -39,9 +39,11 @@ services:
     # volumes:
     #   - ./nginx.conf:/etc/nginx/conf.d/default.conf # Se você descomentou no Dockerfile.prod
     networks:
-      tawkee-network:
-        external: true
+      - tawkee-network
 
 # Para rodar em desenvolvimento: docker-compose up frontend-dev --build
 # Para rodar em produção: docker-compose up frontend-prod --build
 # Para parar: docker-compose down
+    networks:
+      tawkee-network:
+        external: true
