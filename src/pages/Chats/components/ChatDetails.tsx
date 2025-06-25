@@ -682,7 +682,6 @@ export function ChatDetails({
         handleStartHumanAttendance={handleStartHumanAttendance}
         onMessageSent={(data) => {
           syncAgentMessageChatUpdate(data);
-          console.log(data);
         }}
       />
     </Box>

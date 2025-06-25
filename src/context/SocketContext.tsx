@@ -4,7 +4,7 @@ import env from '../config/env';
 
 import { useAuth, User } from './AuthContext';
 import { useAgents } from './AgentsContext';
-import { ChatDto } from '../services/chatService';
+import { InteractionWithMessagesDto, MessageDto } from '../services/chatService';
 import { useHttpResponse } from './ResponseNotifier';
 import { ScheduleSettingsDto } from '../pages/AgentDetails/components/dialogs/GoogleCalendarConfigDialog';
 
@@ -17,6 +17,24 @@ interface ChannelConnectionStatusUpdatePayload {
   agentId: string;
   channelId: string;
   connectionStatus: string;
+}
+
+export interface MessageChatUpdatePayload {
+  chat: {
+    id: string,
+    agentId: string,
+    title: string,
+    name: string,
+    userName: string,
+    userPicture: string,
+    whatsappPhone: string,
+    humanTalk: boolean,
+    read: boolean,
+    finished: boolean,
+    unReadCount: number     
+  };
+  latestInteraction: InteractionWithMessagesDto;
+  latestMessage: MessageDto
 }
 
 interface ErrorPayload {
@@ -71,7 +89,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
       );
     };
 
-    const handleMessageChatUpdate = (data: ChatDto) => {
+    const handleMessageChatUpdate = (data: MessageChatUpdatePayload) => {
       syncAgentMessageChatUpdate(data);
     };
 

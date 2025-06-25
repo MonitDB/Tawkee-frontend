@@ -16,12 +16,14 @@ import {
   DialogActions,
   Chip,
   CircularProgress,
+  useTheme,
+  useColorScheme,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import SpeedDial from '@mui/material/SpeedDial';
-import MicIcon from '@mui/icons-material/Mic';
-import StopIcon from '@mui/icons-material/Stop';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+// import MicIcon from '@mui/icons-material/Mic';
+// import StopIcon from '@mui/icons-material/Stop';
+// import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import SpeedDialIcon from '@mui/material/SpeedDialIcon';
 import SpeedDialAction from '@mui/material/SpeedDialAction';
 import ImageIcon from '@mui/icons-material/Image';
@@ -29,9 +31,10 @@ import AudiotrackIcon from '@mui/icons-material/Audiotrack';
 import DescriptionIcon from '@mui/icons-material/Description';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import CloseIcon from '@mui/icons-material/Close';
+import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 import { useAuth } from '../../../context/AuthContext';
 import { useHttpResponse } from '../../../context/ResponseNotifier';
-import { ChatDto } from '../../../services/chatService';
+import { MessageChatUpdatePayload } from '../../../context/SocketContext';
 
 // Interfaces
 interface ChatComponentProps {
@@ -45,7 +48,7 @@ interface ChatComponentProps {
   isLargeScreen: boolean;
   isSmallScreen: boolean;
   handleStartHumanAttendance: (chatId: string) => void;
-  onMessageSent?: (data: ChatDto) => void; // Callback para atualizar a lista de mensagens
+  onMessageSent?: (data: MessageChatUpdatePayload) => void; // Callback para atualizar a lista de mensagens
 }
 
 interface SendMessageDto {
@@ -56,7 +59,7 @@ interface SendMessageDto {
 interface MediaDto {
   url: string;
   caption: string;
-  type: 'image' | 'audio' | 'document';
+  type: 'image' | 'audio' | 'document' | 'video';
   mimetype: string;
   filename: string;
 }
@@ -74,6 +77,10 @@ export function MediaUploadDialog({
   onConfirm,
   mediaType,
 }: MediaUploadDialogProps) {
+  const theme = useTheme();
+  const { mode, systemMode } = useColorScheme();
+  const resolvedMode = (systemMode || mode) as 'light' | 'dark';
+
   const [caption, setCaption] = useState('');
   const [filename, setFilename] = useState('');
   const [mimetype, setMimetype] = useState('');
@@ -81,17 +88,9 @@ export function MediaUploadDialog({
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [url, setUrl] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-  const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
-    null
-  );
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const audioUrlRef = useRef<string | null>(null);
-  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
-  const [recordingProgress, setRecordingProgress] = useState(0);
-  const maxRecordingSeconds = 30;
-  const recordingIntervalRef = useRef<number | null>(null);
+  const MAX_FILE_SIZE_MB = 25;
 
   const getMimeTypePattern = (type: MediaDto['type']) => {
     switch (type) {
@@ -101,6 +100,8 @@ export function MediaUploadDialog({
         return 'audio/*';
       case 'document':
         return '.pdf,.doc,.docx,.txt,.rtf';
+      case 'video':
+        return 'video/*';
       default:
         return '*/*';
     }
@@ -108,11 +109,19 @@ export function MediaUploadDialog({
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
+    setError(null);
     if (selectedFile) {
+      const sizeInMB = selectedFile.size / (1024 * 1024);
+      if (sizeInMB > MAX_FILE_SIZE_MB) {
+        setError(`File exceeds 25MB limit (${sizeInMB.toFixed(2)} MB).`);
+        return;
+      }
+
       setUploading(true);
       const reader = new FileReader();
       reader.onload = () => {
-        const base64 = reader.result as string;
+        const dataUrl = reader.result as string;
+        const base64 = dataUrl.split(',')[1];
         setUrl(base64);
         setFilename(selectedFile.name);
         setMimetype(selectedFile.type);
@@ -120,63 +129,6 @@ export function MediaUploadDialog({
         setUploading(false);
       };
       reader.readAsDataURL(selectedFile);
-    }
-  };
-
-  const handleStartRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      const chunks: BlobPart[] = [];
-
-      recorder.ondataavailable = (e) => chunks.push(e.data);
-      recorder.onstop = () => {
-        clearInterval(recordingIntervalRef.current!);
-        setRecordingProgress(0);
-
-        const blob = new Blob(chunks, { type: 'audio/webm' });
-        setAudioBlob(blob);
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64 = reader.result as string;
-          setUrl(base64);
-          setFilename('gravacao.webm');
-          setMimetype('audio/webm');
-        };
-        reader.readAsDataURL(blob);
-        stream.getTracks().forEach((track) => track.stop());
-      };
-
-      recorder.start();
-      setMediaRecorder(recorder);
-      setIsRecording(true);
-
-      let elapsed = 0;
-      recordingIntervalRef.current = setInterval(() => {
-        elapsed += 1;
-        setRecordingProgress((elapsed / maxRecordingSeconds) * 100);
-        if (elapsed >= maxRecordingSeconds) {
-          handleStopRecording();
-        }
-      }, 1000);
-    } catch (err) {
-      console.error('Erro ao iniciar gravação:', err);
-    }
-  };
-
-  const handleStopRecording = () => {
-    mediaRecorder?.stop();
-    setIsRecording(false);
-    setMediaRecorder(null);
-  };
-
-  const handlePlayAudio = () => {
-    if (audioBlob) {
-      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
-      audioUrlRef.current = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrlRef.current);
-      audioPlayerRef.current = audio;
-      audio.play();
     }
   };
 
@@ -188,122 +140,96 @@ export function MediaUploadDialog({
       setFilename('');
       setMimetype('');
       setFile(null);
-      setAudioBlob(null);
-      setRecordingProgress(0);
       onClose();
     }
   };
 
   useEffect(() => {
     return () => {
-      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
-      if (recordingIntervalRef.current)
-        clearInterval(recordingIntervalRef.current);
+      if (fileInputRef.current?.files?.length) {
+        URL.revokeObjectURL(fileInputRef.current.value);
+      }
     };
   }, []);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        Anexar{' '}
+        Attach{' '}
         {mediaType === 'image'
-          ? 'Imagem'
+          ? 'Image'
           : mediaType === 'audio'
-            ? 'Áudio'
-            : 'Documento'}
+          ? 'Audio'
+          : mediaType === 'document'
+          ? 'Document'
+          : 'Video'}
       </DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-          {mediaType === 'audio' && (
-            <Box display="flex" flexDirection="column" gap={1}>
-              <Box display="flex" gap={1} alignItems="center">
-                {!isRecording ? (
-                  <Button
-                    variant="outlined"
-                    onClick={handleStartRecording}
-                    startIcon={<MicIcon />}
-                  >
-                    Gravar áudio
-                  </Button>
-                ) : (
-                  <Button
-                    variant="contained"
-                    color="error"
-                    onClick={handleStopRecording}
-                    startIcon={<StopIcon />}
-                  >
-                    Parar gravação
-                  </Button>
-                )}
-                {audioBlob && (
-                  <Button
-                    variant="text"
-                    onClick={handlePlayAudio}
-                    startIcon={<PlayArrowIcon />}
-                  >
-                    Ouvir
-                  </Button>
-                )}
-              </Box>
-              {isRecording && (
-                <LinearProgress
-                  variant="determinate"
-                  value={recordingProgress}
+          <Box>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              accept={getMimeTypePattern(mediaType)}
+              style={{ display: 'none' }}
+            />
+            <Button
+              variant="outlined"
+              onClick={() => fileInputRef.current?.click()}
+              startIcon={<AttachFileIcon />}
+              fullWidth
+            >
+              Select File
+            </Button>
+            {uploading && <CircularProgress size={20} sx={{ mt: 1 }} />}
+            {file && (
+              <Box sx={{ mt: 1 }}>
+                <Chip
+                  label={file.name}
+                  onDelete={() => setFile(null)}
+                  deleteIcon={<CloseIcon />}
                 />
-              )}
-            </Box>
-          )}
-
-          {!isRecording && (
-            <Box>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileSelect}
-                accept={getMimeTypePattern(mediaType)}
-                style={{ display: 'none' }}
-              />
-              <Button
-                variant="outlined"
-                onClick={() => fileInputRef.current?.click()}
-                startIcon={<AttachFileIcon />}
-                fullWidth
-              >
-                Selecionar Arquivo
-              </Button>
-              {uploading && <CircularProgress size={20} sx={{ mt: 1 }} />}
-              {file && (
-                <Box sx={{ mt: 1 }}>
-                  <Chip
-                    label={file.name}
-                    onDelete={() => setFile(null)}
-                    deleteIcon={<CloseIcon />}
+              </Box>
+            )}
+            {error && (
+              <Typography color="error" variant="body2" mt={1}>
+                {error}
+              </Typography>
+            )}
+            {file && mediaType === 'video' && (
+              <Box mt={2}>
+                <video controls width="100%">
+                  <source
+                    src={`data:${mimetype};base64,${url}`}
+                    type={mimetype}
                   />
-                </Box>
-              )}
-            </Box>
-          )}
+                  Your browser does not support the video element.
+                </video>
+              </Box>
+            )}
+          </Box>
 
           <TextField
-            label="Legenda"
+            label="Caption"
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
             fullWidth
             multiline
             rows={2}
-            placeholder="Adicione uma legenda..."
+            placeholder="Add a caption..."
           />
 
           <TextField
-            label="Nome do arquivo"
+            label="File Name"
             value={filename}
             onChange={(e) => setFilename(e.target.value)}
             fullWidth
-            placeholder="arquivo.jpg"
+            placeholder="file.jpg"
           />
 
           <TextField
-            label="Tipo MIME"
+            label="MIME Type"
             value={mimetype}
             onChange={(e) => setMimetype(e.target.value)}
             fullWidth
@@ -312,13 +238,21 @@ export function MediaUploadDialog({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancelar</Button>
+        <Button onClick={onClose}>Cancel</Button>
         <Button
           onClick={handleConfirm}
           variant="contained"
-          disabled={!url || !caption || !filename || !mimetype}
+          disabled={!url || !caption || !filename || !mimetype || !!error}
+          sx={{
+            '&.Mui-disabled': {
+              color:
+                resolvedMode == 'dark'
+                  ? theme.palette.grey[400]
+                  : theme.palette.grey[500],
+            },
+          }}
         >
-          Confirmar
+          Confirm
         </Button>
       </DialogActions>
     </Dialog>
@@ -347,18 +281,20 @@ export default function ChatInput({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() && !mediaToSend) return;
+  const handleSendMessage = async (message: string, media?: MediaDto) => {
+    console.log({message, media});
+
+    if (!message.trim() && !media) return;
 
     setSending(true);
     setError(null);
 
     const messagePayload: SendMessageDto = {
-      message: newMessage.trim(),
+      message: message.trim(),
     };
 
-    if (mediaToSend) {
-      messagePayload.media = mediaToSend;
+    if (media) {
+      messagePayload.media = media;
     }
 
     try {
@@ -387,7 +323,7 @@ export default function ChatInput({
 
       // Chamar callback para atualizar a lista de mensagens
       if (onMessageSent) {
-        onMessageSent(data.data as ChatDto);
+        onMessageSent(data.data as MessageChatUpdatePayload);
       }
     } catch (error) {
       notify(error as string, 'error');
@@ -406,7 +342,7 @@ export default function ChatInput({
   };
 
   const handleMediaConfirm = (media: MediaDto) => {
-    setMediaToSend(media);
+    handleSendMessage(media.caption, media);
   };
 
   const actions = [
@@ -425,6 +361,11 @@ export default function ChatInput({
       name: 'Documento',
       onClick: () => handleMediaSelect('document'),
     },
+    // {
+    //   icon: <VideoLibraryIcon />,
+    //   name: 'Video',
+    //   onClick: () => handleMediaSelect('video'),
+    // },
   ];
 
   const messageInputSection = useMemo(
@@ -479,7 +420,7 @@ export default function ChatInput({
                     onKeyPress={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
-                        handleSendMessage();
+                        handleSendMessage(newMessage);
                       }
                     }}
                     multiline
@@ -512,7 +453,7 @@ export default function ChatInput({
                   </SpeedDial>
                   <IconButton
                     color="primary"
-                    onClick={handleSendMessage}
+                    onClick={() => handleSendMessage(newMessage)}
                     disabled={(!newMessage.trim() && !mediaToSend) || sending}
                     sx={{ height: 50 }}
                   >
