@@ -38,11 +38,10 @@ services:
     # Adicione a cópia do nginx.conf no Dockerfile.prod se você quiser usar a configuração personalizada
     # volumes:
     #   - ./nginx.conf:/etc/nginx/conf.d/default.conf # Se você descomentou no Dockerfile.prod
+    networks:
+      tawkee-network:
+        external: true
 
 # Para rodar em desenvolvimento: docker-compose up frontend-dev --build
 # Para rodar em produção: docker-compose up frontend-prod --build
 # Para parar: docker-compose down
-
-networks:
-  tawkee-network:
-    external: true
