@@ -38,12 +38,45 @@ export interface UpdateSmartRechargeSettingDto {
   active?: boolean;
 }
 
+export interface UpdatePlanFromFormDto {
+  name: string;
+  description: string;
+  price: number;
+
+  creditsLimit?: number | null;
+  agentsLimit?: number | null;
+  trialDays?: number | null;
+  trainingTextLimit?: number | null;
+  trainingDocumentLimit?: number | null;
+  trainingVideoLimit?: number | null;
+  trainingWebsiteLimit?: number | null;
+
+  isActive: boolean;
+  isEnterprise: boolean;
+  features: string[];
+}
+
 // Configuração do serviço Stripe
 
 interface StripeServiceConfig {
   token: string;
   apiUrl: string;
 }
+
+export interface SubscriptionOverrideUpdateDto {
+  subscriptionId: string;
+  overrides: {
+    featureOverrides?: string[];
+    customStripePriceId?: string;
+    creditsLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
+    agentLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
+    trainingTextLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
+    trainingWebsiteLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
+    trainingVideoLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
+    trainingDocumentLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
+  };
+}
+
 
 export class StripeService {
   private token: string;
@@ -172,6 +205,55 @@ export class StripeService {
         body: JSON.stringify(data),
       }
     );
+
+    return this.handleJsonResponse<{ success: boolean }>(response);
+  }
+
+  /**
+   * Cria um novo plano (Stripe + banco local) com base no formulário de criação
+   */
+  async createPlanFromForm(
+    dto: UpdatePlanFromFormDto,
+  ): Promise<{ message: string }> {
+    const response = await fetch(`${this.apiUrl}/stripe/plans/create-from-form`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(dto),
+    });
+
+    return this.handleJsonResponse<{ message: string }>(response);
+  }
+
+  /**
+   * Atualiza um plano existente (Stripe + banco local) com base no formulário de edição
+   */
+  async updatePlanFromForm(
+    dto: UpdatePlanFromFormDto,
+  ): Promise<{ message: string }> {
+    const response = await fetch(`${this.apiUrl}/stripe/plans/update-from-form`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(dto),
+    });
+
+    return this.handleJsonResponse<{ message: string }>(response);
+  }
+
+  /**
+   * Atualiza overrides (limites e recursos) para uma assinatura existente
+   */
+  async updateSubscriptionOverrides(
+    data: SubscriptionOverrideUpdateDto
+  ): Promise<{ success: boolean }> {
+    const response = await fetch(`${this.apiUrl}/stripe/subscription/update-overrides`, {
+      method: 'POST',
+      headers: this.headers,
+      body: JSON.stringify(data),
+    });
 
     return this.handleJsonResponse<{ success: boolean }>(response);
   }

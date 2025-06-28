@@ -63,6 +63,8 @@ export interface User {
   lastName?: string;
   avatar?: string;
 
+  createdAt?: string;
+
   smartRecharge?: {
     threshold: number;
     rechargeAmount: number;

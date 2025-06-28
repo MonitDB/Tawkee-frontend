@@ -18,6 +18,7 @@ import CreditsPerDayChart from './CreditsPerDayChart';
 import { useDashboardService } from '../../../hooks/useDashboardService';
 import { useAuth } from '../../../context/AuthContext';
 import { DashboardMetricsDto } from '../../../services/dashboardService';
+import DailyCreditBalanceChart from './DailyCreditBalanceChart';
 
 const ranges = [
   { label: '7 days', days: 7 },
@@ -280,6 +281,13 @@ export default function MainGrid() {
               columns={12}
               sx={{ mb: (theme) => theme.spacing(2) }}
             >
+              <Grid size={{ xs: 12 }}>
+                <DailyCreditBalanceChart
+                  startDate={startDate?.format('YYYY-MM-DD') ?? ''}
+                  endDate={endDate?.format('YYYY-MM-DD') ?? ''}
+                />
+              </Grid>
+              
               <Grid size={{ xs: 12, md: 3 }}>
                 <Stack
                   direction={{ xs: 'column', sm: 'row', md: 'column' }}

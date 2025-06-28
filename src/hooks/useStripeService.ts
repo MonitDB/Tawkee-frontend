@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { StripeService, UpdateSmartRechargeSettingDto } from '../services/stripeService';
+import { StripeService, SubscriptionOverrideUpdateDto, UpdatePlanFromFormDto, UpdateSmartRechargeSettingDto } from '../services/stripeService';
 import { env } from '../config/env';
 import { useHttpResponse } from '../context/ResponseNotifier';
 import { useAuth } from '../context/AuthContext';
@@ -56,7 +56,7 @@ export const useStripeService = (token: string) => {
         notify('Redirecting to purchase of credits...', 'info');
         window.location.href = url;
       } catch (error: unknown) {
-        notify(error as string, 'error');
+        notify((error as Error).message, 'error');
       } finally {
         setStripeLoading(false);
       }
@@ -73,7 +73,7 @@ export const useStripeService = (token: string) => {
       const response = await service.getProducts();
       return response;
     } catch (error: unknown) {
-      notify(error as string, 'error');
+      notify((error as Error).message, 'error');
     } finally {
       setStripeLoading(false);
     }
@@ -135,6 +135,67 @@ export const useStripeService = (token: string) => {
     [service, notify]
   );
 
+  /**
+   * Cria um novo plano no Stripe + backend
+  */
+  const createPlanFromForm = useCallback(
+    async (data: UpdatePlanFromFormDto) => {
+      try {
+        setStripeLoading(true);
+        const response = await service.createPlanFromForm(data);
+        notify('Plan created successfully!', 'success');
+        return response;
+      } catch (error: any) {
+        notify((error as Error).message, 'error');
+        throw error;
+      } finally {
+        setStripeLoading(false);
+      }
+    },
+    [service, notify]
+  );
+
+  /**
+   * Atualiza um plano existente no Stripe + backend
+  */
+  const updatePlanFromForm = useCallback(
+    async (data: UpdatePlanFromFormDto) => {
+      try {
+        setStripeLoading(true);
+        const response = await service.updatePlanFromForm(data);
+        notify('Plan updated successfully!', 'success');
+        return response;
+      } catch (error: any) {
+        notify((error as Error).message, 'error');
+        throw error;
+      } finally {
+        setStripeLoading(false);
+      }
+    },
+    [service, notify]
+  );
+
+  /**
+   * Atualiza overrides (limites personalizados) de uma assinatura
+   */
+  const updateSubscriptionOverrides = useCallback(
+    async (payload: SubscriptionOverrideUpdateDto) => {
+      try {
+        setStripeLoading(true);
+        const result = await service.updateSubscriptionOverrides(payload);
+        notify('Subscription overrides updated successfully!', 'success');
+        return result;
+      } catch (error: unknown) {
+        notify((error as Error).message || 'Error updating subscription overrides', 'error');
+        return { success: false };
+      } finally {
+        setStripeLoading(false);
+      }
+    },
+    [service, notify]
+  );
+
+
   return {
     stripeLoading,
     subscribeOrChangePlan,
@@ -142,6 +203,9 @@ export const useStripeService = (token: string) => {
     getAvailableProducts,
     getBillingStatus,
     openCustomerPortal,
-    updateSmartRechargeSetting
+    updateSmartRechargeSetting,
+    createPlanFromForm,
+    updatePlanFromForm,
+    updateSubscriptionOverrides
   };
 };

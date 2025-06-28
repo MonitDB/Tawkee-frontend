@@ -1,3 +1,5 @@
+import { Workspace } from "../pages/Workspaces";
+
 export interface TimeSeriesItemDto {
   date: string;
   total: number;
@@ -78,6 +80,12 @@ interface DashboardMetricsParams {
   endDate: string;
 }
 
+export interface DailyCreditBalanceItem {
+  date: string;
+  planCreditsRemaining: number;
+  extraCreditsRemaining: number;
+}
+
 export class DashboardService {
   private token: string;
   private apiUrl: string;
@@ -130,4 +138,153 @@ export class DashboardService {
       );
     }
   }
+
+  async listWorkspaces({
+    page = 1,
+  }: {
+    page?: number;
+  }): Promise<{
+    data: Workspace[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }> {
+    const url = new URL(`${this.apiUrl}/workspaces`);
+    url.searchParams.append('page', String(page));
+
+    console.log(`GET ${url.toString()}...`);
+
+    try {
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({}));
+        const message =
+          errorPayload.error || 'Failed to fetch workspace list';
+        throw new Error(message);
+      }
+
+      const data = await response.json();
+
+      console.log({
+        data: data.data as Workspace[],
+        total: data.meta.total,
+        page: data.meta.page,
+        pageSize: data.meta.pageSize,
+        totalPages: data.meta.totalPages,
+      });
+
+      return {
+        data: data.data as Workspace[],
+        total: data.meta.total,
+        page: data.meta.page,
+        pageSize: data.meta.pageSize,
+        totalPages: data.meta.totalPages,
+      };
+
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch')) {
+          throw new Error(
+            'Network error. Please check your internet connection.'
+          );
+        }
+        throw new Error(error.message);
+      }
+
+      throw new Error(
+        'Unexpected error occurred while fetching workspace list'
+      );
+    }
+  }
+
+  async getDetailedWorkspace(workspaceId: string): Promise<Workspace> {
+    const url = `${this.apiUrl}/workspaces/${workspaceId}/detailed`;
+    console.log(`GET ${url}...`);
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({}));
+        const message =
+          errorPayload.error || 'Failed to fetch detailed workspace';
+        throw new Error(message);
+      }
+
+      const data = await response.json();
+      return data.data as Workspace;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch')) {
+          throw new Error(
+            'Network error. Please check your internet connection.'
+          );
+        }
+        throw new Error(error.message);
+      }
+
+      throw new Error(
+        'Unexpected error occurred while fetching detailed workspace'
+      );
+    }
+  }
+
+  async getDailyCreditBalance(
+    workspaceId: string,
+    startDate?: string,
+    endDate?: string
+  ): Promise<DailyCreditBalanceItem[]> {
+    const url = new URL(`${this.apiUrl}/credits/daily-balance/${workspaceId}`);
+    if (startDate) url.searchParams.append('startDate', startDate);
+    if (endDate) url.searchParams.append('endDate', endDate);
+
+    console.log(`GET ${url.toString()}...`);
+
+    try {
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({}));
+        const message =
+          errorPayload.error || 'Failed to fetch daily credit balance';
+        throw new Error(message);
+      }
+
+      const data = await response.json();
+      return data.data as DailyCreditBalanceItem[];
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch')) {
+          throw new Error(
+            'Network error. Please check your internet connection.'
+          );
+        }
+        throw new Error(error.message);
+      }
+
+      throw new Error(
+        'Unexpected error occurred while fetching daily credit balance'
+      );
+    }
+  } 
 }

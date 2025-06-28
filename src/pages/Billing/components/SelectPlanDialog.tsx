@@ -40,23 +40,32 @@ export default function SelectPlanDialog({ open, onClose }: SelectPlanDialogProp
 
   useEffect(() => {
     async function fetchProductsAndPlan() {
-      setLoading(true);
-      const [productData, billing] = await Promise.all([
-        getAvailableProducts(),
-        getBillingStatus(user?.workspaceId as string),
-      ]);
-      setLoading(false);
+        try {
+          setLoading(true);
+          const [productData, billing] = await Promise.all([
+            getAvailableProducts(),
+            getBillingStatus(user?.workspaceId as string),
+          ]);
+          
+          if (productData) {
+            // Sort plans by price (ascending)
+            const sorted = productData.sort(
+              (a, b) => (a?.prices?.[0]?.unit_amount ?? 0) - (b?.prices?.[0]?.unit_amount ?? 0)
+            );
 
-      if (productData) {
-        // Sort plans by price (ascending)
-        const sorted = productData.sort(
-          (a, b) => (a?.prices?.[0]?.unit_amount ?? 0) - (b?.prices?.[0]?.unit_amount ?? 0)
-        );
-        setProducts(sorted);
+            // Filter plans: keep only active
+            const filteredProductData = sorted.filter(product => product.metadata?.isActive);
+
+            setProducts(filteredProductData);
+          }
+          
+          if (billing?.currentPlan) setCurrentPlan(billing.currentPlan);
+          setLoading(false); 
+
+        } catch {
+          onClose();        
+        }
       }
-
-      if (billing?.currentPlan) setCurrentPlan(billing.currentPlan);
-    }
 
     if (open) fetchProductsAndPlan();
   }, [getAvailableProducts, getBillingStatus, open]);
