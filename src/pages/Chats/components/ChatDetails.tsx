@@ -12,6 +12,7 @@ import {
   Typography,
   useMediaQuery,
   useTheme,
+  IconButton,
 } from '@mui/material';
 import { useAuth } from '../../../context/AuthContext';
 import { useChatService } from '../../../hooks/useChatService';
@@ -23,9 +24,17 @@ import {
   CheckCircle as CheckCircleIcon,
   Schedule as ScheduleIcon,
   Error as ErrorIcon,
+  // Image as ImageIcon,
+  AudioFile as AudioIcon,
+  // VideoFile as VideoIcon,
+  InsertDriveFile as DocumentIcon,
+  Download as DownloadIcon,
+  PlayArrow as PlayIcon,
+  Pause as PauseIcon,
 } from '@mui/icons-material';
 import ChatInput from './ChatInput';
 import { useAgents } from '../../../context/AgentsContext';
+
 
 // Helper function for throttling
 function throttle<T extends (...args: any[]) => any>(
@@ -75,12 +84,113 @@ const InteractionDivider = styled(Divider)(({ theme }) => ({
   },
 }));
 
+const MediaContainer = styled(Box)(({ theme }) => ({
+  borderRadius: theme.spacing(1),
+  overflow: 'hidden',
+  marginBottom: theme.spacing(1),
+  maxWidth: '100%',
+}));
+
+const AudioPlayer = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(1),
+  padding: theme.spacing(1),
+  backgroundColor: theme.palette.action.hover,
+  borderRadius: theme.spacing(1),
+  minWidth: 200,
+}));
+
+const DocumentCard = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(1),
+  padding: theme.spacing(1.5),
+  backgroundColor: theme.palette.action.hover,
+  borderRadius: theme.spacing(1),
+  border: `1px solid ${theme.palette.divider}`,
+  cursor: 'pointer',
+  '&:hover': {
+    backgroundColor: theme.palette.action.selected,
+  },
+}));
+
 interface ChatDetailsProps {
   selectedChat: ChatDto;
   totalInteractions: number;
   interactionLoading: boolean;
   onScrollToTop?: () => void;
 }
+
+export const DocumentViewer = ({ 
+  documentUrl, fileName, mimetype, type
+}: {
+  documentUrl?: string,
+  fileName?: string,
+  mimetype?: string,
+  type?: string;
+}) => {
+  if (!documentUrl && !(type === 'document' && fileName)) return null;
+
+  const handleDownload = () => {
+    if (!documentUrl) return;
+
+    try {
+      const base64 = documentUrl;
+      const mimeType = mimetype || 'application/octet-stream';
+
+      // Validação simples (evita erro do atob se a string não for válida)
+      if (!/^[A-Za-z0-9+/=]+$/.test(base64)) {
+        throw new Error('Base64 string inválida');
+      }
+
+      const byteCharacters = atob(base64);
+      const byteArray = new Uint8Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteArray[i] = byteCharacters.charCodeAt(i);
+      }
+
+      const blob = new Blob([byteArray], { type: mimeType });
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = fileName || 'document';
+      link.click();
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Erro ao processar base64:', error);
+    }
+  };
+
+  return (
+    <MediaContainer>
+      <DocumentCard onClick={handleDownload}>
+        <DocumentIcon sx={{ color: 'text.secondary', fontSize: 32 }} />
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography variant="body2" sx={{ fontWeight: 500, wordBreak: 'break-word' }}>
+            {fileName || 'Document'}
+          </Typography>
+          {mimetype && (
+            <Typography variant="caption" color="text.secondary">
+              {mimetype}
+            </Typography>
+          )}
+        </Box>
+        <IconButton
+          size="small"
+          sx={{ color: 'text.secondary' }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDownload();
+          }}
+        >
+          <DownloadIcon />
+        </IconButton>
+      </DocumentCard>
+    </MediaContainer>
+  );
+};
 
 export function ChatDetails({
   selectedChat,
@@ -98,6 +208,10 @@ export function ChatDetails({
     token as string
   );
 
+  // Audio player state
+  const [audioPlaying, setAudioPlaying] = useState<{ [key: string]: boolean }>({});
+  const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
+
   const handleStartHumanAttendance = useCallback(
     async (chatId: string) => {
       try {
@@ -108,6 +222,120 @@ export function ChatDetails({
     },
     [startChatHumanAttendance]
   );
+
+  // Audio control functions
+  const toggleAudio = useCallback((messageId: string, audioUrl: string) => {
+    const audio = audioRefs.current[messageId];
+    
+    if (audio) {
+      if (audioPlaying[messageId]) {
+        audio.pause();
+      } else {
+        audio.play();
+      }
+    } else {
+      const newAudio = new Audio(audioUrl);
+      audioRefs.current[messageId] = newAudio;
+      
+      newAudio.addEventListener('ended', () => {
+        setAudioPlaying(prev => ({ ...prev, [messageId]: false }));
+      });
+      
+      newAudio.addEventListener('pause', () => {
+        setAudioPlaying(prev => ({ ...prev, [messageId]: false }));
+      });
+      
+      newAudio.addEventListener('play', () => {
+        setAudioPlaying(prev => ({ ...prev, [messageId]: true }));
+      });
+      
+      newAudio.play();
+    }
+  }, [audioPlaying]);
+
+  // Format file size
+  // const formatFileSize = useCallback((bytes?: number) => {
+  //   if (!bytes) return '';
+  //   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  //   const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  //   return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+  // }, []);
+
+  // Render media content based on message type
+  const renderMediaContent = useCallback((message: any) => {
+    const isUser = message.role === 'user';
+
+    // Image content
+    if (message.imageUrl) {
+      const mimeType = message.mimetype || 'image/jpeg'; // fallback genérico
+      const base64Src = `data:${mimeType};base64,${message.imageUrl}`;
+
+      return (
+        <MediaContainer>
+          <img
+            src={base64Src}
+            alt="Image message"
+            style={{
+              maxWidth: '100%',
+              maxHeight: '300px',
+              width: message.width ? Math.min(message.width, 300) : 'auto',
+              height: message.height ? Math.min(message.height, 300) : 'auto',
+              objectFit: 'cover',
+              display: 'block',
+              borderRadius: 8,
+            }}
+            loading="lazy"
+          />
+        </MediaContainer>
+      );
+    }
+
+    // Audio content
+    if (message.audioUrl) {
+      const mimeType = message.mimetype || 'audio/ogg'; // Use o MIME certo do áudio (ex: audio/mpeg)
+      const dataUrl = `data:${mimeType};base64,${message.audioUrl}`;
+
+      return (
+        <MediaContainer>
+          <AudioPlayer>
+            <IconButton
+              size="small"
+              onClick={() => toggleAudio(message.id, dataUrl)}
+              sx={{ 
+                backgroundColor: isUser ? 'rgba(255,255,255,0.2)' : theme.palette.primary.main,
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: isUser ? 'rgba(255,255,255,0.3)' : theme.palette.primary.dark,
+                }
+              }}
+            >
+              {audioPlaying[message.id] ? <PauseIcon /> : <PlayIcon />}
+            </IconButton>
+            <AudioIcon sx={{ color: 'text.secondary' }} />
+            <Typography variant="body2" color="text.secondary">
+              { message?.caption || message?.fileName || 'audio' }
+            </Typography>
+          </AudioPlayer>
+        </MediaContainer>
+      );
+    }
+
+
+    // Document content
+    if (message.documentUrl || (message.type === 'document' && message.fileName)) {
+      return (
+        <DocumentViewer
+          documentUrl={message.documentUrl}
+          fileName={message.fileName}
+          mimetype={message.mimetype}
+          type={message.type}
+        />
+      );
+    }
+
+    return null;
+  }, [audioPlaying, toggleAudio, theme]);
+
 
   // Separate scroll-related state to minimize re-renders
   const [scrollState, setScrollState] = useState({
@@ -347,6 +575,17 @@ export function ChatDetails({
       }
     }
   }, [selectedChat.id, selectedChat.paginatedInteractions?.data]);
+
+  // Cleanup audio references on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(audioRefs.current).forEach(audio => {
+        audio.pause();
+        audio.src = '';
+      });
+      audioRefs.current = {};
+    };
+  }, []);
 
   // Memoize current date calculation
   const currentDate = useMemo(() => {
@@ -635,23 +874,29 @@ export function ChatDetails({
                                   message.role === 'system' ? 'center' : 'left',
                               }}
                             >
-                              <Typography
-                                variant={
-                                  message.role === 'system'
-                                    ? 'caption'
-                                    : 'body2'
-                                }
-                                sx={{
-                                  fontStyle:
+                              {/* Render media content */}
+                              {renderMediaContent(message)}
+                              
+                              {/* Render text content if available */}
+                              {message.text && (
+                                <Typography
+                                  variant={
                                     message.role === 'system'
-                                      ? 'italic'
-                                      : 'normal',
-                                  fontWeight:
-                                    message.role === 'system' ? 500 : 'normal',
-                                }}
-                              >
-                                {message.text}
-                              </Typography>
+                                      ? 'caption'
+                                      : 'body2'
+                                  }
+                                  sx={{
+                                    fontStyle:
+                                      message.role === 'system'
+                                        ? 'italic'
+                                        : 'normal',
+                                    fontWeight:
+                                      message.role === 'system' ? 500 : 'normal',
+                                  }}
+                                >
+                                  {message.text}
+                                </Typography>
+                              )}
                             </Box>
 
                             {message.role !== 'system' && (

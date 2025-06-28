@@ -31,7 +31,6 @@ import AudiotrackIcon from '@mui/icons-material/Audiotrack';
 import DescriptionIcon from '@mui/icons-material/Description';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import CloseIcon from '@mui/icons-material/Close';
-import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 import { useAuth } from '../../../context/AuthContext';
 import { useHttpResponse } from '../../../context/ResponseNotifier';
 import { MessageChatUpdatePayload } from '../../../context/SocketContext';
