@@ -42,6 +42,7 @@ export default function MainGrid() {
   const canViewCreditUsage = can('VIEW_CREDIT_USAGE', 'DASHBOARD');
 
   const canViewPartOfDashboard = canViewInteractions || canViewCreditRemaining || canViewCreditUsage;
+  const cannotViewDashboard = !canViewInteractions && !canViewCreditRemaining && !canViewCreditUsage;
 
   const [workspaceId, setWorkspaceId] = useState<string | null>(user?.workspaceId ?? null);
   const [workspaceOptions, setWorkspaceOptions] = useState<
@@ -89,7 +90,7 @@ export default function MainGrid() {
   useEffect(() => {
     if (selectedRange == -1) return;
 
-    if (!canViewInteractions && !canViewCreditUsage) return;
+    if (!canViewPartOfDashboard) return;
 
     const today = dayjs();
     const newStart = today.subtract(selectedRange - 1, 'day');
@@ -154,6 +155,88 @@ export default function MainGrid() {
   };
 
   const data = dashboardData;
+
+  if (cannotViewDashboard) return (
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
+          <Typography
+            variant="h4"
+            sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+          >
+            <Box
+              sx={{
+                width: '1.5rem',
+                height: '1.5rem',
+                bgcolor: 'black',
+                borderRadius: '999px',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                alignSelf: 'center',
+                backgroundImage: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.dark} 100%)`,
+                color: 'hsla(210, 100%, 95%, 0.9)',
+                border: '1px solid',
+                borderColor: 'hsl(210, 100%, 55%)',
+                boxShadow: 'inset 0 2px 5px rgba(255, 255, 255, 0.3)',
+              }}
+            >
+              <DashboardIcon color="inherit" sx={{ fontSize: '1rem' }} />
+            </Box>
+            Dashboard
+          </Typography>
+        </Box>
+
+        <Grid
+          container
+          spacing={2}
+          columns={12}
+          sx={{ mb: (theme) => theme.spacing(2) }}
+        >
+          <Grid size={{ xs: 12 }}>
+            <Typography fontSize={20} variant="body1" fontWeight="bold" >Interactions</Typography>
+          </Grid>
+            <Grid size={{ xs: 12 }}>
+              <Card
+                variant="outlined"
+                sx={{ width: '100%' }}
+              >
+                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                  <Typography component="h2" variant="subtitle2" gutterBottom>
+                    {loading ? <Skeleton width="60%" /> : 'You do not have permission to view interactions data'}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+        </Grid>
+        
+        <Grid size={{ xs: 12 }}>
+          <Typography fontSize={20} variant="body1" fontWeight="bold" >Credits</Typography>
+        </Grid>
+
+        <Grid
+          container
+          spacing={2}
+          columns={12}
+          sx={{ mt: (theme) => theme.spacing(2), mb: (theme) => theme.spacing(2) }}
+        >
+          <Grid size={{ xs: 12 }}>
+            <Card
+              variant="outlined"
+              sx={{ width: '100%' }}
+            >
+              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                <Typography component="h2" variant="subtitle2" gutterBottom>
+                  {loading ? <Skeleton width="60%" /> : 'You do not have permission to view daily credit usage.'}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>                  
+        </Grid>
+      </Box>
+    </LocalizationProvider>
+  )
+
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -285,7 +368,7 @@ export default function MainGrid() {
           <PaymentsChart workspaceId={workspaceId} startDate={startDate} endDate={endDate} />
         </Grid> */}
 
-        {data ? (
+        {(data) ? (
           <>          
             <Grid
               container
@@ -369,15 +452,16 @@ export default function MainGrid() {
               columns={12}
               sx={{ mt: (theme) => theme.spacing(2), mb: (theme) => theme.spacing(2) }}
             >
-              { (workspaceId && canViewCreditRemaining) ? (
-                <Grid size={{ xs: 12 }}>
-                  <DailyCreditBalanceChart
-                    startDate={startDate?.format('YYYY-MM-DD') ?? ''}
-                    endDate={endDate?.format('YYYY-MM-DD') ?? ''}
-                    workspaceId={workspaceId}
-                  />
-                </Grid>
-              ) : (
+              { (workspaceId) ? (
+                canViewCreditRemaining ? (
+                  <Grid size={{ xs: 12 }}>
+                    <DailyCreditBalanceChart
+                      startDate={startDate?.format('YYYY-MM-DD') ?? ''}
+                      endDate={endDate?.format('YYYY-MM-DD') ?? ''}
+                      workspaceId={workspaceId}
+                    />
+                  </Grid>
+                ) : (
                   <Grid size={{ xs: 12 }}>
                     <Card
                       variant="outlined"
@@ -389,9 +473,12 @@ export default function MainGrid() {
                         </Typography>
                       </CardContent>
                     </Card>
+                  </Grid>  
+                )
+              ) : (
+                  <Grid size={{ xs: 12 }}>
                   </Grid>            
-              )}
-              
+              )}             
               { canViewCreditUsage ? (
                 <>
                   <Grid size={{ xs: 12, md: 3 }}>
