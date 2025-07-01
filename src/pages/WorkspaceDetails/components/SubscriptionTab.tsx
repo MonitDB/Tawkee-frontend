@@ -260,8 +260,8 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <FormControl fullWidth>
-            <FormLabel>
-              Stripe Subscription ID
+            <FormLabel sx={{ display: 'flex', flexDirection: 'row', gap: 1 }}>
+              <Typography>Stripe Subscription ID</Typography>             
               <Tooltip title="The subscription identifier from Stripe.">
                 <InfoIcon fontSize="small" sx={{ ml: 0.5 }} />
               </Tooltip>
@@ -272,14 +272,24 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
 
         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <FormControl fullWidth>
-            <FormLabel>Status</FormLabel>
+            <FormLabel sx={{ display: 'flex', flexDirection: 'row', gap: 1 }}>
+              <Typography>Status</Typography>             
+              <Tooltip title="The status of the subscription.">
+                <InfoIcon fontSize="small" sx={{ ml: 0.5 }} />
+              </Tooltip>
+            </FormLabel>
             <TextField value={subscription.status} disabled />
           </FormControl>
         </Grid>
 
         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <FormControl fullWidth>
-            <FormLabel>Current Period</FormLabel>
+            <FormLabel sx={{ display: 'flex', flexDirection: 'row', gap: 1 }}>
+              <Typography>Current Period</Typography>             
+              <Tooltip title="Start and end dates of the current subscription.">
+                <InfoIcon fontSize="small" sx={{ ml: 0.5 }} />
+              </Tooltip>
+            </FormLabel>
             <TextField
               value={`${formatDate(subscription.currentPeriodStart)} → ${formatDate(subscription.currentPeriodEnd)}`}
               disabled
@@ -303,7 +313,16 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
 
         <Grid size={{ xs: 12 }}>
           <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
-            <Typography variant="subtitle1">Features</Typography>
+            <FormLabel sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+              <Typography variant='subtitle1'>Features</Typography>             
+              <Tooltip title={ isEditing ? "You can override the plan features and limits while in edit mode." : "List of features from the current plan."}>
+                <InfoIcon
+                  fontSize="small"
+                  sx={{ ml: 0.5 }}
+                  color={ isEditing ? 'info' : 'inherit'}
+                />
+              </Tooltip>
+            </FormLabel>
             {isEditing && (
               <Button startIcon={<AddIcon />} size="small" onClick={handleAddFeature}>
                 Add Feature

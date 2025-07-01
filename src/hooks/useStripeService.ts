@@ -5,8 +5,8 @@ import { useHttpResponse } from '../context/ResponseNotifier';
 import { useAuth } from '../context/AuthContext';
 
 export const useStripeService = (token: string) => {
-  const { syncWorkspaceSmartRechargeUpdate } = useAuth();
-  const { notify } = useHttpResponse();
+  const { handleTokenExpirationError, syncWorkspaceSmartRechargeUpdate } = useAuth();
+  const { notify } = useHttpResponse(); // Destructure handleTokenExpirationError
 
   const [stripeLoading, setStripeLoading] = useState<boolean>(false);
 
@@ -37,12 +37,28 @@ export const useStripeService = (token: string) => {
 
         return result;
       } catch (error: unknown) {
-        notify(error as string, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
       } finally {
         setStripeLoading(false);
       }
     },
-    [service, notify]
+    [service, notify, handleTokenExpirationError]
   );
 
   /**
@@ -56,12 +72,28 @@ export const useStripeService = (token: string) => {
         notify('Redirecting to purchase of credits...', 'info');
         window.location.href = url;
       } catch (error: unknown) {
-        notify((error as Error).message, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
       } finally {
         setStripeLoading(false);
       }
     },
-    [service, notify]
+    [service, notify, handleTokenExpirationError]
   );
 
   /**
@@ -73,11 +105,27 @@ export const useStripeService = (token: string) => {
       const response = await service.getProducts();
       return response;
     } catch (error: unknown) {
-      notify((error as Error).message, 'error');
+      let errorMessage = 'A unexpected error occurred.';
+
+      // Check if error is an instance of Error to safely access the message
+      if (error instanceof Error) {
+        // Handling network failures or fetch-specific errors
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage =
+            'Network error. Please check your internet connection.';
+        } else {
+          errorMessage = `Error: ${error.message}`;
+        }
+      } else {
+        errorMessage = 'An unknown error occurred.';
+      }
+
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
+      notify(errorMessage, 'error');
     } finally {
       setStripeLoading(false);
     }
-  }, [service, notify]);
+  }, [service, notify, handleTokenExpirationError]);
 
   /**
    * Obtém status atual de billing do workspace
@@ -88,11 +136,27 @@ export const useStripeService = (token: string) => {
       const status = await service.getBillingStatus(workspaceId);
       return status;
     } catch (error: unknown) {
-      notify(error as string, 'error');
+      let errorMessage = 'A unexpected error occurred.';
+
+      // Check if error is an instance of Error to safely access the message
+      if (error instanceof Error) {
+        // Handling network failures or fetch-specific errors
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage =
+            'Network error. Please check your internet connection.';
+        } else {
+          errorMessage = `Error: ${error.message}`;
+        }
+      } else {
+        errorMessage = 'An unknown error occurred.';
+      }
+
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
+      notify(errorMessage, 'error');
     } finally {
       setStripeLoading(false);
     }
-  }, [service, notify]);
+  }, [service, notify, handleTokenExpirationError]);
 
   /**
    * Inicia sessão do portal do cliente (Stripe Customer Portal)
@@ -104,13 +168,13 @@ export const useStripeService = (token: string) => {
       const { url } = await service.createCustomerPortal(workspaceId);
       window.location.href = url;
     } catch (error: any) {
-      console.log(error);
-      notify(error.message as string, 'error');
+      const errorMessage = error.message || 'Failed to open the customer portal';
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
+      notify(errorMessage, 'error');
     } finally {
       setStripeLoading(false);
     }
-  }, [service, notify]);
-
+  }, [service, notify, handleTokenExpirationError]);
 
   /**
    * Atualiza a configuração de recarga automática do workspace
@@ -125,19 +189,35 @@ export const useStripeService = (token: string) => {
 
         notify('Smart recharge settings updated successfully!', 'success');
         return result;
-      } catch {
-        notify('Failure to update smart recharge settings!', 'error');
+      } catch (error) {
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage || 'Failure to update smart recharge settings!', 'error');
         return { success: false };
       } finally {
         setStripeLoading(false);
       }
     },
-    [service, notify]
+    [service, notify, syncWorkspaceSmartRechargeUpdate, handleTokenExpirationError]
   );
 
   /**
    * Cria um novo plano no Stripe + backend
-  */
+   */
   const createPlanFromForm = useCallback(
     async (data: UpdatePlanFromFormDto) => {
       try {
@@ -146,18 +226,34 @@ export const useStripeService = (token: string) => {
         notify('Plan created successfully!', 'success');
         return response;
       } catch (error: any) {
-        notify((error as Error).message, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
         throw error;
       } finally {
         setStripeLoading(false);
       }
     },
-    [service, notify]
+    [service, notify, handleTokenExpirationError]
   );
 
   /**
    * Atualiza um plano existente no Stripe + backend
-  */
+   */
   const updatePlanFromForm = useCallback(
     async (data: UpdatePlanFromFormDto) => {
       try {
@@ -166,13 +262,15 @@ export const useStripeService = (token: string) => {
         notify('Plan updated successfully!', 'success');
         return response;
       } catch (error: any) {
-        notify((error as Error).message, 'error');
+        const errorMessage = (error as Error).message;
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
         throw error;
       } finally {
         setStripeLoading(false);
       }
     },
-    [service, notify]
+    [service, notify, handleTokenExpirationError]
   );
 
   /**
@@ -186,15 +284,65 @@ export const useStripeService = (token: string) => {
         notify('Subscription overrides updated successfully!', 'success');
         return result;
       } catch (error: unknown) {
-        notify((error as Error).message || 'Error updating subscription overrides', 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
         return { success: false };
       } finally {
         setStripeLoading(false);
       }
     },
-    [service, notify]
+    [service, notify, handleTokenExpirationError]
   );
 
+  /**
+   * Retorna os pagamentos diários acumulados de um workspace no período
+   */
+  const getWorkspacePaymentsInPeriod = useCallback(
+    async (workspaceId: string | null, startDate: string, endDate: string) => {
+      try {
+        setStripeLoading(true);
+        const result = await service.getWorkspacePaymentsInPeriod(workspaceId, startDate, endDate);
+        return result;
+      } catch (error: unknown) {
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
+        return [];
+      } finally {
+        setStripeLoading(false);
+      }
+    },
+    [service, notify, handleTokenExpirationError]
+  );
 
   return {
     stripeLoading,
@@ -206,6 +354,7 @@ export const useStripeService = (token: string) => {
     updateSmartRechargeSetting,
     createPlanFromForm,
     updatePlanFromForm,
-    updateSubscriptionOverrides
+    updateSubscriptionOverrides,
+    getWorkspacePaymentsInPeriod
   };
 };

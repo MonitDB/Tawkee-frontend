@@ -54,6 +54,12 @@ export interface AgentConsumptionDto {
   totalCredits: number;
 }
 
+export interface WorkspaceConsumptionDto {
+  workspaceId: string;
+  name: string | null;
+  totalCredits: number;
+}
+
 export interface ModelConsumptionDto {
   model: string;
   credits: number;
@@ -66,6 +72,7 @@ export interface DashboardMetricsDto {
   avgTimeTrend: number;
   creditsPerDay: CreditPerDayDto[];
   topAgents: AgentConsumptionDto[];
+  topWorkspaces: WorkspaceConsumptionDto[];  
   topModels: ModelConsumptionDto[];
 }
 
@@ -75,7 +82,7 @@ interface DashboardServiceConfig {
 }
 
 interface DashboardMetricsParams {
-  workspaceId: string;
+  workspaceId: string | null;
   startDate: string;
   endDate: string;
 }
@@ -100,11 +107,10 @@ export class DashboardService {
   ): Promise<DashboardMetricsDto> {
     const { workspaceId, startDate, endDate } = params;
 
-    console.log(
-      `GET ${this.apiUrl}/workspaces/${workspaceId}/dashboard-metrics?startDate=${startDate}&endDate=${endDate}...`
-    );
-    const url = `${this.apiUrl}/workspaces/${workspaceId}/dashboard-metrics?startDate=${startDate}&endDate=${endDate}`;
-
+    
+    const url = `${this.apiUrl}/workspaces/${workspaceId ? workspaceId : 'all'}/dashboard-metrics?startDate=${startDate}&endDate=${endDate}`;
+    console.log(url);
+    
     try {
       const response = await fetch(url, {
         method: 'GET',
@@ -122,20 +128,10 @@ export class DashboardService {
       }
 
       const data = await response.json();
+      console.log(data.data);
       return data.data as DashboardMetricsDto;
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        if (error.message.includes('Failed to fetch')) {
-          throw new Error(
-            'Network error. Please check your internet connection.'
-          );
-        }
-        throw new Error(error.message);
-      }
-
-      throw new Error(
-        'Unexpected error occurred while fetching dashboard metrics'
-      );
+      throw error;
     }
   }
 
@@ -152,8 +148,6 @@ export class DashboardService {
   }> {
     const url = new URL(`${this.apiUrl}/workspaces`);
     url.searchParams.append('page', String(page));
-
-    console.log(`GET ${url.toString()}...`);
 
     try {
       const response = await fetch(url.toString(), {
@@ -173,14 +167,6 @@ export class DashboardService {
 
       const data = await response.json();
 
-      console.log({
-        data: data.data as Workspace[],
-        total: data.meta.total,
-        page: data.meta.page,
-        pageSize: data.meta.pageSize,
-        totalPages: data.meta.totalPages,
-      });
-
       return {
         data: data.data as Workspace[],
         total: data.meta.total,
@@ -190,24 +176,42 @@ export class DashboardService {
       };
 
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        if (error.message.includes('Failed to fetch')) {
-          throw new Error(
-            'Network error. Please check your internet connection.'
-          );
-        }
-        throw new Error(error.message);
+      throw error;
+    }
+  }
+
+  async listAllWorkspacesBasicInfo(): Promise<
+    { id: string; name: string; email: string | null }[]
+  > {
+    const url = new URL(`${this.apiUrl}/workspaces/basic`);
+
+    try {
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({}));
+        const message =
+          errorPayload.error || 'Failed to fetch workspace basic info list';
+        throw new Error(message);
       }
 
-      throw new Error(
-        'Unexpected error occurred while fetching workspace list'
-      );
+      const data = await response.json();
+
+      return data.data as { id: string; name: string; email: string | null }[];
+
+    } catch (error: unknown) {
+      throw error;
     }
   }
 
   async getDetailedWorkspace(workspaceId: string): Promise<Workspace> {
     const url = `${this.apiUrl}/workspaces/${workspaceId}/detailed`;
-    console.log(`GET ${url}...`);
 
     try {
       const response = await fetch(url, {
@@ -228,18 +232,7 @@ export class DashboardService {
       const data = await response.json();
       return data.data as Workspace;
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        if (error.message.includes('Failed to fetch')) {
-          throw new Error(
-            'Network error. Please check your internet connection.'
-          );
-        }
-        throw new Error(error.message);
-      }
-
-      throw new Error(
-        'Unexpected error occurred while fetching detailed workspace'
-      );
+      throw error;
     }
   }
 
@@ -251,8 +244,6 @@ export class DashboardService {
     const url = new URL(`${this.apiUrl}/credits/daily-balance/${workspaceId}`);
     if (startDate) url.searchParams.append('startDate', startDate);
     if (endDate) url.searchParams.append('endDate', endDate);
-
-    console.log(`GET ${url.toString()}...`);
 
     try {
       const response = await fetch(url.toString(), {
@@ -273,18 +264,44 @@ export class DashboardService {
       const data = await response.json();
       return data.data as DailyCreditBalanceItem[];
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        if (error.message.includes('Failed to fetch')) {
-          throw new Error(
-            'Network error. Please check your internet connection.'
-          );
-        }
-        throw new Error(error.message);
+      throw error;
+    }
+  }
+  
+  async updateUserPermissions({
+    userId,
+    userPermissions,
+  }: {
+    userId: string;
+    userPermissions: {
+      allowed?: boolean;
+      resource: string;
+      action: string;
+    }[];
+  }): Promise<{ success: boolean }> {
+    const url = `${this.apiUrl}/auth/${userId}/permissions`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.token}`,
+        },
+        body: JSON.stringify({ permissions: userPermissions }),
+      });
+
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({}));
+        const message =
+          errorPayload.error || 'Failed to update user permissions';
+        throw new Error(message);
       }
 
-      throw new Error(
-        'Unexpected error occurred while fetching daily credit balance'
-      );
+      const data = await response.json();
+      return data.data as { success: boolean };
+    } catch (error: unknown) {
+      throw error;
     }
-  } 
+  }  
 }

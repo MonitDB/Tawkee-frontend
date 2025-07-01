@@ -77,6 +77,12 @@ export interface SubscriptionOverrideUpdateDto {
   };
 }
 
+export interface WorkspacePaymentBalanceItem {
+  date: string;
+  planAmount: number;
+  oneTimeAmount: number;
+  total: number;
+}
 
 export class StripeService {
   private token: string;
@@ -258,6 +264,32 @@ export class StripeService {
     return this.handleJsonResponse<{ success: boolean }>(response);
   }
 
+  async getWorkspacePaymentsInPeriod(
+    this: StripeService,
+    workspaceId: string | null,
+    startDate: string,
+    endDate: string
+  ): Promise<WorkspacePaymentBalanceItem[]> {
+    const url = new URL(
+      `${this.apiUrl}/stripe/billing/payments/${workspaceId ? workspaceId : 'all'}`
+    );
+    url.searchParams.append('startDate', startDate);
+    url.searchParams.append('endDate', endDate);
+
+    try {
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: this.headers,
+      });
+  
+      return this.handleJsonResponse<WorkspacePaymentBalanceItem[]>(response);
+
+    } catch (error: unknown) {
+      throw error;
+    }
+  }
+
+
   /**
    * Utilitário para tratar respostas JSON
    */
@@ -271,15 +303,8 @@ export class StripeService {
 
       const data = await response.json();
       return await data.data;
-    } catch (err) {
-      if (err instanceof Error && err.message.includes('Failed to fetch')) {
-        throw new Error(
-          'Network error. Please check your internet connection.'
-        );
-      }
-      throw err instanceof Error
-        ? err
-        : new Error('An unexpected error occurred.');
+    } catch (error: unknown) {
+      throw error;
     }
-  }
+  } 
 }

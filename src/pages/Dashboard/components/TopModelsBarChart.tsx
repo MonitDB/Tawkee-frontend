@@ -42,7 +42,7 @@ export default function TopModelsBarChart({ data }: TopModelsBarChartProps) {
             </Typography>
           </Stack>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            Total credits distributed among top models
+            Distributed among top models
           </Typography>
         </Stack>
         <Box>
@@ -57,6 +57,8 @@ export default function TopModelsBarChart({ data }: TopModelsBarChartProps) {
               },
             ]}
             grid={{ horizontal: true }}
+            height={180}
+            margin={{ bottom: modelNames.some(name => name.length > 10) ? 80 : 50 }}
           />
         </Box>
       </CardContent>

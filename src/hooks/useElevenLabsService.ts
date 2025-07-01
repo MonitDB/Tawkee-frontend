@@ -7,8 +7,8 @@ import { useAuth } from '../context/AuthContext';
 import { ElevenLabsSettings } from '../pages/AgentDetails/components/dialogs/ElevenLabsSettingsDialog';
 
 export const useElevenLabsService = (token: string) => {
-  const { notify } = useHttpResponse();
-  const { user } = useAuth();
+  const { notify } = useHttpResponse(); // Destructure handleTokenExpirationError
+  const { user, handleTokenExpirationError } = useAuth();
   const { syncAgentElevenLabsStatus, syncAgentElevenLabsData } = useAgents();
 
   const [elevenLabsLoading, setElevenLabsLoading] = useState<boolean>(false);
@@ -34,13 +34,29 @@ export const useElevenLabsService = (token: string) => {
         notify('ElevenLabs integration activated successfully!', 'success');
         return response;
       } catch (error: unknown) {
-        notify(error as string, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
         throw error;
       } finally {
         setElevenLabsLoading(false);
       }
     },
-    [service, notify, syncAgentElevenLabsStatus]
+    [service, notify, syncAgentElevenLabsStatus, handleTokenExpirationError]
   );
 
   const deactivateElevenLabs = useCallback(
@@ -53,12 +69,28 @@ export const useElevenLabsService = (token: string) => {
         notify('ElevenLabs integration deactivated successfully!', 'success');
         return response;
       } catch (error: unknown) {
-        notify(error as string, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
       } finally {
         setElevenLabsLoading(false);
       }
     },
-    [service, notify, syncAgentElevenLabsStatus]
+    [service, notify, syncAgentElevenLabsStatus, handleTokenExpirationError]
   );
 
   const fetchElevenLabsData = useCallback(
@@ -70,12 +102,28 @@ export const useElevenLabsService = (token: string) => {
 
         return response;
       } catch (error: unknown) {
-        notify(error as string, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
       } finally {
         setVoicesLoading(false);
       }
     },
-    [service, notify, syncAgentElevenLabsData]
+    [service, notify, syncAgentElevenLabsData, handleTokenExpirationError]
   );
 
   const updateElevenLabsData = useCallback(
@@ -88,12 +136,28 @@ export const useElevenLabsService = (token: string) => {
         notify('ElevenLabs data updated successfully!', 'success');
         return response;
       } catch (error: unknown) {
-        notify(error as string, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+        
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
       } finally {
         setElevenLabsLoading(false);
       }
     },
-    [service, notify, syncAgentElevenLabsData]
+    [service, notify, syncAgentElevenLabsData, handleTokenExpirationError]
   );
 
   return {

@@ -4,9 +4,11 @@ import { env } from '../config/env';
 import { useHttpResponse } from '../context/ResponseNotifier';
 import { useAgents } from '../context/AgentsContext';
 import { ScheduleSettingsDto } from '../pages/AgentDetails/components/dialogs/GoogleCalendarConfigDialog';
+import { useAuth } from '../context/AuthContext';
 
 export const useGoogleCalendarService = (token: string) => {
-  const { notify } = useHttpResponse();
+  const { handleTokenExpirationError } = useAuth();
+  const { notify } = useHttpResponse(); // Destructure handleTokenExpirationError
   const { syncAgentScheduleSettingsUpdate } = useAgents();
 
   const [loading, setLoading] = useState(false);
@@ -29,16 +31,29 @@ export const useGoogleCalendarService = (token: string) => {
         );
         return intention;
       } catch (error) {
-        notify(
-          error instanceof Error ? error.message : 'Failed to create intention',
-          'error'
-        );
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
         return null;
       } finally {
         setLoading(false);
       }
     },
-    [service, notify]
+    [service, notify, handleTokenExpirationError]
   );
 
   const getAuthUrl = useCallback(
@@ -47,18 +62,29 @@ export const useGoogleCalendarService = (token: string) => {
         setLoading(true);
         return await service.getAuthUrl(agentId);
       } catch (error) {
-        notify(
-          error instanceof Error
-            ? error.message
-            : 'Failed to generate auth URL',
-          'error'
-        );
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
         return null;
       } finally {
         setLoading(false);
       }
     },
-    [service, notify]
+    [service, notify, handleTokenExpirationError]
   );
 
   const checkAuthStatus = useCallback(
@@ -69,18 +95,29 @@ export const useGoogleCalendarService = (token: string) => {
 
         return status;
       } catch (error) {
-        notify(
-          error instanceof Error
-            ? error.message
-            : 'Failed to check auth status',
-          'error'
-        );
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
         return null;
       } finally {
         setLoading(false);
       }
     },
-    [service, notify]
+    [service, notify, handleTokenExpirationError]
   );
 
   const revokeTokens = useCallback(
@@ -97,16 +134,29 @@ export const useGoogleCalendarService = (token: string) => {
 
         return result;
       } catch (error) {
-        notify(
-          error instanceof Error ? error.message : 'Failed to revoke tokens',
-          'error'
-        );
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
         return { success: false };
       } finally {
         setLoading(false);
       }
     },
-    [service, notify]
+    [service, notify, handleTokenExpirationError]
   );
 
   const authenticateAgent = useCallback(
@@ -120,7 +170,23 @@ export const useGoogleCalendarService = (token: string) => {
         }
         return null;
       } catch (error) {
-        notify('Failed to start authentication process', 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
         return null;
       }
     },
@@ -142,18 +208,29 @@ export const useGoogleCalendarService = (token: string) => {
         syncAgentScheduleSettingsUpdate({ agentId, scheduleSettings: data });
         return data;
       } catch (error) {
-        notify(
-          error instanceof Error
-            ? error.message
-            : 'Failed to get schedule settings',
-          'error'
-        );
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
         return null;
       } finally {
         setLoading(false);
       }
     },
-    [service, notify]
+    [service, notify, syncAgentScheduleSettingsUpdate, handleTokenExpirationError]
   );
 
   const updateScheduleSettings = useCallback(
@@ -167,18 +244,29 @@ export const useGoogleCalendarService = (token: string) => {
         syncAgentScheduleSettingsUpdate({ agentId, scheduleSettings: data });
         return data;
       } catch (error) {
-        notify(
-          error instanceof Error
-            ? error.message
-            : 'Failed to update schedule settings',
-          'error'
-        );
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
         return null;
       } finally {
         setLoading(false);
       }
     },
-    [service, notify]
+    [service, notify, syncAgentScheduleSettingsUpdate, handleTokenExpirationError]
   );
 
   return {

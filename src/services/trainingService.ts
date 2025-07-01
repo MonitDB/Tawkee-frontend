@@ -115,22 +115,7 @@ export class TrainingService {
         return defaultPaginatedResponse;
       }
     } catch (error: unknown) {
-      let errorMessage = 'A unexpected error occurred.';
-
-      // Check if error is an instance of Error to safely access the message
-      if (error instanceof Error) {
-        // Handling network failures or fetch-specific errors
-        if (error.message.includes('Failed to fetch')) {
-          errorMessage =
-            'Network error. Please check your internet connection.';
-        } else {
-          errorMessage = `Error: ${error.message}`;
-        }
-      } else {
-        errorMessage = 'An unknown error occurred.';
-      }
-
-      throw errorMessage;
+      throw error;
     }
   }
 
@@ -164,22 +149,7 @@ export class TrainingService {
 
       return data.data;
     } catch (error: unknown) {
-      let errorMessage = 'A unexpected error occurred.';
-
-      // Check if error is an instance of Error to safely access the message
-      if (error instanceof Error) {
-        // Handling network failures or fetch-specific errors
-        if (error.message.includes('Failed to fetch')) {
-          errorMessage =
-            'Network error. Please check your internet connection.';
-        } else {
-          errorMessage = `Error: ${error.message}`;
-        }
-      } else {
-        errorMessage = 'An unknown error occurred.';
-      }
-
-      throw errorMessage;
+      throw error;
     }
   }
 
@@ -203,22 +173,7 @@ export class TrainingService {
 
       return data.success === true;
     } catch (error: unknown) {
-      let errorMessage = 'A unexpected error occurred.';
-
-      // Check if error is an instance of Error to safely access the message
-      if (error instanceof Error) {
-        // Handling network failures or fetch-specific errors
-        if (error.message.includes('Failed to fetch')) {
-          errorMessage =
-            'Network error. Please check your internet connection.';
-        } else {
-          errorMessage = `Error: ${error.message}`;
-        }
-      } else {
-        errorMessage = 'An unknown error occurred.';
-      }
-
-      throw errorMessage;
+      throw error;
     }
   }
 }

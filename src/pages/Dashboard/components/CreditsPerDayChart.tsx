@@ -17,16 +17,29 @@ type AgentCredits = {
   credits: number;
 };
 
-type CreditEntry = {
+type WorkspaceCredits = {
+  workspaceId: string;
+  workspaceName: string;
+  credits: number;
+};
+
+type AgentCreditEntry = {
   date: string;
   totalCredits: number;
   creditsByAgent: AgentCredits[];
 };
 
+type WorkspaceCreditEntry = {
+  date: string;
+  totalCredits: number;
+  creditsByWorkspace: WorkspaceCredits[];
+};
+
 type CreditsPerDayChartProps = {
-  data: CreditEntry[];
+  data: AgentCreditEntry[] | WorkspaceCreditEntry[];
   startDate: string;
   endDate: string;
+  mode?: 'agent' | 'workspace';
 };
 
 function AreaGradient({ color, id }: { color: string; id: string }) {
@@ -64,11 +77,15 @@ function generateDateRange(startDate: string, endDate: string): string[] {
   return range;
 }
 
-function fillMissingDates(
-  data: CreditEntry[],
+function isAgentCreditEntry(entry: any): entry is AgentCreditEntry {
+  return 'creditsByAgent' in entry;
+}
+
+function fillMissingDatesAgent(
+  data: AgentCreditEntry[],
   startDate: string,
   endDate: string
-): CreditEntry[] {
+): AgentCreditEntry[] {
   const fullRange = generateDateRange(startDate, endDate);
   const known = new Map(data.map((d) => [d.date, d]));
 
@@ -98,40 +115,158 @@ function fillMissingDates(
   });
 }
 
+function fillMissingDatesWorkspace(
+  data: WorkspaceCreditEntry[],
+  startDate: string,
+  endDate: string
+): WorkspaceCreditEntry[] {
+  const fullRange = generateDateRange(startDate, endDate);
+  const known = new Map(data.map((d) => [d.date, d]));
+
+  const allWorkspaces = Array.from(
+    new Set(data.flatMap((d) => d.creditsByWorkspace.map((c) => c.workspaceId)))
+  );
+
+  const workspaceIdToName: Record<string, string> = {};
+  data.forEach((d) =>
+    d.creditsByWorkspace.forEach(({ workspaceId, workspaceName }) => {
+      workspaceIdToName[workspaceId] = workspaceName;
+    })
+  );
+
+  return fullRange.map((date) => {
+    return (
+      known.get(date) || {
+        date,
+        totalCredits: 0,
+        creditsByWorkspace: allWorkspaces.map((workspaceId) => ({
+          workspaceId,
+          workspaceName: workspaceIdToName[workspaceId] || 'Unknown',
+          credits: 0,
+        })),
+      }
+    );
+  });
+}
+
 export default function CreditsPerDayChart({
   data,
   startDate,
   endDate,
+  mode,
 }: CreditsPerDayChartProps) {
   const theme = useTheme();
-  const adjustedData = useMemo(
-    () => fillMissingDates(data, startDate, endDate),
-    [data, startDate, endDate]
-  );
+  
+  // Auto-detect mode if not provided
+  const detectedMode = useMemo(() => {
+    if (mode) return mode;
+    if (data.length === 0) return 'agent';
+    return isAgentCreditEntry(data[0]) ? 'agent' : 'workspace';
+  }, [mode, data]);
+
+  const adjustedData = useMemo(() => {
+    if (detectedMode === 'agent') {
+      return fillMissingDatesAgent(data as AgentCreditEntry[], startDate, endDate);
+    } else {
+      return fillMissingDatesWorkspace(data as WorkspaceCreditEntry[], startDate, endDate);
+    }
+  }, [data, startDate, endDate, detectedMode]);
 
   const labels = useMemo(() => {
     return adjustedData.map((d) => d.date);
   }, [adjustedData]);
 
-  const allAgentIds = useMemo(() => {
-    const idSet = new Set<string>();
-    adjustedData.forEach((entry) => {
-      entry.creditsByAgent.forEach((agent) => idSet.add(agent.agentId));
-    });
-    return Array.from(idSet);
-  }, [adjustedData]);
+  const { allEntityIds, series } = useMemo(() => {
+    if (detectedMode === 'agent') {
+      const agentData = adjustedData as AgentCreditEntry[];
+      
+      const allAgentIds = Array.from(
+        new Set(
+          agentData.flatMap((entry) => 
+            entry.creditsByAgent.map((agent) => agent.agentId)
+          )
+        )
+      );
 
-  const agentIdToNameMap = useMemo(() => {
-    const map = new Map<string, string>();
-    adjustedData.forEach((entry) => {
-      entry.creditsByAgent.forEach(({ agentId, agentName }) => {
-        if (!map.has(agentId)) {
-          map.set(agentId, agentName);
-        }
+      const agentIdToNameMap = new Map<string, string>();
+      agentData.forEach((entry) => {
+        entry.creditsByAgent.forEach(({ agentId, agentName }) => {
+          if (!agentIdToNameMap.has(agentId)) {
+            agentIdToNameMap.set(agentId, agentName);
+          }
+        });
       });
-    });
-    return map;
-  }, [adjustedData]);
+
+      const agentSeries = allAgentIds.map((agentId) => {
+        const agentSeriesData = agentData.map(
+          (entry) =>
+            entry.creditsByAgent.find((c) => c.agentId === agentId)?.credits ?? 0
+        );
+
+        const agentName = agentIdToNameMap.get(agentId) || 'Unknown';
+
+        return {
+          id: agentId,
+          label: `Agent ${agentName}`,
+          data: agentSeriesData,
+          showMark: false,
+          curve: 'bumpX' as CurveType,
+          area: true,
+          stack: 'total',
+        };
+      });
+
+      return {
+        allEntityIds: allAgentIds,
+        entityIdToNameMap: agentIdToNameMap,
+        series: agentSeries,
+      };
+    } else {
+      const workspaceData = adjustedData as WorkspaceCreditEntry[];
+      
+      const allWorkspaceIds = Array.from(
+        new Set(
+          workspaceData.flatMap((entry) => 
+            entry.creditsByWorkspace.map((workspace) => workspace.workspaceId)
+          )
+        )
+      );
+
+      const workspaceIdToNameMap = new Map<string, string>();
+      workspaceData.forEach((entry) => {
+        entry.creditsByWorkspace.forEach(({ workspaceId, workspaceName }) => {
+          if (!workspaceIdToNameMap.has(workspaceId)) {
+            workspaceIdToNameMap.set(workspaceId, workspaceName);
+          }
+        });
+      });
+
+      const workspaceSeries = allWorkspaceIds.map((workspaceId) => {
+        const workspaceSeriesData = workspaceData.map(
+          (entry) =>
+            entry.creditsByWorkspace.find((c) => c.workspaceId === workspaceId)?.credits ?? 0
+        );
+
+        const workspaceName = workspaceIdToNameMap.get(workspaceId) || 'Unknown';
+
+        return {
+          id: workspaceId,
+          label: `Workspace ${workspaceName}`,
+          data: workspaceSeriesData,
+          showMark: false,
+          curve: 'bumpX' as CurveType,
+          area: true,
+          stack: 'total',
+        };
+      });
+
+      return {
+        allEntityIds: allWorkspaceIds,
+        entityIdToNameMap: workspaceIdToNameMap,
+        series: workspaceSeries,
+      };
+    }
+  }, [adjustedData, detectedMode, theme.palette]);
 
   const colorPalette = [
     theme.palette.success.main,
@@ -142,28 +277,14 @@ export default function CreditsPerDayChart({
     theme.palette.primary.main,
   ];
 
-  const series = allAgentIds.map((agentId) => {
-    const agentData = adjustedData.map(
-      (entry) =>
-        entry.creditsByAgent.find((c) => c.agentId === agentId)?.credits ?? 0
-    );
-
-    const agentName = agentIdToNameMap.get(agentId) || 'Unknown';
-
-    return {
-      id: agentId,
-      label: `Agent ${agentName}`,
-      data: agentData,
-      showMark: false,
-      curve: 'bumpX' as CurveType,
-      area: true,
-      stack: 'total',
-    };
-  });
-
   const totalSum = series
     .flatMap((s) => s.data)
     .reduce((acc, val) => acc + val, 0);
+
+  const chartTitle = detectedMode === 'agent' ? 'Daily Credit Usage' : 'Daily Credit Usage by Workspace';
+  const chartSubtitle = detectedMode === 'agent' 
+    ? `Credits stacked by agent per day (${totalSum})`
+    : `Credits stacked by workspace per day (${totalSum})`;
 
   return (
     <Card
@@ -188,10 +309,10 @@ export default function CreditsPerDayChart({
         }}
       >
         <Typography component="h2" variant="subtitle2" gutterBottom>
-          Daily Credit Usage
+          {chartTitle}
         </Typography>
         <Typography variant="caption" sx={{ color: 'text.secondary', mb: 1 }}>
-          Credits stacked by agent per day ({totalSum})
+          {chartSubtitle}
         </Typography>
 
         <Box sx={{ flex: 1, height: '100%' }}>
@@ -226,18 +347,18 @@ export default function CreditsPerDayChart({
             sx={{
               height: '99.4%',
               ...Object.fromEntries(
-                allAgentIds.map((agentId) => [
-                  `& .MuiAreaElement-series-${agentId}`,
-                  { fill: `url('#${agentId}')` },
+                allEntityIds.map((entityId) => [
+                  `& .MuiAreaElement-series-${entityId}`,
+                  { fill: `url('#${entityId}')` },
                 ])
               ),
             }}
           >
-            {allAgentIds.map((agentId, i) => (
-              <Fragment key={agentId}>
+            {allEntityIds.map((entityId, i) => (
+              <Fragment key={entityId}>
                 <AreaGradient
                   color={colorPalette[i % colorPalette.length]}
-                  id={agentId}
+                  id={entityId}
                 />
               </Fragment>
             ))}

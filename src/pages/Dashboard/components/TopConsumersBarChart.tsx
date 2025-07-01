@@ -5,24 +5,32 @@ import Stack from '@mui/material/Stack';
 import { BarChart } from '@mui/x-charts';
 import { useTheme } from '@mui/material/styles';
 import { Box } from '@mui/material';
-import { AgentConsumptionDto } from '../../../services/dashboardService';
+import { AgentConsumptionDto, WorkspaceConsumptionDto } from '../../../services/dashboardService';
 
-type TopAgentsBarChartProps = {
-  data: AgentConsumptionDto[];
+type TopConsumersBarChartProps = {
+  data: AgentConsumptionDto[] | WorkspaceConsumptionDto[];
+  type: 'agents' | 'workspaces';
 };
 
-export default function TopAgentsBarChart({ data }: TopAgentsBarChartProps) {
+export default function TopConsumersBarChart({ data, type }: TopConsumersBarChartProps) {
   const theme = useTheme();
 
-  const names = data.map((a) => a.name);
-  const credits = data.map((a) => a.totalCredits);
+  console.log({ inhere: data })
+
+  const names = data.map((item) => item.name || 'Unknown');
+  const credits = data.map((item) => item.totalCredits);
   const totalSum = credits.reduce((acc, val) => acc + val, 0);
+
+  const title = type === 'agents' ? 'Top Agents by Credits' : 'Top Workspaces by Credits';
+  const description = type === 'agents' 
+    ? 'Distributed among top agents'
+    : 'Distributed among top workspaces';
 
   return (
     <Card variant="outlined" sx={{ width: '100%', flex: 1 }}>
       <CardContent>
         <Typography component="h2" variant="subtitle2" gutterBottom>
-          Top Agents by Credits
+          {title}
         </Typography>
         <Stack sx={{ justifyContent: 'space-between' }}>
           <Stack
@@ -34,16 +42,23 @@ export default function TopAgentsBarChart({ data }: TopAgentsBarChartProps) {
             }}
           >
             <Typography variant="h4" component="p">
-              {totalSum}
+              {totalSum.toLocaleString()}
             </Typography>
           </Stack>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            Total credits distributed among top agents
+            {description}
           </Typography>
         </Stack>
         <Box>
           <BarChart
-            xAxis={[{ data: names, scaleType: 'band' }]}
+            xAxis={[{ 
+              data: names, 
+              scaleType: 'band',
+              tickLabelStyle: {
+                angle: names.some(name => name.length > 10) ? -45 : 0,
+                textAnchor: names.some(name => name.length > 10) ? 'end' : 'middle'
+              }
+            }]}
             series={[
               {
                 id: 'credits',
@@ -53,6 +68,8 @@ export default function TopAgentsBarChart({ data }: TopAgentsBarChartProps) {
               },
             ]}
             grid={{ horizontal: true }}
+            height={180}
+            margin={{ bottom: names.some(name => name.length > 10) ? 80 : 50 }}
           />
         </Box>
       </CardContent>

@@ -56,7 +56,12 @@ export function SocketProvider({ children }: SocketProviderProps) {
   const socketRef = useRef<Socket | null>(null);
 
   const { notify } = useHttpResponse();
-  const { user, syncWorkspaceSubscriptionUpdate, syncWorkspaceCreditsUpdate } = useAuth();
+  const { 
+    user,
+    handleTokenExpirationError,
+    syncWorkspaceSubscriptionUpdate,
+    syncWorkspaceCreditsUpdate
+  } = useAuth();
   const {
     syncAgentChannelConnectionUpdate,
     syncAgentMessageChatUpdate,
@@ -116,6 +121,9 @@ export function SocketProvider({ children }: SocketProviderProps) {
 
     const handleSocketError = (error: ErrorPayload) => {
       console.error('Socket error:', error);
+      const errorMessage = (error as Error).message;
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
+      notify(errorMessage, 'error');
     };
 
     if (user) {

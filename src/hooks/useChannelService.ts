@@ -3,9 +3,11 @@ import { Channel, ChannelService } from '../services/channelService';
 import { env } from '../config/env';
 import { useHttpResponse } from '../context/ResponseNotifier';
 import { useAgents } from '../context/AgentsContext';
+import { useAuth } from '../context/AuthContext';
 
 export const useChannelService = (token: string) => {
-  const { notify } = useHttpResponse();
+  const { handleTokenExpirationError } = useAuth();
+  const { notify } = useHttpResponse(); // Destructure handleTokenExpirationError
   const {
     syncAgentChannelCreation,
     syncAgentChannelDeletion,
@@ -23,23 +25,34 @@ export const useChannelService = (token: string) => {
     async (agentId: string, name: string, type: string) => {
       setLoading(true);
       try {
-        const newChannel = (await service.createChannel(
-          agentId,
-          name,
-          type
-        )) as Channel;
+        const newChannel = (await service.createChannel(agentId, name, type)) as Channel;
         syncAgentChannelCreation(agentId, newChannel);
-
         notify('Channel created successfully!', 'success');
         return newChannel;
       } catch (error) {
-        notify(error as string, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
         return null;
       } finally {
         setLoading(false);
       }
     },
-    [service, syncAgentChannelCreation, notify]
+    [service, syncAgentChannelCreation, notify, handleTokenExpirationError]
   );
 
   const getQRCode = useCallback(
@@ -52,13 +65,29 @@ export const useChannelService = (token: string) => {
         }
         return result;
       } catch (error) {
-        notify(error as string, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
         return { qrCode: null };
       } finally {
         setLoading(false);
       }
     },
-    [service]
+    [service, notify, handleTokenExpirationError]
   );
 
   const disconnectChannel = useCallback(
@@ -72,13 +101,29 @@ export const useChannelService = (token: string) => {
         }
         return success;
       } catch (error) {
-        notify(error as string, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
         return false;
       } finally {
         setLoading(false);
       }
     },
-    [service]
+    [service, syncAgentChannelConnectionUpdate, notify, handleTokenExpirationError]
   );
 
   const deleteChannel = useCallback(
@@ -92,13 +137,29 @@ export const useChannelService = (token: string) => {
         }
         return success;
       } catch (error) {
-        notify(error as string, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
         return false;
       } finally {
         setLoading(false);
       }
     },
-    [service, syncAgentChannelDeletion, notify]
+    [service, syncAgentChannelDeletion, notify, handleTokenExpirationError]
   );
 
   return {

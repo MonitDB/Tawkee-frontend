@@ -198,7 +198,7 @@ interface AgentsProviderProps {
 const AgentsContext = createContext<AgentsContextType | null>(null);
 
 export function AgentsProvider({ children }: AgentsProviderProps) {
-  const { user, token } = useAuth();
+  const { user, token, handleTokenExpirationError } = useAuth();
   const { notify } = useHttpResponse();
 
   const [paginatedAgents, setPaginatedAgents] = useState<PaginatedAgentWrapper>(
@@ -226,7 +226,6 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
         ...(query && { query }),
       });
 
-      console.log('fetchingAgents....')
       const response = await fetch(
         `${env.API_URL}/workspace/${user?.workspaceId}/agents?${queryParams}`,
         {
@@ -245,7 +244,9 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
         meta: data.meta,
       });
     } catch (error) {
-      notify(error instanceof Error ? error.message : '', 'error');
+      const errorMessage = error instanceof Error ? error.message : '';
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
+      notify(errorMessage, 'error');
     } finally {
       setLoading(false);
     }
@@ -264,7 +265,9 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       if (data.error) throw new Error(data.error);
       return data.data;
     } catch (error) {
-      notify(error instanceof Error ? error.message : '', 'error');
+      const errorMessage = error instanceof Error ? error.message : '';
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
+      notify(errorMessage, 'error');
       return null;
     } finally {
       setLoading(false);
@@ -303,7 +306,9 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       notify('Agent created successfully!', 'success');
       return { success: true, id: data.data.agent.id };
     } catch (error) {
-      notify(error instanceof Error ? error.message : '', 'error');
+      const errorMessage = error instanceof Error ? error.message : '';
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
+      notify(errorMessage, 'error');
       return { success: false };
     } finally {
       setLoading(false);
@@ -338,7 +343,9 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       notify('Agent updated successfully!', 'success');
       return true;
     } catch (error) {
-      notify(error instanceof Error ? error.message : '', 'error');
+      const errorMessage = error instanceof Error ? error.message : '';
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
+      notify(errorMessage, 'error');
       return false;
     } finally {
       setLoading(false);
@@ -368,7 +375,9 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       notify('Agent deleted successfully!', 'success');
       return true;
     } catch (error) {
-      notify(error instanceof Error ? error.message : '', 'error');
+      const errorMessage = error instanceof Error ? error.message : '';
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
+      notify(errorMessage, 'error');
       return false;
     } finally {
       setLoading(false);
@@ -404,7 +413,9 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       notify('Agent activated!', 'success');
       return true;
     } catch (error) {
-      notify(error instanceof Error ? error.message : '', 'error');
+      const errorMessage = error instanceof Error ? error.message : '';
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
+      notify(errorMessage, 'error');
       return false;
     } finally {
       setLoading(false);
@@ -440,7 +451,9 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
       return true;
     } catch (error) {
-      notify(error instanceof Error ? error.message : '', 'error');
+      const errorMessage = error instanceof Error ? error.message : '';
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
+      notify(errorMessage, 'error');
       return false;
     } finally {
       setLoading(false);
@@ -459,7 +472,9 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       if (data.error) throw new Error(data.error);
       return data.data;
     } catch (error) {
-      notify(error instanceof Error ? error.message : '', 'error');
+      const errorMessage = error instanceof Error ? error.message : '';
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
+      notify(errorMessage, 'error');
       return null;
     } finally {
       setLoading(false);
@@ -483,8 +498,6 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       const data = await response.json();
       if (data.error) throw new Error(data.error);
 
-      console.log('Before setPaginatedAgents:', paginatedAgents.agents.length);
-
       setPaginatedAgents((prev) => {
         const updated = {
           ...prev,
@@ -494,14 +507,15 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
               : wrapper
           ),
         };
-        console.log('After setPaginatedAgents:', updated.agents.length);
         return updated;
       });
 
       notify('Settings updated successfully!', 'success');
       return true;
     } catch (error) {
-      notify(error instanceof Error ? error.message : '', 'error');
+      const errorMessage = error instanceof Error ? error.message : '';
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
+      notify(errorMessage, 'error');
       return false;
     } finally {
       setLoading(false);

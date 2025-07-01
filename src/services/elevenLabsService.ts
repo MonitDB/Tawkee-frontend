@@ -136,20 +136,7 @@ export class ElevenLabsService {
 
       return data;
     } catch (error: unknown) {
-      let errorMessage = 'An unexpected error occurred.';
-
-      if (error instanceof Error) {
-        if (error.message.includes('Failed to fetch')) {
-          errorMessage =
-            'Network error. Please check your internet connection.';
-        } else {
-          errorMessage = `Error: ${error.message}`;
-        }
-      } else {
-        errorMessage = 'An unknown error occurred.';
-      }
-
-      throw errorMessage;
+      throw error;
     }
   }
 
@@ -194,20 +181,7 @@ export class ElevenLabsService {
 
       return data;
     } catch (error: unknown) {
-      let errorMessage = 'An unexpected error occurred.';
-
-      if (error instanceof Error) {
-        if (error.message.includes('Failed to fetch')) {
-          errorMessage =
-            'Network error. Please check your internet connection.';
-        } else {
-          errorMessage = `Error: ${error.message}`;
-        }
-      } else {
-        errorMessage = 'An unknown error occurred.';
-      }
-
-      throw errorMessage;
+      throw error;
     }
   }
 
@@ -260,20 +234,7 @@ export class ElevenLabsService {
 
       return data;
     } catch (error: unknown) {
-      let errorMessage = 'An unexpected error occurred.';
-
-      if (error instanceof Error) {
-        if (error.message.includes('Failed to fetch')) {
-          errorMessage =
-            'Network error. Please check your internet connection.';
-        } else {
-          errorMessage = `Error: ${error.message}`;
-        }
-      } else {
-        errorMessage = 'An unknown error occurred.';
-      }
-
-      throw errorMessage;
+      throw error;
     }
   }
 
@@ -333,20 +294,7 @@ export class ElevenLabsService {
 
       return data;
     } catch (error: unknown) {
-      let errorMessage = 'An unexpected error occurred.';
-
-      if (error instanceof Error) {
-        if (error.message.includes('Failed to fetch')) {
-          errorMessage =
-            'Network error. Please check your internet connection.';
-        } else {
-          errorMessage = `Error: ${error.message}`;
-        }
-      } else {
-        errorMessage = 'An unknown error occurred.';
-      }
-
-      throw errorMessage;
+      throw error;
     }
   }
 }

@@ -6,15 +6,14 @@ import { useAgents } from '../context/AgentsContext';
 import { useAuth } from '../context/AuthContext';
 
 export const useChatService = (token: string) => {
-  const { notify } = useHttpResponse();
-  const { user } = useAuth();
+  const { notify } = useHttpResponse(); // Destructure handleTokenExpirationError
+  const { user, handleTokenExpirationError } = useAuth();
   const {
     syncAgentChats,
     syncAgentChatFinishStatus,
     syncAgentChatRead,
     syncAgentChatHumanTalkStatus,
     syncAgentChatDeletion,
-
     syncAgentChatInteractions,
   } = useAgents();
 
@@ -28,7 +27,7 @@ export const useChatService = (token: string) => {
         apiUrl: env.API_URL,
         userId: user?.id as string,
       }),
-    [token, env.API_URL]
+    [token, env.API_URL, user?.id]
   );
 
   const fetchChats = useCallback(
@@ -44,12 +43,28 @@ export const useChatService = (token: string) => {
 
         return response;
       } catch (error: unknown) {
-        notify(error as string, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
       } finally {
         setChatLoading(false);
       }
     },
-    [service, notify]
+    [service, notify, handleTokenExpirationError]
   );
 
   const finishChat = useCallback(
@@ -62,12 +77,28 @@ export const useChatService = (token: string) => {
         notify('Chat marked as finished!', 'info');
         return response;
       } catch (error: unknown) {
-        notify(error as string, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
       } finally {
         setChatLoading(false);
       }
     },
-    [service, notify]
+    [service, notify, handleTokenExpirationError]
   );
 
   const unfinishChat = useCallback(
@@ -80,12 +111,28 @@ export const useChatService = (token: string) => {
         notify('Chat marked as unfinished!', 'info');
         return response;
       } catch (error: unknown) {
-        notify(error as string, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
       } finally {
         setChatLoading(false);
       }
     },
-    [service, notify]
+    [service, notify, handleTokenExpirationError]
   );
 
   const readChat = useCallback(
@@ -97,12 +144,28 @@ export const useChatService = (token: string) => {
 
         return response;
       } catch (error: unknown) {
-        notify(error as string, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
       } finally {
         setChatLoading(false);
       }
     },
-    [service, notify]
+    [service, notify, handleTokenExpirationError]
   );
 
   const startChatHumanAttendance = useCallback(
@@ -115,12 +178,28 @@ export const useChatService = (token: string) => {
         notify('Started human attendance in chat!', 'info');
         return response;
       } catch (error: unknown) {
-        notify(error as string, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
       } finally {
         setChatLoading(false);
       }
     },
-    [service, notify]
+    [service, notify, handleTokenExpirationError]
   );
 
   const stopChatHumanAttendance = useCallback(
@@ -133,12 +212,28 @@ export const useChatService = (token: string) => {
         notify('Stopped human attendance in chat!', 'info');
         return response;
       } catch (error: unknown) {
-        notify(error as string, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
       } finally {
         setChatLoading(false);
       }
     },
-    [service, notify]
+    [service, notify, handleTokenExpirationError]
   );
 
   const deleteChat = useCallback(
@@ -151,12 +246,28 @@ export const useChatService = (token: string) => {
         notify('Chat deleted successfully!', 'success');
         return response;
       } catch (error: unknown) {
-        notify(error as string, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
       } finally {
         setChatLoading(false);
       }
     },
-    [service, notify]
+    [service, notify, handleTokenExpirationError]
   );
 
   const fetchInteractionsWithMessagesOfChat = useCallback(
@@ -172,12 +283,28 @@ export const useChatService = (token: string) => {
 
         return response;
       } catch (error: unknown) {
-        notify(error as string, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
       } finally {
         setInteractionLoading(false);
       }
     },
-    [service, notify]
+    [service, notify, handleTokenExpirationError]
   );
 
   return {

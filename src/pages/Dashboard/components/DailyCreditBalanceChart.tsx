@@ -17,6 +17,7 @@ dayjs.extend(isSameOrBefore);
 interface DailyCreditBalanceChartProps {
   startDate: string;
   endDate: string;
+  workspaceId: string;
 }
 
 function AreaGradient({ color, id }: { color: string; id: string }) {
@@ -45,18 +46,19 @@ function formatRelative(dateStr: string): string {
 export default function DailyCreditBalanceChart({
   startDate,
   endDate,
+  workspaceId
 }: DailyCreditBalanceChartProps) {
   const theme = useTheme();
-  const { token, user } = useAuth();
+  const { token } = useAuth();
   const { fetchDailyCreditBalance } = useDashboardService(token as string);
 
   const [data, setData] = useState<DailyCreditBalanceItem[]>([]);
 
   useEffect(() => {
-    fetchDailyCreditBalance(user?.workspaceId as string, startDate, endDate)
+    fetchDailyCreditBalance(workspaceId as string, startDate, endDate)
       .then(setData)
       .catch(() => setData([]));
-  }, [user?.workspaceId, startDate, endDate, fetchDailyCreditBalance]);
+  }, [workspaceId, startDate, endDate, fetchDailyCreditBalance]);
 
   const labels = useMemo(() => data.map((d) => d.date), [data]);
   const planSeries = data.map((d) => d.planCreditsRemaining);
@@ -68,7 +70,7 @@ export default function DailyCreditBalanceChart({
       sx={{
         width: '100%',
         minHeight: 300,
-        maxHeight: 1000,
+        maxHeight: 600,
         height: '100%',
         flex: 1,
         display: 'flex',

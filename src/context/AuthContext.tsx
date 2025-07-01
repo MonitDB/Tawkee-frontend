@@ -20,6 +20,9 @@ interface AuthContextType {
   logout: () => void;
   resetPassword: (input: PasswordResetInput) => Promise<Result>;
 
+  can: (resource: string, action: string) => boolean;
+  handleTokenExpirationError: (errorMessage: string) => void;
+
   workspacePlanCredits: number;
   workspaceExtraCredits: number;
   syncWorkspaceCreditsUpdate: (planCredits: number, extraCredits: number) => boolean;
@@ -55,15 +58,25 @@ export interface User {
   email: string;
   provider?: 'google' | 'facebook' | 'password';
   emailVerified?: boolean;
-
+  
   workspacePlanCredits: number;
   workspaceExtraCredits: number;
-
+  
   firstName?: string;
   lastName?: string;
   avatar?: string;
-
+  
   createdAt?: string;
+  updatedAt?: string;
+
+  role: {
+    name: string;
+    description?: string;
+  };
+
+  rolePermissions: { action: string; resource: string; description: string }[];
+
+  userPermissions: { action: string; resource: string; allowed: boolean }[];
 
   smartRecharge?: {
     threshold: number;
@@ -196,7 +209,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
           subscriptionData.data.plan
         );
       } catch (error) {
-        console.error('Error fetching workspace data:', error);
+        const errorMessage = error instanceof Error ? error.message : '';
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
       }
     };
 
@@ -258,6 +273,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         errorMessage = 'An unknown error occurred.';
       }
 
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
       notify(errorMessage, 'error');
       return {
         success: false,
@@ -325,6 +341,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         errorMessage = 'An unknown error occurred.';
       }
 
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
       notify(errorMessage, 'error');
       return {
         success: false,
@@ -449,6 +466,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         errorMessage = 'An unknown error occurred.';
       }
 
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
       notify(errorMessage, 'error');
       return {
         success: false,
@@ -509,6 +527,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         errorMessage = 'An unknown error occurred.';
       }
 
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
       notify(errorMessage, 'error');
       return {
         success: false,
@@ -516,6 +535,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
       };
     } finally {
       setLoading(false);
+    }
+  };
+
+  const can = (action: string, resource: string): boolean => {
+      if (!user) return false;
+
+      // Check userPermissions first (higher precedence)
+      const userPermission = user.userPermissions.find(
+          (permission) => permission.resource === resource && permission.action === action
+      );
+      if (userPermission) {
+          return userPermission.allowed;
+      }
+
+      // Check rolePermissions if userPermissions doesn't allow it
+      const rolePermission = user.rolePermissions.find(
+          (permission) => permission.resource === resource && permission.action === action
+      );
+      if (rolePermission) {
+          return true;
+      }
+
+      return false;
+  };
+
+  const handleTokenExpirationError = (errorMessage: string) => {
+    if (errorMessage.includes('Your session has been expired. Please log in again') || errorMessage.includes('jwt malformed')) {
+      
+      // Reset state
+      localStorage.removeItem('app:user');
+      localStorage.removeItem('app:auth-token');
+
+      setToken(null);
+      setUser(null);
+      setIsAuthenticated(false);
+      setWorkspacePlanCredits(0);
+      setWorkspaceExtraCredits(0);
     }
   };
 
@@ -576,6 +632,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     profile,
     logout,
     resetPassword,
+
+    can,
+    handleTokenExpirationError,
 
     workspacePlanCredits,
     workspaceExtraCredits,

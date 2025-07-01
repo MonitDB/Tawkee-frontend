@@ -8,9 +8,11 @@ import {
 import { env } from '../config/env';
 import { useHttpResponse } from '../context/ResponseNotifier';
 import { useAgents } from '../context/AgentsContext';
+import { useAuth } from '../context/AuthContext';
 
 export const useTrainingService = (token: string) => {
-  const { notify } = useHttpResponse();
+  const { handleTokenExpirationError } = useAuth();
+  const { notify } = useHttpResponse(); // Destructure handleTokenExpirationError
   const {
     syncAgentTrainings,
     syncAgentTrainingCreation,
@@ -37,13 +39,29 @@ export const useTrainingService = (token: string) => {
 
         return response;
       } catch (error) {
-        notify(error as string, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
         return defaultPaginatedResponse;
       } finally {
         setLoading(false);
       }
     },
-    [service, syncAgentTrainings, notify]
+    [service, syncAgentTrainings, notify, handleTokenExpirationError]
   );
 
   const createTraining = useCallback(
@@ -59,13 +77,29 @@ export const useTrainingService = (token: string) => {
         notify('Training created successfully!', 'success');
         return newTraining;
       } catch (error) {
-        notify(error as string, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
         return null;
       } finally {
         setCreateTrainingLoading(false);
       }
     },
-    [service, syncAgentTrainingCreation, notify]
+    [service, syncAgentTrainingCreation, notify, handleTokenExpirationError]
   );
 
   const deleteTraining = useCallback(
@@ -80,13 +114,29 @@ export const useTrainingService = (token: string) => {
         }
         return success;
       } catch (error) {
-        notify(error as string, 'error');
+        let errorMessage = 'A unexpected error occurred.';
+
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        } else {
+          errorMessage = 'An unknown error occurred.';
+        }
+
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
         return false;
       } finally {
         setLoading(false);
       }
     },
-    [service, syncAgentTrainingDeletion, notify]
+    [service, syncAgentTrainingDeletion, notify, handleTokenExpirationError]
   );
 
   return {
