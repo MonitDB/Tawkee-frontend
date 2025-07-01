@@ -110,17 +110,17 @@ export default function EditPlanDialog({ plan, onClose }: EditPlanDialogProps) {
             description: plan.product?.description || '',
             price: plan.prices[0].unit_amount,
 
-            creditsLimit: plan.metadata.creditsLimit,
-            agentsLimit: plan.metadata.agentLimit,
-            trialDays: plan.metadata.trialDays,
-            trainingTextLimit: plan.metadata.trainingTextLimit,
-            trainingDocumentLimit: plan.metadata.trainingDocumentLimit,
-            trainingVideoLimit: plan.metadata.trainingVideoLimit,
-            trainingWebsiteLimit: plan.metadata.trainingWebsiteLimit,
-            isActive: plan.metadata.isActive,
-            isEnterprise: plan.metadata.isEnterprise || false,
+            creditsLimit: plan?.metadata?.creditsLimit,
+            agentsLimit: plan?.metadata?.agentLimit,
+            trialDays: plan?.metadata?.trialDays,
+            trainingTextLimit: plan?.metadata?.trainingTextLimit,
+            trainingDocumentLimit: plan?.metadata?.trainingDocumentLimit,
+            trainingVideoLimit: plan?.metadata?.trainingVideoLimit,
+            trainingWebsiteLimit: plan?.metadata?.trainingWebsiteLimit,
+            isActive: plan?.metadata?.isActive,
+            isEnterprise: plan?.metadata?.isEnterprise || false,
 
-            features: plan.metadata.features || []    
+            features: plan?.metadata?.features || []    
         })
     }
   }, [plan])
@@ -175,7 +175,6 @@ export default function EditPlanDialog({ plan, onClose }: EditPlanDialogProps) {
     };
 
     const handleSubmit = async () => {
-        console.log('Submitted Plan:', form);
         await updatePlanFromForm(form);
     };
 

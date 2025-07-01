@@ -101,8 +101,7 @@ export default function Chats() {
       };
 
       setSelectedChatId(updatedChat.id);
-    } catch (error) {
-      console.log(error);
+    } catch {
     }
   };
 

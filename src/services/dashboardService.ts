@@ -109,7 +109,6 @@ export class DashboardService {
 
     
     const url = `${this.apiUrl}/workspaces/${workspaceId ? workspaceId : 'all'}/dashboard-metrics?startDate=${startDate}&endDate=${endDate}`;
-    console.log(url);
     
     try {
       const response = await fetch(url, {
@@ -128,7 +127,6 @@ export class DashboardService {
       }
 
       const data = await response.json();
-      console.log(data.data);
       return data.data as DashboardMetricsDto;
     } catch (error: unknown) {
       throw error;

@@ -230,7 +230,6 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
   };
 
   const handleSubmitTraining = (training: CreateTrainingDto) => {
-    console.log('handleSubmitTraining...');
     createTraining(agentData?.id as string, training);
   };
 

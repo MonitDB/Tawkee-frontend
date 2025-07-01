@@ -1335,7 +1335,6 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
   const syncAgentMessageChatUpdate = (data: MessageChatUpdatePayload): boolean => {
     try {
-      console.log("payload ", data);
       setPaginatedAgents((prev) => {
         // Find the agent that needs to be updated
         const agentIndex = prev.agents.findIndex(

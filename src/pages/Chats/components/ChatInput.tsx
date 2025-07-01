@@ -281,8 +281,6 @@ export default function ChatInput({
   const [error, setError] = useState<string | null>(null);
 
   const handleSendMessage = async (message: string, media?: MediaDto) => {
-    console.log({message, media});
-
     if (!message.trim() && !media) return;
 
     setSending(true);

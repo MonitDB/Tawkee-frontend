@@ -99,7 +99,6 @@ export default function CreatePlanDialog({ open, onClose }: CreatePlanDialogProp
   };
 
   const handleSubmit = async () => {
-    console.log('Creating Plan:', form);
     await createPlanFromForm(form);
     onClose();
   };

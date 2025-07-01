@@ -216,8 +216,7 @@ export function ChatDetails({
     async (chatId: string) => {
       try {
         await startChatHumanAttendance(chatId);
-      } catch (error) {
-        console.log(error);
+      } catch {
       }
     },
     [startChatHumanAttendance]

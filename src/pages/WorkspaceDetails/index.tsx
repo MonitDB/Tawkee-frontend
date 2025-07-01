@@ -56,7 +56,6 @@ export default function WorkspaceDetails() {
     const loadWorkspace = async () => {
       if (!workspaceId) return;
       const data = await fetchDetailedWorkspace(workspaceId);
-      console.log({data })
       setWorkspace(data);
     };
 

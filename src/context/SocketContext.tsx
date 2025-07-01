@@ -80,7 +80,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
     const handleSocketConnectionStatus = (data: ConnectionStatusPayload) => {
       console.log(`Connection Status: ${data.status}`);
       if (data.workspaceId) {
-        console.log(`My Workspace ID: ${data.workspaceId}`);
+        // console.log(`My Workspace ID: ${data.workspaceId}`);
       }
     };
 
@@ -199,7 +199,6 @@ export function SocketProvider({ children }: SocketProviderProps) {
       };
     }
 
-    console.log('Socket provider mounted!');
   }, [user?.id]);
 
   const contextValue: SocketContextType = {};

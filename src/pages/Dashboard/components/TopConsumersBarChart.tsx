@@ -15,8 +15,6 @@ type TopConsumersBarChartProps = {
 export default function TopConsumersBarChart({ data, type }: TopConsumersBarChartProps) {
   const theme = useTheme();
 
-  console.log({ inhere: data })
-
   const names = data.map((item) => item.name || 'Unknown');
   const credits = data.map((item) => item.totalCredits);
   const totalSum = credits.reduce((acc, val) => acc + val, 0);

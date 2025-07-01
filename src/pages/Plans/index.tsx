@@ -150,7 +150,7 @@ export default function PlanList() {
                                 )}
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, justifyContent: 'space-between' }}>
                                     <List dense sx={{ minHeight: '300px' }}>
-                                    {plan.metadata.features?.map((feature, index) => (
+                                    {plan?.metadata?.features?.map((feature, index) => (
                                         <ListItem key={index} disableGutters>
                                         <ListItemIcon>
                                             <CheckCircleIcon color="success" fontSize="small" />
@@ -160,7 +160,7 @@ export default function PlanList() {
                                     ))}
                                     </List>
                                     <Box sx={{ display: 'flex', gap: 1 }}>
-                                        {plan.metadata?.trialDays && (
+                                        {plan?.metadata?.trialDays && (
                                         <Chip
                                             label={`${plan.metadata.trialDays} days of trial`}
                                             color="primary"
@@ -169,7 +169,7 @@ export default function PlanList() {
                                             sx={{ mt: 2 }}
                                         />
                                         )}
-                                        {plan.metadata?.isActive ? (
+                                        {plan?.metadata?.isActive ? (
                                             <Chip
                                                 label={`Plan Available`}
                                                 color="success"
@@ -186,7 +186,7 @@ export default function PlanList() {
                                                 sx={{ mt: 2 }}
                                             />                                            
                                         )}
-                                        {plan.metadata?.isEnterprise && (
+                                        {plan?.metadata?.isEnterprise && (
                                         <Chip
                                             label={`Enterprise plan`}
                                             color="secondary"

@@ -66,7 +66,6 @@ export default function MenuContent() {
       <List dense>
         {mainListItems.map((item, index) => {
           // Only include "Plans" and "Workspaces" if the user's role is "ADMIN"
-          console.log({ user: user?.role.name, item: item.role})
           if (item.role && user?.role.name !== item.role) {
             return null;
           }

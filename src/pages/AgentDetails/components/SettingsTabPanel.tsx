@@ -96,11 +96,6 @@ export default function SettingsTabPanel({
   agentId,
   agentSettingsData,
 }: SettingsTabPanelProps) {
-  console.log(
-    'SettingsTabPanel received agentSettingsData:',
-    agentSettingsData
-  );
-
   const theme = useTheme();
 
   const { mode, systemMode } = useColorScheme();

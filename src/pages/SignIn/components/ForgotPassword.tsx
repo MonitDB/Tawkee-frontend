@@ -43,8 +43,7 @@ export default function ForgotPassword({
       const succeeded: boolean = await sendForgotPasswordEmail(email.value);
       email.value = '';
       setRequestSucceeded(succeeded);
-    } catch (error) {
-      console.log(error);
+    } catch {
     }
   };
 
