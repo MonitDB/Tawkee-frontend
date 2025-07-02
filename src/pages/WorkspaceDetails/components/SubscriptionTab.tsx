@@ -48,9 +48,11 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
   const theme = useTheme();
   const { mode, systemMode } = useColorScheme();
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
-  const { token } = useAuth();
+  const { token, can } = useAuth();
   const { updateSubscriptionOverrides, stripeLoading } = useStripeService(token as string);
   const { plan } = subscription;
+
+  const canOverrideSubscriptionLimitsAsAdmin = can('OVERRIDE_SUBSCRIPTION_LIMITS_AS_ADMIN', 'WORKSPACE');
 
   const [isEditing, setIsEditing] = useState(false);
   const [editableFeatures, setEditableFeatures] = useState<string[]>(subscription.featureOverrides ?? plan.features);
@@ -225,12 +227,22 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h6">Subscription & Plan Details</Typography>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 2 }}>
           <Button
             size='small'
             variant='outlined'
             onClick={() => handleRemoveOverrides()}
-            disabled={!hasOverrides}
+            disabled={stripeLoading
+              ? true
+              : !hasOverrides || !canOverrideSubscriptionLimitsAsAdmin
+            }
+            sx={{
+              textTransform: 'none',
+              fontWeight: 600,
+              '&.Mui-disabled': {
+                color: resolvedMode === 'dark' ? theme.palette.grey[400] : theme.palette.grey[500],
+              },
+            }}
           >
             Remove Overrides
           </Button>
@@ -244,7 +256,10 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
                 setIsEditing(true);
               }
             }}
-            disabled={stripeLoading}
+            disabled={stripeLoading
+              ? true
+              : !canOverrideSubscriptionLimitsAsAdmin
+            }
             sx={{
               textTransform: 'none',
               fontWeight: 600,
@@ -255,6 +270,11 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
           >
             {isEditing ? 'Save' : 'Edit'}
           </Button>
+          { !canOverrideSubscriptionLimitsAsAdmin && (
+            <Tooltip title="Your admin privileges to override subscription limits of any workspace has been denied.">
+              <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
+            </Tooltip>              
+          )}
         </Box>
       </Box>
       <Grid container spacing={3}>

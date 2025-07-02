@@ -13,6 +13,7 @@ import {
   Tooltip,
   Chip,
   useMediaQuery,
+  Button,
 } from '@mui/material';
 import {
   Group as GroupIcon,
@@ -69,6 +70,15 @@ export default function WorkspaceDetails() {
       <CardContent sx={{ height: '100%', overflowY: 'auto' }}>
         <Box sx={{ p: 3 }}>
           <Grid container spacing={3}>
+            <Grid size={{ xs: 12 }}>
+              <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => navigate(-1)}
+              >
+                &larr; Go back to Workspaces
+              </Button>
+            </Grid>
             <Grid size={{ xs: 12 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
                 <Avatar sx={{ width: 100, height: 100 }}>

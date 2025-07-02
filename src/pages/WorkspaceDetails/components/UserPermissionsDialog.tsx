@@ -16,8 +16,10 @@ import {
   useTheme,
   useColorScheme,
   useMediaQuery,
-  Theme
+  Theme,
+  Tooltip
 } from '@mui/material';
+import InfoIcon from '@mui/icons-material/Info';
 
 import { useAuth, User } from '../../../context/AuthContext';
 import { useDashboardService } from '../../../hooks/useDashboardService';
@@ -39,8 +41,10 @@ export default function UserPermissionsDialog({
 
   const isSmallScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
 
-  const { token } = useAuth();
-  const { updateUserPermissions } = useDashboardService(token as string);
+  const { token, can } = useAuth();
+  const { updateUserPermissions, loading } = useDashboardService(token as string);
+
+  const canEditUserPermissionAsAdmin = false//can('EDIT_USER_PERMISSION_AS_ADMIN', 'WORKSPACE');
 
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
@@ -263,6 +267,10 @@ export default function UserPermissionsDialog({
           onClick={() => {
             isEditing ? handleSave() : setIsEditing(true)
           }}
+          disabled={loading
+            ? true
+            : !canEditUserPermissionAsAdmin
+          }
           sx={{
             '&.Mui-disabled': {
               color:
@@ -274,6 +282,11 @@ export default function UserPermissionsDialog({
         >
           { isEditing ? 'Save' : 'Edit'}
         </Button>
+        { !canEditUserPermissionAsAdmin && (
+          <Tooltip title="Your admin privileges to edit user permissions of any workspace has been denied.">
+            <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
+          </Tooltip>              
+        )}
       </DialogActions>
     </Dialog>
   );
