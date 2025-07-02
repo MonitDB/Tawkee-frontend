@@ -19,6 +19,13 @@ export interface BillingStatusResponse {
   currentPlan?: string;
   plan: any;
   subscription: any;
+  smartRecharge: {
+    active: boolean;
+    threshold: number;
+    rechargeAmount: number;
+  },
+  planCreditsRemaining: number;
+  extraCreditsRemaining: number;
 }
 
 export interface ProductWithPrices {

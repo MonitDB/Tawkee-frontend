@@ -16,7 +16,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  FormHelperText,
   SelectChangeEvent,
   Tooltip,
 } from '@mui/material';
@@ -63,6 +62,8 @@ export default function Billing() {
 
   const [planState, setPlanState] = useState(plan);
   const [subscriptionState, setSubscriptionState] = useState(subscription);
+  const [workspacePlanCreditsState, setWorkspacePlanCreditsState] = useState<number>(workspacePlanCredits);
+  const [workspaceExtraCreditsState, setWorkspaceExtraCreditsState] = useState<number>(workspaceExtraCredits);
 
   const [openPlanDialog, setOpenPlanDialog] = useState(false);
 
@@ -109,11 +110,13 @@ export default function Billing() {
     await purchaseCredits({ workspaceId: user?.workspaceId as string, credits: rechargeAmount});
   };
 
-  const handleUpdateSmartRechargeSetting = async () => {
-    await updateSmartRechargeSetting(user?.workspaceId as string, {
+  const handleUpdateSmartRechargeSetting = async (
+    selectedWorkspaceId: string, currentAutoRechargeEnabled: boolean
+  ) => {
+    await updateSmartRechargeSetting(selectedWorkspaceId, {
         threshold: autoRechargeThreshold,
         rechargeAmount: autoRechargeAmount,
-        active: autoRechargeEnabled
+        active: currentAutoRechargeEnabled
     });
   };
 
@@ -149,10 +152,16 @@ export default function Billing() {
   useEffect(() => {
     const fetchBillingData = async (workspaceId: string) => {
       const response = await getBillingStatus(workspaceId);
-      console.log({ billing: response });
 
       setPlanState(response?.plan);
       setSubscriptionState(response?.subscription);
+
+      setAutoRechargeEnabled(!!response?.smartRecharge?.active);
+      setRechargeThreshold(response?.smartRecharge?.threshold);
+      setAutoRechargeAmount(response?.smartRecharge?.rechargeAmount);
+
+      setWorkspacePlanCreditsState(response?.planCreditsRemaining as number);
+      setWorkspaceExtraCreditsState(response?.extraCreditsRemaining as number);
     }
     
     if (!userBelongsToSelectedWorkspace) {
@@ -160,10 +169,14 @@ export default function Billing() {
     } else {
       setPlanState(plan);
       setSubscriptionState(subscription);
+      setAutoRechargeEnabled(!!user?.smartRecharge?.active);
+      setRechargeThreshold(user?.smartRecharge?.threshold);
+      setAutoRechargeAmount(user?.smartRecharge?.rechargeAmount);
+      setWorkspacePlanCreditsState(workspacePlanCredits);
+      setWorkspaceExtraCreditsState(workspaceExtraCredits);
     }
 
   }, [userBelongsToSelectedWorkspace, workspaceId]);
-
 
   const relativeTerm = user?.workspaceId === workspaceId ? 'Your' : 'The'
 
@@ -203,7 +216,6 @@ export default function Billing() {
                       </MenuItem>
                     ))}
                   </Select>
-                  {!workspaceId && <FormHelperText>Workspace is required</FormHelperText>}
                 </FormControl>
               )}
 
@@ -228,14 +240,14 @@ export default function Billing() {
               : 'This workspace currently has '
             }
             <Chip
-              label={`${workspacePlanCredits.toLocaleString('en-US') || 'No'} credits`}
+              label={`${workspacePlanCreditsState.toLocaleString('en-US') || 'No'} credits`}
               color="primary"
               variant="outlined"
               size="small"
             />
             { subscriptionState?.status !== 'TRIAL' && (
                 <Chip
-                label={`${workspaceExtraCredits.toLocaleString('en-US') || 'No'} extra credits`}
+                label={`${workspaceExtraCreditsState.toLocaleString('en-US') || 'No'} extra credits`}
                 color="primary"
                 variant="outlined"
                 size="small"
@@ -397,7 +409,7 @@ export default function Billing() {
                         checked={autoRechargeEnabled}
                         onChange={() => {
                             setAutoRechargeEnabled(!autoRechargeEnabled);
-                            handleUpdateSmartRechargeSetting()
+                            handleUpdateSmartRechargeSetting(workspaceId as string, !autoRechargeEnabled);
                         }}
                         disabled={userBelongsToSelectedWorkspace
                           ? !canManageSmartRechargeSettings
@@ -436,7 +448,7 @@ export default function Billing() {
                         />
                         <Button
                             variant="contained"
-                            onClick={handleUpdateSmartRechargeSetting}
+                            onClick={() => handleUpdateSmartRechargeSetting(workspaceId as string, autoRechargeEnabled)}
                             disabled={ (stripeLoading || !autoRechargeEnabled) 
                                 ? true
                                 : userBelongsToSelectedWorkspace
