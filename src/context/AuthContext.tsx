@@ -20,7 +20,7 @@ interface AuthContextType {
   logout: () => void;
   resetPassword: (input: PasswordResetInput) => Promise<Result>;
 
-  can: (resource: string, action: string) => boolean;
+  can: (action: string, resource: string) => boolean;
   handleTokenExpirationError: (errorMessage: string) => void;
 
   workspacePlanCredits: number;
@@ -549,7 +549,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           return userPermission.allowed;
       }
 
-      // Check rolePermissions if userPermissions doesn't allow it
+      // Check rolePermissions if no userPermissions
       const rolePermission = user.rolePermissions.find(
           (permission) => permission.resource === resource && permission.action === action
       );

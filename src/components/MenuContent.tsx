@@ -18,25 +18,37 @@ import { Badge, ListItemAvatar } from '@mui/material';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { useAuth } from '../context/AuthContext';
 
-const mainListItems = [
-  { text: 'Dashboard', icon: <DashboardIcon /> },
-  { text: 'Plans', icon: <SubscriptionsIcon />, role: 'ADMIN' },  // Add role condition here
-  { text: 'Workspaces', icon: <WorkspacesIcon />, role: 'ADMIN' }, // Add role condition here
-  { text: 'Agents', icon: <SupportAgentIcon /> },
-  { text: 'Chats', icon: <ChatIcon /> },
-];
-
-const secondaryListItems = [
-  { text: 'Billing', icon: <ReceiptLongIcon /> },
-];
-
 export default function MenuContent() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { user } = useAuth();
+  const { can } = useAuth();
   const { paginatedAgents } = useAgents();
   const { agents } = paginatedAgents;
+
+  const canViewDashboardPage = 
+    can('VIEW_INTERACTIONS', 'DASHBOARD') ||
+    can('VIEW_CREDIT_REMAINING', 'DASHBOARD') ||
+    can('VIEW_CREDIT_USAGE', 'DASHBOARD');
+
+  const canViewPlansPage = can('VIEW_AS_ADMIN', 'PLAN');
+  const canViewWorkspacesPage = can('VIEW_AS_ADMIN', 'WORKSPACE');
+  const canViewAgentsPage = can('VIEW', 'AGENT');
+  const canViewChatsPage = can('VIEW_LIST', 'CHAT') || can('VIEW_MESSAGES', 'CHAT');
+
+  const mainListItems = [
+    { text: 'Dashboard', icon: <DashboardIcon />, permission: canViewDashboardPage },
+    { text: 'Plans', icon: <SubscriptionsIcon />,   permission: canViewPlansPage },
+    { text: 'Workspaces', icon: <WorkspacesIcon />, permission: canViewWorkspacesPage },
+    { text: 'Agents', icon: <SupportAgentIcon />, permission: canViewAgentsPage },
+    { text: 'Chats', icon: <ChatIcon />, permission: canViewChatsPage },
+  ];
+
+  const canViewBilling = can('VIEW', 'BILLING');
+
+  const secondaryListItems = [
+    { text: 'Billing', icon: <ReceiptLongIcon />, permission: canViewBilling },
+  ];
 
   const routePrimaryKeyMap: Record<number, string> = {
     0: '/',
@@ -65,10 +77,11 @@ export default function MenuContent() {
     <Stack sx={{ flexGrow: 1, p: 1, justifyContent: 'space-between' }}>
       <List dense>
         {mainListItems.map((item, index) => {
-          // Only include "Plans" and "Workspaces" if the user's role is "ADMIN"
-          if (item.role && user?.role.name !== item.role) {
+          // Remove item if user has been denied access...
+          if (!item.permission) {
             return null;
           }
+          
           return (
             <ListItem
               key={index}
@@ -102,18 +115,25 @@ export default function MenuContent() {
         })}
       </List>
       <List dense>
-        {secondaryListItems.map((item, index) => (
-          <ListItem
-            key={index}
-            disablePadding sx={{ display: 'block' }}
-            onClick={() => navigate(routeSecondaryKeyMap[index])}
-          >
-            <ListItemButton selected={routeSecondaryKeyMap[index] == location.pathname}>
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
+        {secondaryListItems.map((item, index) => {
+          // Remove item if user has been denied access...
+          if (!item.permission) {
+            return null;
+          }
+          
+          return (
+            <ListItem
+              key={index}
+              disablePadding sx={{ display: 'block' }}
+              onClick={() => navigate(routeSecondaryKeyMap[index])}
+            >
+              <ListItemButton selected={routeSecondaryKeyMap[index] == location.pathname}>
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
       </List>
     </Stack>
   );
