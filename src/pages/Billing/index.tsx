@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -12,41 +12,77 @@ import {
   Stack,
   useTheme,
   useColorScheme,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormHelperText,
+  SelectChangeEvent,
+  Tooltip,
 } from '@mui/material';
 import { useAuth, User } from '../../context/AuthContext';
 import SelectPlanDialog from './components/SelectPlanDialog';
+import InfoIcon from '@mui/icons-material/Info';
 import { useStripeService } from '../../hooks/useStripeService';
 import { Circle } from '@mui/icons-material';
+import { useDashboardService } from '../../hooks/useDashboardService';
+import { useNavigate } from 'react-router-dom';
+import { useHttpResponse } from '../../context/ResponseNotifier';
+import LoadingBackdrop from '../../components/LoadingBackdrop';
 
 export default function Billing() {
+  const navigate = useNavigate();
   const theme = useTheme();
   const { mode, systemMode } = useColorScheme();
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
 
-  const { token, user, workspacePlanCredits, workspaceExtraCredits } = useAuth();
+  const { token, user, workspacePlanCredits, workspaceExtraCredits, can } = useAuth();
+  const { notify } = useHttpResponse();
+
+  const userIsAdmin = user?.role.name === 'ADMIN';
+  const canManageSubscriptionAsAdmin = can('MANAGE_SUBSCRIPTION_AS_ADMIN', 'BILLING');
+  const canManageSubscription = can('MANAGE_SUBSCRIPTION', 'BILLING');
+  const canPurchaseExtraCreditsAsAdmin = can('PURCHASE_EXTRA_CREDITS_AS_ADMIN', 'BILLING');
+  const canPurchaseExtraCredits = can('PURCHASE_EXTRA_CREDITS', 'BILLING');
+  const canManageSmartRechargeSettingsAsAdmin = can('MANAGE_SMART_RECHARGE_SETTINGS_AS_ADMIN', 'BILLING');
+  const canManageSmartRechargeSettings = can('MANAGE_SMART_RECHARGE_SETTINGS', 'BILLING');
+  const canViewAsAdmin = can('VIEW_AS_ADMIN', 'BILLING')
+  const canView = can('VIEW', 'BILLING');
+
   const { 
     openCustomerPortal,
     purchaseCredits,
     updateSmartRechargeSetting,
+    getBillingStatus,
     stripeLoading
-} = useStripeService(token as string);
+  } = useStripeService(token as string);
+
+  const { fetchAllWorkspacesBasicInfo  } = useDashboardService(token as string);
 
   const { smartRecharge, plan, subscription } = user as User;
 
+  const [planState, setPlanState] = useState(plan);
+  const [subscriptionState, setSubscriptionState] = useState(subscription);
+
   const [openPlanDialog, setOpenPlanDialog] = useState(false);
 
+  const [workspaceId, setWorkspaceId] = useState<string | null>(user?.workspaceId ?? null);
+  const [workspaceOptions, setWorkspaceOptions] = useState<
+    { id: string; name: string; email: string | null }[]
+  >([]);
+  
   const formattedDueDate = new Intl.DateTimeFormat('en-US', {
     dateStyle: 'long',
-  }).format(new Date(subscription?.currentPeriodEnd as string));
+  }).format(new Date(subscriptionState?.currentPeriodEnd as string));
 
-  const formattedCancelDate = subscription?.cancelAtPeriodEnd
+  const formattedCancelDate = subscriptionState?.cancelAtPeriodEnd
     ? new Intl.DateTimeFormat('en-US', {
             dateStyle: 'long',
-        }).format(new Date(subscription?.canceledAt as string))
+        }).format(new Date(subscriptionState?.canceledAt as string))
     : undefined
 
-  const value = (plan?.amount || 0) / 100; // Stripe gives amounts in cents
-  const currency = plan?.currency || 'usd';
+  const value = (planState?.amount || 0) / 100; // Stripe gives amounts in cents
+  const currency = planState?.currency || 'usd';
 
   const formattedPrice = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -65,6 +101,10 @@ export default function Billing() {
     }).format(rechargeAmount * 0.04)
     : undefined;
 
+  const handleWorkspaceChange = (event: SelectChangeEvent<string | null>) => {
+    setWorkspaceId(event.target.value);
+  }; 
+
   const handlePurchaseExtraCredits = async () => {
     await purchaseCredits({ workspaceId: user?.workspaceId as string, credits: rechargeAmount});
   };
@@ -77,26 +117,123 @@ export default function Billing() {
     });
   };
 
+  const userBelongsToSelectedWorkspace = user?.workspaceId === workspaceId;
+
+  // Handle unauthorized access to the page
+  useEffect(() => {
+    if (!canView) {
+      notify('You do not have permission to view Billing details of your workspace.', 'warning');
+      navigate('/');
+    }
+  }, [canView, userBelongsToSelectedWorkspace]);
+
+  // Fetch list of workspaces
+  useEffect(() => {
+
+    if (userIsAdmin) {
+      // Fetch list of all workspaces
+      const fetchOptions = async () => {
+        try {
+          const all = await fetchAllWorkspacesBasicInfo();
+          setWorkspaceOptions(all);
+        } catch (err) {
+          console.error('Failed to load workspace options:', err);
+        }
+      };
+      fetchOptions();
+    }
+
+  }, [user?.role.name, fetchAllWorkspacesBasicInfo]);  
+  
+  // Fetch billing data of selected workspace (if admin is viewing other workspaces data)
+  useEffect(() => {
+    const fetchBillingData = async (workspaceId: string) => {
+      const response = await getBillingStatus(workspaceId);
+      console.log({ billing: response });
+
+      setPlanState(response?.plan);
+      setSubscriptionState(response?.subscription);
+    }
+    
+    if (!userBelongsToSelectedWorkspace) {
+      fetchBillingData(workspaceId as string);
+    } else {
+      setPlanState(plan);
+      setSubscriptionState(subscription);
+    }
+
+  }, [userBelongsToSelectedWorkspace, workspaceId]);
+
+
+  const relativeTerm = user?.workspaceId === workspaceId ? 'Your' : 'The'
+
   return (
     <Card variant="outlined" sx={{ margin: '0 auto', width: '100%' }}>
       <CardContent>
         <Box sx={{ p: 3 }}>
           <Typography variant="h5" sx={{ mb: 1 }}>
-            Your subscription is{' '}
-            <Typography variant="h4" component="span" color="primary">
-              {subscription?.status}
-            </Typography>
+            <Box sx={{ 
+              display: 'flex',
+              flexDirection: {xs: 'column', md: 'row'},
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 2,
+              width: '100%'
+            }}>             
+              { userIsAdmin && (
+                <FormControl variant='standard' fullWidth error={!workspaceId} required>
+                  <InputLabel>
+                    Select a Workspace
+                    { !canViewAsAdmin && (
+                      <Tooltip title="Your admin privileges to view Billing details of other workspaces has been denied.">
+                        <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
+                      </Tooltip>
+                    )}
+                  </InputLabel>
+                  <Select
+                    label="Select a Workspace"
+                    value={workspaceId}
+                    onChange={handleWorkspaceChange}
+                    sx={{ p: 1 }}
+                    disabled={!canViewAsAdmin}
+                  >
+                    {workspaceOptions.map((workspace) => (
+                      <MenuItem key={workspace.id} value={workspace.id}>
+                        {`${workspace.name}${workspace.email ? ` (${workspace.email})` : ` (${workspace.id})`}`}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {!workspaceId && <FormHelperText>Workspace is required</FormHelperText>}
+                </FormControl>
+              )}
+
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 2, width: '100%', textAlign: 'right' }}>
+                <Typography variant='h5'>
+                  { userBelongsToSelectedWorkspace
+                    ? 'Your subscription is '
+                    : `This subscription is `
+                  }
+                </Typography>
+                <Typography variant="h4" component="span" color="primary">
+                  {subscriptionState?.status}
+                </Typography>
+              </Box>
+            </Box>
+
           </Typography>
 
           <Typography variant="body2" sx={{ mb: 2, display: 'flex', flexDirection: 'row', gap: 2 }}>
-            You currently have{' '}
+            { userBelongsToSelectedWorkspace
+              ? 'You currently have '
+              : 'This workspace currently has '
+            }
             <Chip
               label={`${workspacePlanCredits.toLocaleString('en-US') || 'No'} credits`}
               color="primary"
               variant="outlined"
               size="small"
             />
-            { subscription?.status !== 'TRIAL' && (
+            { subscriptionState?.status !== 'TRIAL' && (
                 <Chip
                 label={`${workspaceExtraCredits.toLocaleString('en-US') || 'No'} extra credits`}
                 color="primary"
@@ -109,36 +246,47 @@ export default function Billing() {
           <Card variant="outlined" sx={{ mb: 3 }}>
             <CardContent>
               <Typography variant="body1" gutterBottom>
-                { subscription?.cancelAtPeriodEnd 
-                    ? `Your subscription was cancelled at ${formattedCancelDate}, but your subscription will remain active until `
-                    : subscription?.status !== 'TRIAL'
-                        ? 'Your next payment is due on '
-                        : 'Your trial period ends on '
+                { subscriptionState?.cancelAtPeriodEnd 
+                    ? `${relativeTerm} subscription was cancelled at ${formattedCancelDate}, but it will remain active until `
+                    : subscriptionState?.status !== 'TRIAL'
+                        ? `${relativeTerm} next payment is due on `
+                        : `${relativeTerm} trial period ends on `
                 }                
                 <strong>{formattedDueDate}.</strong>
               </Typography>
               <Typography>
-                Plan {plan?.name} — {formattedPrice}/month
+                Plan {planState?.name} — {formattedPrice}/month
               </Typography>
-              {plan?.features && (
+              { subscriptionState?.featureOverrides ? (
                 <Box sx={{ mt: 1 }}>
-                  {plan.features.map((feature: string, index: number) => (
+                  {subscriptionState.featureOverrides.map((feature: string, index: number) => (
                     <Typography key={index} variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Circle fontSize="small" color="success" /> {feature}
                     </Typography>
                   ))}
                 </Box>
+              ) : (
+                planState?.features && (
+                  <Box sx={{ mt: 1 }}>
+                    {planState.features.map((feature: string, index: number) => (
+                      <Typography key={index} variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Circle fontSize="small" color="success" /> {feature}
+                      </Typography>
+                    ))}
+                  </Box>
+                )
               )}
             </CardContent>
           </Card>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 4 }}>
-            { subscription?.status === 'TRIAL' ? (
+            { subscriptionState?.status === 'TRIAL' ? (
+              userBelongsToSelectedWorkspace && (
                 <Button
                     variant="contained"
                     color="primary"
                     onClick={() => setOpenPlanDialog(true)}
-                    disabled={!!subscription?.cancelAtPeriodEnd}
+                    disabled={!!subscriptionState?.cancelAtPeriodEnd}
                     sx={{
                     '&.Mui-disabled': {
                         color:
@@ -148,24 +296,42 @@ export default function Billing() {
                     },
                     }}
                 >
-                { subscription?.status === 'TRIAL' 
+                { subscriptionState?.status === 'TRIAL' 
                     ? 'Confirm Plan'
                     : 'Change Plan'
                 }
                 </Button>
+              )
             ) : (
-                <Button
-                    disabled={subscription?.status === 'TRIAL'}
-                    variant="contained"
-                    color="secondary"
-                    onClick={() => openCustomerPortal(user?.workspaceId as string)}
-                >
-                    Manage Subscription
-                </Button>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Button
+                      disabled={userBelongsToSelectedWorkspace
+                        ? !canManageSubscription
+                        : !canManageSubscriptionAsAdmin
+                      }
+                      variant="contained"
+                      color="secondary"
+                      onClick={() => openCustomerPortal(user?.workspaceId as string)}
+                  >
+                      Manage Subscription
+                  </Button>
+                  { userBelongsToSelectedWorkspace
+                    ? !canManageSubscription && (
+                      <Tooltip title="You do not have permission to manage workspace subscription.">
+                        <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
+                      </Tooltip>                    
+                    )
+                    : !canManageSubscriptionAsAdmin && (
+                      <Tooltip title="Your admin privileges to manage subscriptions of any workspace has been denied.">
+                        <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
+                      </Tooltip>                    
+                    )
+                  }
+                </Box>
             )}
           </Stack>
 
-          { (subscription?.status !== 'TRIAL' && !subscription?.cancelAtPeriodEnd) && (
+          { (subscriptionState?.status !== 'TRIAL' && !subscriptionState?.cancelAtPeriodEnd) && (
             <>
               <Card variant="outlined" sx={{ mb: 3 }}>
                 <CardContent>
@@ -179,9 +345,42 @@ export default function Billing() {
                       size="small"
                       value={rechargeAmount}
                       onChange={event => setRechargeAmount(Number(event.target.value))}
+                      disabled={userBelongsToSelectedWorkspace
+                        ? !canPurchaseExtraCredits
+                        : !canPurchaseExtraCreditsAsAdmin
+                      }
                     />
                     <Chip label={rechargeCost + ' ' + currency.toUpperCase()} />
-                    <Button variant="contained" onClick={handlePurchaseExtraCredits} >Buy Now</Button>
+                    <Button
+                      variant="contained"
+                      onClick={handlePurchaseExtraCredits}
+                      disabled={userBelongsToSelectedWorkspace
+                        ? !canPurchaseExtraCredits
+                        : !canPurchaseExtraCreditsAsAdmin
+                      }
+                      sx={{
+                          '&.Mui-disabled': {
+                              color:
+                              resolvedMode == 'dark'
+                                  ? theme.palette.grey[400]
+                                  : theme.palette.grey[500],
+                          }                                
+                      }}                      
+                    >
+                      Buy Now
+                    </Button>
+                    { userBelongsToSelectedWorkspace
+                      ? !canPurchaseExtraCredits && (
+                        <Tooltip title="You do not have permission to purchase extra credits for this workspace.">
+                          <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
+                        </Tooltip>                    
+                      )
+                      : !canPurchaseExtraCreditsAsAdmin && (
+                        <Tooltip title="Your admin privileges to purchase extra credits for any workspace has been denied.">
+                          <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
+                        </Tooltip>                    
+                      )
+                    }
                   </Box>
                 </CardContent>
               </Card>
@@ -189,7 +388,7 @@ export default function Billing() {
               <Card variant="outlined">
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
-                    Automatic Extra Credits
+                    Automatic Extra Credits: Smart Recharge
                   </Typography>
 
                   <FormControlLabel
@@ -200,6 +399,10 @@ export default function Billing() {
                             setAutoRechargeEnabled(!autoRechargeEnabled);
                             handleUpdateSmartRechargeSetting()
                         }}
+                        disabled={userBelongsToSelectedWorkspace
+                          ? !canManageSmartRechargeSettings
+                          : !canManageSmartRechargeSettingsAsAdmin
+                        }
                       />
                     }
                     label={autoRechargeEnabled ? 'Enabled' : 'Not Enabled'}
@@ -211,7 +414,12 @@ export default function Billing() {
                             value={autoRechargeThreshold}
                             onChange={(e) => setRechargeThreshold(Number(e.target.value))}
                             size="small"
-                            disabled={!autoRechargeEnabled}
+                            disabled={(stripeLoading || !autoRechargeEnabled) 
+                                ? true
+                                : userBelongsToSelectedWorkspace
+                                  ? !canManageSmartRechargeSettings
+                                  : !canManageSmartRechargeSettingsAsAdmin
+                            }
                         />
                         <TextField
                             label="Recharge amount"
@@ -219,12 +427,22 @@ export default function Billing() {
                             value={autoRechargeAmount}
                             onChange={(e) => setAutoRechargeAmount(Number(e.target.value))}
                             size="small"
-                            disabled={!autoRechargeEnabled}
+                            disabled={ (stripeLoading || !autoRechargeEnabled) 
+                                ? true
+                                : userBelongsToSelectedWorkspace
+                                  ? !canManageSmartRechargeSettings
+                                  : !canManageSmartRechargeSettingsAsAdmin
+                            }
                         />
                         <Button
                             variant="contained"
                             onClick={handleUpdateSmartRechargeSetting}
-                            disabled={stripeLoading || !autoRechargeEnabled}
+                            disabled={ (stripeLoading || !autoRechargeEnabled) 
+                                ? true
+                                : userBelongsToSelectedWorkspace
+                                  ? !canManageSmartRechargeSettings
+                                  : !canManageSmartRechargeSettingsAsAdmin
+                            }
                             sx={{
                                 '&.Mui-disabled': {
                                     color:
@@ -236,6 +454,19 @@ export default function Billing() {
                         >
                             Save Settings
                         </Button>
+
+                        { userBelongsToSelectedWorkspace
+                          ? !canManageSmartRechargeSettings && (
+                            <Tooltip title="You do not have permission to manage smart recharge settings.">
+                              <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
+                            </Tooltip>                    
+                          )
+                          : !canManageSmartRechargeSettingsAsAdmin && (
+                            <Tooltip title="Your admin privileges to manage smart recharge settings for any workspace has been denied.">
+                              <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
+                            </Tooltip>                    
+                          )
+                        }
                     </Box>
                 </CardContent>
               </Card>
@@ -244,6 +475,7 @@ export default function Billing() {
         </Box>
 
         <SelectPlanDialog open={openPlanDialog} onClose={() => setOpenPlanDialog(false)} />
+        <LoadingBackdrop open={stripeLoading} />
       </CardContent>
     </Card>
   );

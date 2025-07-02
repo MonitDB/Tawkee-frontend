@@ -17,6 +17,8 @@ export interface BillingStatusResponse {
   renewalDate?: string;
   credits?: number;
   currentPlan?: string;
+  plan: any;
+  subscription: any;
 }
 
 export interface ProductWithPrices {
