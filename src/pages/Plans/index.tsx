@@ -13,30 +13,52 @@ import {
   ListItemText,
   Skeleton,
   useTheme,
+  useColorScheme,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, CheckCircle as CheckCircleIcon, Subscriptions as SubscriptionsIcon } from '@mui/icons-material';
+import InfoIcon from '@mui/icons-material/Info';
 import { useEffect, useState } from 'react';
 import EditPlanDialog, { StripePlan } from './components/EditPlanDialog';
-// import CreatePlanDialog from './components/CreatePlanDialog';
 import { useAuth } from '../../context/AuthContext';
 import { useStripeService } from '../../hooks/useStripeService';
 import LoadingBackdrop from '../../components/LoadingBackdrop';
 import CreatePlanDialog from './components/CreatePlanDialog';
+import { useNavigate } from 'react-router-dom';
+import { useHttpResponse } from '../../context/ResponseNotifier';
 
 
 export default function PlanList() {
+    const navigate = useNavigate();
   const theme = useTheme();
-  const { token } = useAuth();
+  const { mode, systemMode } = useColorScheme();
+
+  const resolvedMode = (systemMode || mode) as 'light' | 'dark';
+  const { notify } = useHttpResponse();
+  const { token, can } = useAuth();
   const {
     getAvailableProducts,
     stripeLoading,
   } = useStripeService(token as string);
+
+  const canEditPlanAsAdmin = can('EDIT_AS_ADMIN', 'PLAN');
+  const canViewPlanAsAdmin = can('VIEW_AS_ADMIN', 'PLAN');
+  const canCreatePlanAsAdmin = can('CREATE_AS_ADMIN', 'PLAN');
 
   const [plans, setPlans] = useState<StripePlan[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [planToEdit, setPlanToEdit] = useState<StripePlan | null>(null);
   const [createOpen, setCreateOpen] = useState<boolean>(false);
 
+
+    // Handle unauthorized access to the page
+    useEffect(() => {
+        if (!canViewPlanAsAdmin) {
+        notify('You do not have permission to view existing Plans of your workspace.', 'warning');
+        navigate('/');
+        }
+    }, [canViewPlanAsAdmin]);
+
+  // Fetch data if user has permission to view them
   useEffect(() => {
     async function fetchProductsAndPlan() {
         try {
@@ -57,6 +79,7 @@ export default function PlanList() {
     }
 
     fetchProductsAndPlan();
+
   }, [getAvailableProducts]);
 
 //   const [createOpen, setCreateOpen] = useState(false);
@@ -99,14 +122,30 @@ export default function PlanList() {
                     </Box>
                     Plans
                 </Typography>
-
-                <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => setCreateOpen(true)}
-                >
-                Create Plan
-                </Button>
+                
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => setCreateOpen(true)}
+                        disabled={!canCreatePlanAsAdmin}
+                        sx={{
+                        '&.Mui-disabled': {
+                            color:
+                            resolvedMode == 'dark'
+                                ? theme.palette.grey[400]
+                                : theme.palette.grey[500],
+                        },
+                        }}
+                    >
+                        Create Plan
+                    </Button>
+                    { !canCreatePlanAsAdmin && (
+                        <Tooltip title="Your admin privileges to create new plans has been denied.">
+                            <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
+                        </Tooltip> 
+                    )}
+                </Box>
             </Box>
 
             <Grid container spacing={3}>
@@ -135,9 +174,18 @@ export default function PlanList() {
                                 <Box display="flex" justifyContent="space-between" alignItems="center">
                                 <Typography variant="h6">{plan.product.name}</Typography>
                                 <Tooltip title="Edit">
-                                    <Button onClick={() => setPlanToEdit(plan)}>
-                                    <EditIcon />
-                                    </Button>
+                                    { canEditPlanAsAdmin ? (
+                                        <Button
+                                            onClick={() => setPlanToEdit(plan)}
+                                            disabled={!canEditPlanAsAdmin}
+                                        >
+                                            <EditIcon />
+                                        </Button>
+                                    ) : (
+                                        <Tooltip title="Your admin privileges to edit plans has been denied.">
+                                            <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
+                                        </Tooltip> 
+                                    )}
                                 </Tooltip>
                                 </Box>
                                 <Typography variant="body2" color="text.secondary" gutterBottom sx={{ minHeight: 60 }}>
