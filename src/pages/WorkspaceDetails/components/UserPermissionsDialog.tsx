@@ -44,7 +44,7 @@ export default function UserPermissionsDialog({
   const { token, can } = useAuth();
   const { updateUserPermissions, loading } = useDashboardService(token as string);
 
-  const canEditUserPermissionAsAdmin = false//can('EDIT_USER_PERMISSION_AS_ADMIN', 'WORKSPACE');
+  const canEditUserPermissionAsAdmin = can('EDIT_USER_PERMISSION_AS_ADMIN', 'WORKSPACE');
 
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
