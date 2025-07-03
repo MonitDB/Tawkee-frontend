@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 // Keep necessary imports from original file
 import { useAuth } from '../../context/AuthContext';
-import { Agent, AgentSettings, useAgents } from '../../context/AgentsContext';
+import { Agent, AgentSettings, AgentWrapper, useAgents } from '../../context/AgentsContext';
 import { useChannelService } from '../../hooks/useChannelService';
 import { Channel } from '../../services/channelService';
 import LoadingBackdrop from '../../components/LoadingBackdrop';
@@ -83,10 +83,19 @@ export default function AgentDetails() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { paginatedAgents, activateAgent, deactivateAgent, loading } =
+  const { 
+    paginatedAgents,
+    activateAgent,
+    deactivateAgent,
+
+    fetchAgentOfOtherWorkspaces,    
+    loading
+  } =
   useAgents();
   const { agents } = paginatedAgents;
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+
+  const userBelongsToWorkspace: boolean = user?.workspaceId === params?.agentId;
      
   const {
     getQRCode,
@@ -131,20 +140,34 @@ export default function AgentDetails() {
 
   useEffect(() => {
     if (params.agentId) {
-      const agentWrapper = agents.find(
-        (wrapper) => wrapper.agent.id === params.agentId
-      );
-
       // try to fetch tabName from query Params
       const searchParams = new URLSearchParams(location.search);
       const tabName = searchParams.get('tabName');
 
-      if (agentWrapper?.agent) {
-        setAgentData(agentWrapper?.agent);
-        setAgentSettingsData(agentWrapper?.settings);
-        if (tabName) {
-          setCurrentTab(tabIndexFromName[tabName as TabName]);
+      if (userBelongsToWorkspace) {
+        const agentWrapper = agents.find(
+          (wrapper) => wrapper.agent.id === params.agentId
+        );
+   
+        if (agentWrapper?.agent) {
+          setAgentData(agentWrapper?.agent);
+          setAgentSettingsData(agentWrapper?.settings);
+          if (tabName) {
+            setCurrentTab(tabIndexFromName[tabName as TabName]);
+          }
         }
+
+      } else {
+        const fetchAgentsData = async (agentId: string) => {
+          const response = await fetchAgentOfOtherWorkspaces(agentId) as AgentWrapper;
+          setAgentData(response.agent);
+          setAgentSettingsData(response.settings);
+          if (tabName) {
+            setCurrentTab(tabIndexFromName[tabName as TabName]);
+          }
+        }
+        
+        fetchAgentsData(params.agentId);
       }
     }
   }, [params.agentId, agents]);
@@ -185,34 +208,40 @@ export default function AgentDetails() {
                   <Typography variant="h4">{agentData.name}</Typography>
                   <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
                     <Tooltip
-                      title={
-                        agentData.isActive ? 'Deactivate me' : 'Activate me'
+                      title={ agentData.isDeleted
+                        ? 'Restore me'
+                        : agentData.isActive ? 'Deactivate me' : 'Activate me'
                       }
                     >
                       <Chip
                         color={
-                          agentData.isActive
-                            ? agentData.channels.find(
-                                (channel: Channel) => channel.connected
-                              )
-                              ? 'success'
-                              : 'warning'
-                            : 'error'
+                          agentData.isDeleted
+                            ? 'default'
+                            : agentData.isActive
+                              ? agentData.channels.find(
+                                  (channel: Channel) => channel.connected
+                                )
+                                ? 'success'
+                                : 'warning'
+                              : 'error'
                         }
                         label={
-                          agentData.isActive
-                            ? agentData.channels.filter(
-                                (channel: Channel) => channel.connected
-                              ).length > 0
-                              ? 'ACTIVE & CONNECTED'
-                              : 'ACTIVE BUT DISCONNECTED'
-                            : 'INACTIVE'
+                          agentData.isDeleted
+                            ? 'DELETED'
+                            : agentData.isActive
+                              ? agentData.channels.filter(
+                                  (channel: Channel) => channel.connected
+                                ).length > 0
+                                ? 'ACTIVE & CONNECTED'
+                                : 'ACTIVE BUT DISCONNECTED'
+                              : 'INACTIVE'
                         }
                         onClick={() =>
                           agentData.isActive
                             ? deactivateAgent(agentData.id)
                             : activateAgent(agentData.id)
                         }
+                        disabled={agentData.isDeleted}
                       />
                     </Tooltip>
                     <Tooltip

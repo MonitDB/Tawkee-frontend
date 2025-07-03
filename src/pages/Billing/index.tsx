@@ -184,7 +184,7 @@ export default function Billing() {
     <Card variant="outlined" sx={{ margin: '0 auto', width: '100%' }}>
       <CardContent>
         <Box sx={{ p: 3 }}>
-          <Typography variant="h5" sx={{ mb: 1 }}>
+          <Typography variant="h5" component="div" sx={{ mb: 1 }}>
             <Box sx={{ 
               display: 'flex',
               flexDirection: {xs: 'column', md: 'row'},
@@ -192,7 +192,7 @@ export default function Billing() {
               justifyContent: 'space-between',
               gap: 2,
               width: '100%'
-            }}>             
+            }}>
               { userIsAdmin && (
                 <FormControl variant='standard' fullWidth error={!workspaceId} required>
                   <InputLabel>
@@ -205,7 +205,7 @@ export default function Billing() {
                   </InputLabel>
                   <Select
                     label="Select a Workspace"
-                    value={workspaceId}
+                    value={workspaceOptions.some(w => w.id === workspaceId) ? workspaceId : ''}
                     onChange={handleWorkspaceChange}
                     sx={{ p: 1 }}
                     disabled={!canViewAsAdmin}
@@ -227,11 +227,13 @@ export default function Billing() {
                   }
                 </Typography>
                 <Typography variant="h4" component="span" color="primary">
-                  {subscriptionState?.status}
+                  {userBelongsToSelectedWorkspace
+                    ? subscription?.status
+                    : subscriptionState?.status
+                  }
                 </Typography>
               </Box>
             </Box>
-
           </Typography>
 
           <Typography variant="body2" sx={{ mb: 2, display: 'flex', flexDirection: 'row', gap: 2 }}>
@@ -239,19 +241,37 @@ export default function Billing() {
               ? 'You currently have '
               : 'This workspace currently has '
             }
-            <Chip
-              label={`${workspacePlanCreditsState.toLocaleString('en-US') || 'No'} credits`}
-              color="primary"
-              variant="outlined"
-              size="small"
-            />
-            { subscriptionState?.status !== 'TRIAL' && (
-                <Chip
-                label={`${workspaceExtraCreditsState.toLocaleString('en-US') || 'No'} extra credits`}
+            { userBelongsToSelectedWorkspace ? (
+              <Chip
+                label={`${workspacePlanCredits.toLocaleString('en-US') || 'No'} credits`}
                 color="primary"
                 variant="outlined"
                 size="small"
+              />
+            ) : (
+              <Chip
+                label={`${workspacePlanCreditsState.toLocaleString('en-US') || 'No'} credits`}
+                color="primary"
+                variant="outlined"
+                size="small"
+              />
+            )}
+            { subscriptionState?.status !== 'TRIAL' && (
+              userBelongsToSelectedWorkspace ? (
+                <Chip
+                  label={`${workspaceExtraCredits.toLocaleString('en-US') || 'No'} extra credits`}
+                  color="primary"
+                  variant="outlined"
+                  size="small"
                 />
+              ) : (
+                <Chip
+                  label={`${workspaceExtraCreditsState.toLocaleString('en-US') || 'No'} extra credits`}
+                  color="primary"
+                  variant="outlined"
+                  size="small"
+                />
+              )
             )}
           </Typography>
 

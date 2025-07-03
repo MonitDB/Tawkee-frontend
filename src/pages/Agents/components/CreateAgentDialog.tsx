@@ -80,12 +80,16 @@ interface CreateAgentDialogProps {
   open: boolean;
   onClose: () => void;
   agentTypeDescriptions: Record<AgentType, string>;
+  userBelongsToSelectedWorkspace: boolean;
+  workspaceId: string;
 }
 
 export default function CreateAgentDialog({
   open,
   onClose,
   agentTypeDescriptions,
+  userBelongsToSelectedWorkspace,
+  workspaceId: workspaceIdOfClient
 }: CreateAgentDialogProps) {
   const theme = useTheme();
   const { mode, systemMode } = useColorScheme();
@@ -93,7 +97,7 @@ export default function CreateAgentDialog({
 
   const navigate = useNavigate();
 
-  const { createAgent, loading } = useAgents();
+  const { createAgent, createAgentOfOtherWorkspaces, loading } = useAgents();
   const { token } = useAuth();
   const { createChannel, loading: channelCreationLoading } = useChannelService(
     token as string
@@ -131,12 +135,19 @@ export default function CreateAgentDialog({
       const { id, workspaceId, isActive, ...agentInput } =
         selectedAgent as Agent;
 
-      const { id: agentId } = await createAgent(agentInput as AgentInput);
-      setCreatedAgentId(agentId);
-      await createChannel(agentId as string, 'Whatsapp', 'WHATSAPP');
-      // await fetchAgents(); // I guess it's safe to remove
-    } finally {
+      if (userBelongsToSelectedWorkspace) {
+        const { id: agentId } = await createAgent(agentInput as AgentInput);
+        setCreatedAgentId(agentId);
+        await createChannel(agentId as string, 'Whatsapp', 'WHATSAPP');
+      
+      } else {
+        const { id: agentId } = await createAgentOfOtherWorkspaces(agentInput as AgentInput, workspaceIdOfClient);
+        setCreatedAgentId(agentId);
+        await createChannel(agentId as string, 'Whatsapp', 'WHATSAPP');
+      }
+      
       setActiveStep(5);
+    } catch {
     }
   };
 

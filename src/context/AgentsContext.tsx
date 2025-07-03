@@ -84,6 +84,7 @@ export interface Agent {
   jobSite: string;
   jobDescription: string;
   isActive: boolean;
+  isDeleted: boolean;
   channels: Channel[];
 
   scheduleSettings?: ScheduleSettingsDto;
@@ -116,7 +117,7 @@ export type AgentInput = Partial<
 interface AgentsContextType {
   paginatedAgents: PaginatedAgentWrapper;
   loading: boolean;
-  fetchAgents: () => Promise<void>;
+  fetchAgents: (workspaceId?: string) => Promise<PaginatedAgentWrapper | void>;
   getAgentById: (id: string) => Promise<Agent | null>;
   createAgent: (
     input: AgentInput
@@ -189,6 +190,14 @@ interface AgentsContextType {
     agentId: string;
     params: any;
   }) => void;
+
+  createAgentOfOtherWorkspaces: (
+    input: AgentInput, workspaceId: string
+  ) => Promise<{ success: boolean; id?: string }>;  
+  fetchAgentOfOtherWorkspaces: (agentId: string) => Promise<AgentWrapper | void>;  
+  fetchAgentsOfOtherWorkspaces: (workspaceId: string) => Promise<PaginatedAgentWrapper | void>;  
+  deleteAgentsOfOtherWorkspaces: (id: string) => Promise<boolean>;
+  restoreAgentsOfOtherWorkspaces: (id: string) => Promise<boolean>;
 }
 
 interface AgentsProviderProps {
@@ -198,8 +207,10 @@ interface AgentsProviderProps {
 const AgentsContext = createContext<AgentsContextType | null>(null);
 
 export function AgentsProvider({ children }: AgentsProviderProps) {
-  const { user, token, handleTokenExpirationError } = useAuth();
+  const { user, token, loading: authLoading, handleTokenExpirationError } = useAuth();
   const { notify } = useHttpResponse();
+
+  const authIsReady: boolean = !!user?.id && !!token && !authLoading;
 
   const [paginatedAgents, setPaginatedAgents] = useState<PaginatedAgentWrapper>(
     {
@@ -217,7 +228,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
   const [pageSize, setPageSize] = useState(3);
   const [query, setQuery] = useState('');
 
-  const fetchAgents = async (): Promise<void> => {
+  const fetchAgents = async (workspaceId?: string): Promise<PaginatedAgentWrapper | void> => {
     try {
       setLoading(true);
       const queryParams = new URLSearchParams({
@@ -227,7 +238,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       });
 
       const response = await fetch(
-        `${env.API_URL}/workspace/${user?.workspaceId}/agents?${queryParams}`,
+        `${env.API_URL}/workspace/${workspaceId ?? user?.workspaceId}/agents?${queryParams}`,
         {
           method: 'GET',
           headers: {
@@ -239,6 +250,12 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       const data = await response.json();
 
       if (data.error) throw new Error(data.error);
+
+      if (workspaceId) return {
+        agents: data.data || [],
+        meta: data.meta
+      };
+
       setPaginatedAgents({
         agents: data.data || [],
         meta: data.meta,
@@ -378,7 +395,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       const errorMessage = error instanceof Error ? error.message : '';
       handleTokenExpirationError(errorMessage); // Handle token expiration error
       notify(errorMessage, 'error');
-      return false;
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -395,6 +412,8 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       const data = await response.json();
       if (data.error) throw new Error(data.error);
 
+      // This will do nothing if the agent does not belong to the actual workspace, which might happen
+      // if an admin is activating agents of other workspaces. 
       setPaginatedAgents((prev) => ({
         ...prev,
         agents: prev.agents.map((wrapper) =>
@@ -416,7 +435,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       const errorMessage = error instanceof Error ? error.message : '';
       handleTokenExpirationError(errorMessage); // Handle token expiration error
       notify(errorMessage, 'error');
-      return false;
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -434,6 +453,8 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       if (data.error) throw new Error(data.error);
       notify('Agent deactivated!', 'success');
 
+      // This will do nothing if the agent does not belong to the actual workspace, which might happen
+      // if an admin is deactivating agents of other workspaces.       
       setPaginatedAgents((prev) => ({
         ...prev,
         agents: prev.agents.map((wrapper) =>
@@ -454,7 +475,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       const errorMessage = error instanceof Error ? error.message : '';
       handleTokenExpirationError(errorMessage); // Handle token expiration error
       notify(errorMessage, 'error');
-      return false;
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -885,6 +906,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
               jobSite: '',
               jobDescription: '',
               isActive: true,
+              isDeleted: false,
               channels: [],
               paginatedTrainings: {
                 data: [],
@@ -1642,11 +1664,154 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     }
   };
 
+  const createAgentOfOtherWorkspaces = async (
+    input: AgentInput, workspaceId: string
+  ): Promise<{ success: boolean; id?: string }> => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${env.API_URL}/workspace/${workspaceId}/agents`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          } as const,
+          body: JSON.stringify(input),
+        }
+      );
+
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+
+      notify('Agent created successfully!', 'success');
+      return { success: true, id: data.data.agent.id };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '';
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
+      notify(errorMessage, 'error');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const fetchAgentOfOtherWorkspaces = async (agentId: string): Promise<AgentWrapper | void> => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${env.API_URL}/agent/${agentId}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          } as const,
+        }
+      );
+      const data = await response.json();
+
+      if (data.error) throw new Error(data.error);
+
+      return data.data;
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '';
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
+      notify(errorMessage, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAgentsOfOtherWorkspaces = async (workspaceId: string): Promise<PaginatedAgentWrapper | void> => {
+    try {
+      setLoading(true);
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+        ...(query && { query }),
+      });
+
+      const response = await fetch(
+        `${env.API_URL}/workspace/${workspaceId}/agents-as-admin?${queryParams}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          } as const,
+        }
+      );
+      const data = await response.json();
+
+      if (data.error) throw new Error(data.error);
+
+      return {
+        agents: data.data || [],
+        meta: data.meta
+      };
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '';
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
+      notify(errorMessage, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteAgentsOfOtherWorkspaces = async (id: string): Promise<boolean> => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${env.API_URL}/agent-as-admin/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` } as const,
+      });
+
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+
+      notify('Agent deleted successfully!', 'success');
+      return data.deletedPermanently;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '';
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
+      notify(errorMessage, 'error');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };  
+
+  const restoreAgentsOfOtherWorkspaces = async (id: string): Promise<boolean> => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${env.API_URL}/agent/restore/${id}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` } as const,
+      });
+
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+
+      notify('Agent restored successfully!', 'success');
+      return true;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '';
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
+      notify(errorMessage, 'error');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };    
+
   useEffect(() => {
-    if (token) {
+    if (authIsReady) {
       fetchAgents();
     }
-  }, [token, page, pageSize, query]);
+  }, [authIsReady, page, pageSize, query]);
 
   const contextValue: AgentsContextType = {
     paginatedAgents,
@@ -1685,6 +1850,12 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
     syncAgentElevenLabsStatus,
     syncAgentElevenLabsData,
+
+    createAgentOfOtherWorkspaces,
+    fetchAgentOfOtherWorkspaces,
+    fetchAgentsOfOtherWorkspaces,
+    deleteAgentsOfOtherWorkspaces,
+    restoreAgentsOfOtherWorkspaces
   };
 
   return (

@@ -3,6 +3,8 @@ import {
   useAgents,
   AgentCommunicationType,
   AgentType,
+  AgentWrapper,
+  PaginatedAgentWrapper,
 } from '../../context/AgentsContext';
 
 import LoadingBackdrop from '../../components/LoadingBackdrop';
@@ -78,6 +80,7 @@ const agentActivityDescriptions: Record<number, string> = {
   0: 'The agent is shutdown and will not respond to messages even when connected to channels.',
   1: 'The agent is ready to connect to channels and respond to messages on your behalf.',
   2: 'The agent is connected to channels and ready to respond to messages.',
+  3: 'The agent is shutdown and has been deleted, but is still able to be restored.'
 };
 
 export default function Agents() {
@@ -90,7 +93,7 @@ export default function Agents() {
 
   const { user, token, can } = useAuth();
   const { notify } = useHttpResponse();
-  
+
   const canView = can('VIEW', 'AGENT');
   const canViewAsAdmin = can('VIEW_AS_ADMIN', 'AGENT');
   const canCreate = can('CREATE', 'AGENT');
@@ -99,12 +102,14 @@ export default function Agents() {
   const canActivateAsAdmin = can('ACTIVATE_AS_ADMIN', 'AGENT');
   const canDelete = can('DELETE', 'AGENT');
   const canDeleteAsAdmin = can('DELETE_AS_ADMIN', 'AGENT');
-
+  
   const userIsAdmin = user?.role.name === 'ADMIN';
   const [workspaceId, setWorkspaceId] = useState<string | null>(user?.workspaceId ?? null);
   const [workspaceOptions, setWorkspaceOptions] = useState<
-    { id: string; name: string; email: string | null }[]
+  { id: string; name: string; email: string | null }[]
   >([]);
+  
+  const userBelongsToSelectedWorkspace = user?.workspaceId === workspaceId;
 
   const [tab, setTab] = useState(0);
   const {
@@ -114,11 +119,18 @@ export default function Agents() {
     paginatedAgents,
     setPage,
     loading,
+
+    fetchAgentsOfOtherWorkspaces,
+    deleteAgentsOfOtherWorkspaces,
+    restoreAgentsOfOtherWorkspaces
   } = useAgents();
 
   const { fetchAllWorkspacesBasicInfo  } = useDashboardService(token as string);
 
   const { agents, meta } = paginatedAgents;
+
+  const [agentsState, setAgentsState] = useState<AgentWrapper[]>(agents);
+  const [metaState, setMetaState] = useState<PaginatedAgentWrapper['meta']>(meta);
 
   const handleWorkspaceChange = (event: SelectChangeEvent<string | null>) => {
     setWorkspaceId(event.target.value);
@@ -128,11 +140,19 @@ export default function Agents() {
     setTab(newValue);
   };
 
-  const filteredAgents = agents.filter((wrapper) => {
-    if (tab === 1) return wrapper.agent.isActive;
-    if (tab === 2) return !wrapper.agent.isActive;
-    return true;
-  });
+  const filteredAgents = userBelongsToSelectedWorkspace ? (
+    agents.filter((wrapper) => {
+      if (tab === 1) return wrapper.agent.isActive;
+      if (tab === 2) return !wrapper.agent.isActive;
+      return true;
+    })
+  ) : (
+    agentsState.filter((wrapper) => {
+        if (tab === 1) return wrapper.agent.isActive;
+        if (tab === 2) return !wrapper.agent.isActive;
+        return true;
+      })    
+  );
 
   const handlePageChange = (_: ChangeEvent<unknown>, value: number) => {
     setPage(value);
@@ -146,9 +166,19 @@ export default function Agents() {
 
   const handleCloseModal = () => {
     setOpen(false);
+
+    if (!userBelongsToSelectedWorkspace) {
+      const fetchAgentsData = async (workspaceId: string) => {
+        const response = await fetchAgentsOfOtherWorkspaces(workspaceId) as PaginatedAgentWrapper;
+        setAgentsState(response.agents);
+        setMetaState(response.meta);
+      }
+      
+      fetchAgentsData(workspaceId as string);
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (userBelongsToSelectedWorkspace && !canDelete) {
       notify('You cannot delete agents of the workspace!', 'warning');
       return;
@@ -159,10 +189,69 @@ export default function Agents() {
       return;
     }
 
-    deleteAgent(id);
+    if (userBelongsToSelectedWorkspace) {
+      deleteAgent(id);
+      return;
+    }
+
+    if (!userBelongsToSelectedWorkspace) {
+      try {
+        const deletedPermanently: boolean = await deleteAgentsOfOtherWorkspaces(id);
+
+        if (deletedPermanently) {
+          setAgentsState(previousAgentsWrapper => previousAgentsWrapper.filter(wrapper => {
+            return wrapper.agent.id != id;
+          }))
+        } else {
+          setAgentsState(previousAgentsWrapper => previousAgentsWrapper.map(wrapper => {
+            if (wrapper.agent.id === id) return {
+              ...wrapper,
+              agent: {
+                ...wrapper.agent,
+                isActive: false,
+                isDeleted: true
+              }
+            };
+    
+            return wrapper;
+          }))
+        }
+
+      } catch {
+
+      }
+    }   
   };
 
-  const handleActivateOrDeactivate = (
+  const handleRestore = (id: string) => {
+    if (!userBelongsToSelectedWorkspace && !canDeleteAsAdmin) {
+      notify('Your admin privileges to restore agents of any workspace has been revoked!', 'warning');
+      return;
+    }
+
+    if (!userBelongsToSelectedWorkspace) {
+      try {
+        restoreAgentsOfOtherWorkspaces(id);
+
+        setAgentsState(previousAgentsWrapper => previousAgentsWrapper.map(wrapper => {
+          if (wrapper.agent.id === id) return {
+            ...wrapper,
+            agent: {
+              ...wrapper.agent,
+              isDeleted: false
+            }
+          };
+  
+          return wrapper;
+        }))
+
+      } catch {
+
+      }
+    }   
+  };
+
+  const handleActivateOrDeactivate = async (
     event: React.MouseEvent<HTMLDivElement, MouseEvent>,
     agentActivityStatus: boolean,
     agentId: string
@@ -178,9 +267,27 @@ export default function Agents() {
       return;
     }
     
-    agentActivityStatus
-      ? deactivateAgent(agentId)
-      : activateAgent(agentId);
+    try {
+      agentActivityStatus
+        ? deactivateAgent(agentId)
+        : activateAgent(agentId);
+  
+      if (!userBelongsToSelectedWorkspace) {
+        setAgentsState(previousAgentsWrapper => previousAgentsWrapper.map(wrapper => {
+          if (wrapper.agent.id === agentId) return {
+            ...wrapper,
+            agent: {
+              ...wrapper.agent,
+              isActive: !agentActivityStatus
+            }
+          };
+  
+          return wrapper;
+        }))
+      }
+    } catch {
+
+    }
   }
 
   const handleOpenSettings = (agentId: string) => {
@@ -230,7 +337,19 @@ export default function Agents() {
 
   }, [canViewAsAdmin, fetchAllWorkspacesBasicInfo]);   
 
-  const userBelongsToSelectedWorkspace = user?.workspaceId === workspaceId;
+  // Fetch agent data of selected workspace (if admin is viewing other workspaces data)
+  useEffect(() => {
+    const fetchAgentsData = async (workspaceId: string) => {
+      const response = await fetchAgentsOfOtherWorkspaces(workspaceId) as PaginatedAgentWrapper;
+      setAgentsState(response.agents);
+      setMetaState(response.meta);
+    }
+    
+    if (!userBelongsToSelectedWorkspace) {
+      fetchAgentsData(workspaceId as string);
+    }
+
+  }, [userBelongsToSelectedWorkspace, workspaceId]);
 
   return (
     <Card variant="outlined" sx={{ margin: '0 auto', width: '100%' }}>
@@ -242,6 +361,7 @@ export default function Agents() {
               justifyContent: 'space-between',
               alignItems: 'center',
               mb: 4,
+              gap: 1
             }}
           >
             <Typography
@@ -283,8 +403,7 @@ export default function Agents() {
                   </InputLabel>
                   <Select
                     label="Select a Workspace"
-                    value={workspaceId}
-                    onChange={handleWorkspaceChange}
+                    value={workspaceOptions.some(w => w.id === workspaceId) ? workspaceId : ''}                    onChange={handleWorkspaceChange}
                     sx={{ p: 1 }}
                     disabled={!canViewAsAdmin}
                   >
@@ -349,8 +468,10 @@ export default function Agents() {
                 variant="outlined"
                 sx={{
                   margin: `${theme.spacing(2)} 0`,
+                  color: agent.isDeleted ? theme.palette.text.secondary : 'textPrimary',
+                  textDecoration: agent.isDeleted ? 'line-through' : 'none',
                   '&:hover': {
-                    backgroundColor: 'action.hover',
+                    backgroundColor: agent.isDeleted ? 'transparent' : 'action.hover',
                   },
                   cursor: 'pointer',
                 }}
@@ -381,35 +502,41 @@ export default function Agents() {
                     <Tooltip
                       title={
                         agentActivityDescriptions[
-                          agent.isActive
-                            ? agent.channels.find(
-                                (channel: Channel) => channel.connected
-                              )
-                              ? 2
-                              : 1
-                            : 0
+                          agent.isDeleted
+                            ? 3
+                            : agent.isActive
+                              ? agent.channels.find(
+                                  (channel: Channel) => channel.connected
+                                )
+                                ? 2
+                                : 1
+                              : 0
                         ]
                       }
                       onClick={(event) => handleActivateOrDeactivate(event, agent.isActive, agent.id)}                     
                     >
                       <Chip
                         color={
-                          agent.isActive
-                            ? agent.channels.find(
-                                (channel: Channel) => channel.connected
-                              )
-                              ? 'success'
-                              : 'warning'
-                            : 'error'
+                          agent.isDeleted
+                            ? 'default'
+                            : agent.isActive
+                              ? agent.channels.find(
+                                  (channel: Channel) => channel.connected
+                                )
+                                ? 'success'
+                                : 'warning'
+                              : 'error'
                         }
                         label={
-                          agent.isActive
-                            ? agent.channels.find(
-                                (channel: Channel) => channel.connected
-                              )
-                              ? 'ACTIVE & CONNECTED'
-                              : 'ACTIVE BUT DISCONNECTED'
-                            : 'INACTIVE'
+                          agent.isDeleted
+                            ? 'DELETED'
+                            : agent.isActive
+                              ? agent.channels.find(
+                                  (channel: Channel) => channel.connected
+                                )
+                                ? 'ACTIVE & CONNECTED'
+                                : 'ACTIVE BUT DISCONNECTED'
+                              : 'INACTIVE'
                         }
                       />
                     </Tooltip>
@@ -449,6 +576,7 @@ export default function Agents() {
                       agent={agent}
                       handleDelete={handleDelete}
                       handleActivateOrDeactivate={handleActivateOrDeactivate}
+                      handleRestore={handleRestore}
                       handleOpenSettings={handleOpenSettings}
                       theme={theme}
                     />
@@ -458,7 +586,7 @@ export default function Agents() {
             ))}
           </List>
 
-          {agents.length === 0 ? (
+          {filteredAgents.length === 0 ? (
             <Typography
               variant="h6"
               sx={{ textAlign: 'center', color: 'text.secondary', mt: 4 }}
@@ -478,8 +606,8 @@ export default function Agents() {
                 Total: {filteredAgents.length} agents
               </Typography>
               <Pagination
-                count={meta.totalPages}
-                page={meta.page}
+                count={userBelongsToSelectedWorkspace ? meta.totalPages : metaState.totalPages}
+                page={userBelongsToSelectedWorkspace ? meta.page : metaState.page}
                 onChange={handlePageChange}
                 color="primary"
               />
@@ -490,6 +618,8 @@ export default function Agents() {
             open={open}
             onClose={handleCloseModal}
             agentTypeDescriptions={agentTypeDescriptions}
+            userBelongsToSelectedWorkspace={userBelongsToSelectedWorkspace}
+            workspaceId={workspaceId as string}
           />
 
           <LoadingBackdrop open={loading} />

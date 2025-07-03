@@ -58,6 +58,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
   const { notify } = useHttpResponse();
   const { 
     user,
+    loading,
     handleTokenExpirationError,
     syncWorkspaceSubscriptionUpdate,
     syncWorkspaceCreditsUpdate
@@ -67,6 +68,8 @@ export function SocketProvider({ children }: SocketProviderProps) {
     syncAgentMessageChatUpdate,
     syncAgentScheduleSettingsUpdate,
   } = useAgents();
+
+  const authIsReady = !!user?.id && !loading;
 
   useEffect(() => {
     const handleSocketConnect = () => {
@@ -199,7 +202,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
       };
     }
 
-  }, [user?.id]);
+  }, [authIsReady]);
 
   const contextValue: SocketContextType = {};
 

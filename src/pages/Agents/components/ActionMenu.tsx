@@ -10,10 +10,12 @@ import {
 } from '@mui/material';
 import {
   MoreVert as MoreVertIcon,
-  Edit as EditIcon,
+  Person as PersonIcon,
   Settings as SettingsIcon,
   Hub as HubIcon,
   Delete as DeleteIcon,
+  DeleteForever as DeleteForeverIcon,
+  Restore as RestoreIcon,
   PowerSettingsNew,
   StopCircle,
 } from '@mui/icons-material';
@@ -26,6 +28,7 @@ interface ActionMenuProps {
   agent: Agent;
   handleOpenSettings: (agentId: string) => void;
   handleDelete: (agentId: string) => void;
+  handleRestore: (agentId: string) => void;
   handleActivateOrDeactivate: (
     event: any,
     agentActivityStatus: boolean,
@@ -38,6 +41,7 @@ export default function ActionMenu({
   agent,
   handleOpenSettings,
   handleDelete,
+  handleRestore,
   handleActivateOrDeactivate,
   theme,
 }: ActionMenuProps) {
@@ -105,11 +109,45 @@ export default function ActionMenu({
           horizontal: 'right',
         }}
       >
+        { !agent.isDeleted && (
+          <>
+            <MenuItem onClick={(event) => handleActivateOrDeactivate(event, agent.isActive, agent.id)}>
+              <ListItemIcon>
+                { agent.isActive ? (
+                  <StopCircle fontSize="small" />
+                ) : (
+                  <PowerSettingsNew fontSize="small" />
+                )}
+              </ListItemIcon>
+              <ListItemText>{ agent.isActive ? 'Deactivate' : 'Activate' }</ListItemText>
+              { userBelongsToWorkspace
+                ? !canActivate && (
+                  <Tooltip
+                    title="You cannot activate/deactivate agents of the workspace."
+                    placement='right'
+                    sx={{ ml: 1 }}
+                  >
+                    <InfoIcon color='warning' />
+                  </Tooltip>
+                ) : !canActivateAsAdmin && (
+                  <Tooltip
+                    title="Your admin privileges to activate/deactivate agents of any workspace has been revoked."
+                    placement='right'
+                    sx={{ ml: 1 }}
+                  >
+                    <InfoIcon color='warning' />
+                  </Tooltip>
+                )
+              }          
+            </MenuItem>
+            <Divider />
+          </>
+        )}
         <MenuItem onClick={() => handleNavigateToAgentDetails(agent.id)}>
           <ListItemIcon>
-            <EditIcon fontSize="small" />
+            <PersonIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Edit</ListItemText>
+          <ListItemText>Profile</ListItemText>
         </MenuItem>
         <MenuItem
           onClick={(event) =>
@@ -120,36 +158,6 @@ export default function ActionMenu({
             <SettingsIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Settings</ListItemText>
-        </MenuItem>
-        <Divider />
-        <MenuItem onClick={(event) => handleActivateOrDeactivate(event, agent.isActive, agent.id)}>
-          <ListItemIcon>
-            { agent.isActive ? (
-              <StopCircle fontSize="small" />
-            ) : (
-              <PowerSettingsNew fontSize="small" />
-            )}
-          </ListItemIcon>
-          <ListItemText>{ agent.isActive ? 'Deactivate' : 'Activate' }</ListItemText>
-          { userBelongsToWorkspace
-            ? !canActivate && (
-              <Tooltip
-                title="You cannot activate/deactivate agents of the workspace."
-                placement='right'
-                sx={{ ml: 1 }}
-              >
-                <InfoIcon color='warning' />
-              </Tooltip>
-            ) : !canActivateAsAdmin && (
-              <Tooltip
-                title="Your admin privileges to activate/deactivate agents of any workspace has been revoked."
-                placement='right'
-                sx={{ ml: 1 }}
-              >
-                <InfoIcon color='warning' />
-              </Tooltip>
-            )
-          }          
         </MenuItem>
         <MenuItem
           onClick={(event) =>
@@ -164,18 +172,48 @@ export default function ActionMenu({
           <ListItemText>Channels</ListItemText>
         </MenuItem>
         <Divider />
+        { agent.isDeleted && (
+          <MenuItem
+            onClick={(event) =>
+              handleMenuItemClick(event, () => handleRestore(agent.id))
+            }
+          >
+            <ListItemIcon>
+              <RestoreIcon
+                sx={{ color: theme.palette.success.main }}
+                fontSize="small"
+              />
+            </ListItemIcon>
+            <ListItemText>Restore</ListItemText>
+            { userBelongsToWorkspace && !canDeleteAsAdmin && (
+              <Tooltip
+                title="Your admin privileges to restore agents of any workspace has been revoked."
+                placement='right'
+              >
+                <InfoIcon color='warning' />
+              </Tooltip>
+            )}
+          </MenuItem>
+        )}
         <MenuItem
           onClick={(event) =>
             handleMenuItemClick(event, () => handleDelete(agent.id))
           }
         >
           <ListItemIcon>
-            <DeleteIcon
-              sx={{ color: theme.palette.error.main }}
-              fontSize="small"
-            />
+            { agent.isDeleted ? (
+              <DeleteForeverIcon
+                sx={{ color: theme.palette.error.main }}
+                fontSize="small"
+              />
+            ) : (
+              <DeleteIcon
+                sx={{ color: theme.palette.error.main }}
+                fontSize="small"
+              />
+            )}
           </ListItemIcon>
-          <ListItemText>Delete</ListItemText>
+          <ListItemText>Delete { agent.isDeleted ? 'Permanently' : '' }</ListItemText>
           { userBelongsToWorkspace
             ? !canDelete && (
               <Tooltip
