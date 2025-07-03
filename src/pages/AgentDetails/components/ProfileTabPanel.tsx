@@ -17,8 +17,11 @@ import {
   FormLabel,
   Tooltip,
   Button,
+  useTheme,
+  useColorScheme,
 } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
+import { useAuth } from '../../../context/AuthContext';
 
 interface ProfileTabPanelProps {
   agentData: Agent | null;
@@ -32,7 +35,16 @@ export default function ProfileTabPanel({
   agentData,
   loading,
 }: ProfileTabPanelProps) {
+  const theme = useTheme();
+  const { mode, systemMode } = useColorScheme();
+  const resolvedMode = (systemMode || mode) as 'light' | 'dark';
+
   const { updateAgent } = useAgents();
+  const { user, can } = useAuth();
+  
+  const userBelongsToWorkspace = user?.workspaceId === agentData?.workspaceId;
+  const canEditProfile = can('EDIT_PROFILE', 'AGENT');
+  const canEditProfileAsAdmin = can('EDIT_PROFILE_AS_ADMIN', 'AGENT');
 
   const [agentNameValue, setAgentNameValue] = useState<string>('');
   const [agentNameError, setAgentNameError] = useState<boolean>(false);
@@ -96,9 +108,30 @@ export default function ProfileTabPanel({
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h6" gutterBottom>
-        Personal Information
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+        <Typography variant="h6" gutterBottom>
+          Personal Information
+        </Typography>
+
+        { userBelongsToWorkspace
+          ? !canEditProfile && (
+            <Tooltip
+              title="You cannot edit personal information of agents on the workspace."
+              placement='right'
+            >
+              <InfoIcon color='warning' />
+            </Tooltip>
+          ) : !canEditProfileAsAdmin && (
+            <Tooltip
+              title="Your admin privileges to edit personal information of agents of any workspace has been revoked."
+              placement='right'
+            >
+              <InfoIcon color='warning' />
+            </Tooltip>
+          )
+        }
+      </Box>
+
       <Grid
         container
         spacing={3}
@@ -140,6 +173,10 @@ export default function ProfileTabPanel({
                   setAgentNameErrorMessage('');
                 }
               }}
+              disabled={userBelongsToWorkspace
+                ? !canEditProfile
+                : !canEditProfileAsAdmin
+              }
             />
           </FormControl>
         </Grid>
@@ -165,6 +202,10 @@ export default function ProfileTabPanel({
               required
               fullWidth
               variant="outlined"
+              disabled={userBelongsToWorkspace
+                ? !canEditProfile
+                : !canEditProfileAsAdmin
+              }
             >
               {Object.values(AgentCommunicationType).map(
                 (communicationType) => (
@@ -213,6 +254,10 @@ export default function ProfileTabPanel({
                 }
               }}
               color={agentBehaviorError ? 'error' : 'primary'}
+              disabled={userBelongsToWorkspace
+                ? !canEditProfile
+                : !canEditProfileAsAdmin
+              }              
             />
           </FormControl>
         </Grid>
@@ -223,7 +268,21 @@ export default function ProfileTabPanel({
             fullWidth
             variant={loading ? 'outlined' : 'contained'}
             onClick={validateInputs}
-            disabled={loading}
+            disabled={loading
+              ? true
+              : userBelongsToWorkspace
+                ? !canEditProfile
+                : !canEditProfileAsAdmin
+            }
+            sx={{
+              height: '100%',
+              '&.Mui-disabled': {
+                  color:
+                  resolvedMode == 'dark'
+                      ? theme.palette.grey[400]
+                      : theme.palette.grey[500],
+              },
+            }}
           >
             Save
           </Button>

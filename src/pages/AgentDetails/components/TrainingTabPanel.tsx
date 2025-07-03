@@ -25,6 +25,7 @@ import {
   LinearProgress,
   useColorScheme,
   Pagination,
+  useTheme,
 } from '@mui/material';
 import {
   MoreVert as MoreVertIcon,
@@ -37,6 +38,7 @@ import {
   Delete as DeleteIcon,
   Link as LinkIcon,
 } from '@mui/icons-material';
+import InfoIcon from '@mui/icons-material/Info';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Agent } from '../../../context/AgentsContext';
 import { useTrainingService } from '../../../hooks/useTrainingService';
@@ -49,16 +51,26 @@ import {
 } from '../../../services/trainingService';
 import LoadingBackdrop from '../../../components/LoadingBackdrop';
 import CreateTrainingDialog from './CreateTrainingDialog';
+import { useHttpResponse } from '../../../context/ResponseNotifier';
 
 interface TrainingTabPanelProps {
   agentData: Agent | null;
 }
 
 export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
+  const theme = useTheme();
   const { mode, systemMode } = useColorScheme();
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
 
-  const { token } = useAuth();
+  const { notify } = useHttpResponse();
+  const { token, user, can } = useAuth();
+ 
+  const userBelongsToWorkspace = user?.workspaceId === agentData?.workspaceId;
+  const canCreateTraining = can('TRAINING_CREATE', 'AGENT');
+  const canCreateTrainingAsAdmin = can('TRAINING_CREATE_AS_ADMIN', 'AGENT');
+  const canDeleteTraining = can('TRAINING_DELETE', 'AGENT');
+  const canDeleteTrainingAsAdmin = can('TRAINING_DELETE_AS_ADMIN', 'AGENT');
+
   const {
     fetchTrainings,
     createTraining,
@@ -269,17 +281,49 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
         <Typography variant="h6" gutterBottom>
           Training material
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          sx={{
-            textTransform: 'none',
-            px: 3,
-          }}
-          onClick={() => setDialogOpen(true)}
-        >
-          New Training
-        </Button>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setDialogOpen(true)}
+            disabled={userBelongsToWorkspace
+              ? !canCreateTraining
+              : !canCreateTrainingAsAdmin
+            }
+            sx={{
+              textTransform: 'none',
+              px: 3,
+              height: '100%',
+              '&.Mui-disabled': {
+                  color:
+                  resolvedMode == 'dark'
+                      ? theme.palette.grey[400]
+                      : theme.palette.grey[500],
+              },
+            }}                
+          >
+            New Training
+          </Button>
+
+          { userBelongsToWorkspace
+            ? !canCreateTraining && (
+              <Tooltip
+                title="You cannot create training materials of agents on the workspace."
+                placement='top-start'
+              >
+                <InfoIcon color='warning' />
+              </Tooltip>
+            ) : !canCreateTrainingAsAdmin && (
+              <Tooltip
+                title="Your admin privileges to create training materials of agents of any workspace has been revoked."
+                placement='right'
+              >
+                <InfoIcon color='warning' />
+              </Tooltip>
+            )
+          }
+        </Box>
       </Box>
 
       {/* Search Bar */}
@@ -577,12 +621,40 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
       >
         <MenuItem
           onClick={() => {
+            if (userBelongsToWorkspace && !canDeleteTraining) {
+              notify('You cannot delete training materials of agents on the workspace!', 'warning');
+              return;
+            }
+
+            if (!userBelongsToWorkspace && !canDeleteTrainingAsAdmin) {
+              notify("Your admin privileges to delete training materials of agents of any workspace has been revoked.", 'warning');
+              return;
+            }
+
             deleteTraining(agentData.id, selectedItem?.id as string);
             handleMenuClose();
           }}
         >
           <DeleteIcon sx={{ mr: 1, fontSize: 20, color: 'error.light' }} />
           Delete
+          { userBelongsToWorkspace
+            ? !canDeleteTraining && (
+              <Tooltip
+                title="You cannot delete training materials of agents on the workspace."
+                placement='top-start'
+                sx={{ ml: 1 }}
+              >
+                <InfoIcon color='warning' />
+              </Tooltip>
+            ) : !canDeleteTrainingAsAdmin && (
+              <Tooltip
+                title="Your admin privileges to delete training materials of agents of any workspace has been revoked."
+                placement='right'
+              >
+                <InfoIcon color='warning' />
+              </Tooltip>
+            )
+          }
         </MenuItem>
       </Menu>
 

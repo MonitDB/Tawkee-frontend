@@ -283,7 +283,7 @@ export default function UserPermissionsDialog({
           { isEditing ? 'Save' : 'Edit'}
         </Button>
         { !canEditUserPermissionAsAdmin && (
-          <Tooltip title="Your admin privileges to edit user permissions of any workspace has been denied.">
+          <Tooltip title="Your admin privileges to edit user permissions of any workspace has been revoked.">
             <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
           </Tooltip>              
         )}

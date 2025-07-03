@@ -17,13 +17,20 @@ import {
   PowerSettingsNew,
   StopCircle,
 } from '@mui/icons-material';
-import { Agent, useAgents } from '../../../context/AgentsContext';
+import InfoIcon from '@mui/icons-material/Info';
+import { Agent } from '../../../context/AgentsContext';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 
 interface ActionMenuProps {
   agent: Agent;
   handleOpenSettings: (agentId: string) => void;
   handleDelete: (agentId: string) => void;
+  handleActivateOrDeactivate: (
+    event: any,
+    agentActivityStatus: boolean,
+    agentId: string
+  ) => void;
   theme: any;
 }
 
@@ -31,12 +38,20 @@ export default function ActionMenu({
   agent,
   handleOpenSettings,
   handleDelete,
+  handleActivateOrDeactivate,
   theme,
 }: ActionMenuProps) {
   const navigate = useNavigate();
 
+  const { user, can } = useAuth();
+
+  const userBelongsToWorkspace = user?.workspaceId === agent.workspaceId;
+  const canActivate = can('ACTIVATE', 'AGENT');
+  const canActivateAsAdmin = can('ACTIVATE_AS_ADMIN', 'AGENT');
+  const canDelete = can('DELETE', 'AGENT');
+  const canDeleteAsAdmin = can('DELETE_AS_ADMIN', 'AGENT');
+
   const [anchorEl, setAnchorEl] = useState<EventTarget | null>(null);
-  const { activateAgent, deactivateAgent } = useAgents();
 
   const open = Boolean(anchorEl);
 
@@ -56,14 +71,6 @@ export default function ActionMenu({
   ) => {
     handleClose(event);
     action();
-  };
-
-  const handleToggleActive = (
-    event: MouseEvent<HTMLLIElement>,
-    agent: Agent
-  ) => {
-    agent.isActive ? deactivateAgent(agent.id) : activateAgent(agent.id);
-    handleClose(event);
   };
 
   const handleNavigateToAgentDetails = (agentId: string) => {
@@ -115,26 +122,39 @@ export default function ActionMenu({
           <ListItemText>Settings</ListItemText>
         </MenuItem>
         <Divider />
-        {!agent.isActive && (
-          <MenuItem onClick={(event) => handleToggleActive(event, agent)}>
-            <ListItemIcon>
-              <PowerSettingsNew fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Activate</ListItemText>
-          </MenuItem>
-        )}
-        {agent.isActive && (
-          <MenuItem onClick={(event) => handleToggleActive(event, agent)}>
-            <ListItemIcon>
+        <MenuItem onClick={(event) => handleActivateOrDeactivate(event, agent.isActive, agent.id)}>
+          <ListItemIcon>
+            { agent.isActive ? (
               <StopCircle fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Deactivate</ListItemText>
-          </MenuItem>
-        )}
+            ) : (
+              <PowerSettingsNew fontSize="small" />
+            )}
+          </ListItemIcon>
+          <ListItemText>{ agent.isActive ? 'Deactivate' : 'Activate' }</ListItemText>
+          { userBelongsToWorkspace
+            ? !canActivate && (
+              <Tooltip
+                title="You cannot activate/deactivate agents of the workspace."
+                placement='right'
+                sx={{ ml: 1 }}
+              >
+                <InfoIcon color='warning' />
+              </Tooltip>
+            ) : !canActivateAsAdmin && (
+              <Tooltip
+                title="Your admin privileges to activate/deactivate agents of any workspace has been revoked."
+                placement='right'
+                sx={{ ml: 1 }}
+              >
+                <InfoIcon color='warning' />
+              </Tooltip>
+            )
+          }          
+        </MenuItem>
         <MenuItem
           onClick={(event) =>
             handleMenuItemClick(event, () =>
-              navigate(`/agents/${agent.id}?tabName=integrations`)
+              navigate(`/agents/${agent.id}?tabName=channels`)
             )
           }
         >
@@ -156,6 +176,23 @@ export default function ActionMenu({
             />
           </ListItemIcon>
           <ListItemText>Delete</ListItemText>
+          { userBelongsToWorkspace
+            ? !canDelete && (
+              <Tooltip
+                title="You cannot delete agents of the workspace."
+                placement='right'
+              >
+                <InfoIcon color='warning' />
+              </Tooltip>
+            ) : !canDeleteAsAdmin && (
+              <Tooltip
+                title="Your admin privileges to delete agents of any workspace has been revoked."
+                placement='right'
+              >
+                <InfoIcon color='warning' />
+              </Tooltip>
+            )
+          }
         </MenuItem>
       </Menu>
     </>

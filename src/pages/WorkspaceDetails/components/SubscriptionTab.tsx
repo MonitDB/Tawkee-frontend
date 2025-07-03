@@ -271,7 +271,7 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
             {isEditing ? 'Save' : 'Edit'}
           </Button>
           { !canOverrideSubscriptionLimitsAsAdmin && (
-            <Tooltip title="Your admin privileges to override subscription limits of any workspace has been denied.">
+            <Tooltip title="Your admin privileges to override subscription limits of any workspace has been revoked.">
               <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
             </Tooltip>              
           )}

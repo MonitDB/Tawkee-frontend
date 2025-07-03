@@ -1,5 +1,6 @@
 import { useState, ChangeEvent, Fragment, ReactNode } from 'react';
 import {
+  Agent,
   AgentSettings,
   AIModel,
   useAgents,
@@ -29,6 +30,8 @@ import {
   Schedule,
   SmartToy,
 } from '@mui/icons-material';
+import InfoIcon from '@mui/icons-material/Info';
+import { useAuth } from '../../../context/AuthContext';
 
 const modelDescriptions: Record<AIModel, string> = {
   [AIModel.GPT_4]: 'GPT-4: General-purpose large language model.',
@@ -88,18 +91,24 @@ const settingsOptions = [
 ];
 
 interface SettingsTabPanelProps {
-  agentId: string;
+  agentData: Agent;
   agentSettingsData: AgentSettings | null;
 }
 
 export default function SettingsTabPanel({
-  agentId,
+  agentData,
   agentSettingsData,
 }: SettingsTabPanelProps) {
   const theme = useTheme();
 
   const { mode, systemMode } = useColorScheme();
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
+
+  const { user, can } = useAuth();
+
+  const userBelongsToWorkspace = user?.workspaceId === agentData.workspaceId;
+  const canManageSettings = can('MANAGE_SETTINGS', 'AGENT');
+  const canManageSettingsAsAdmin = can('MANAGE_SETTINGS_AS_ADMIN', 'AGENT');
 
   const { updateAgentSettings, loading } = useAgents();
 
@@ -140,16 +149,37 @@ export default function SettingsTabPanel({
     };
 
   const handleSave = () => {
-    updateAgentSettings(agentId, formState);
+    updateAgentSettings(agentData.id, formState);
   };
 
   if (!agentSettingsData) return null;
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h6" gutterBottom>
-        Agent Settings
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Typography variant="h6" gutterBottom>
+          Agent Settings
+        </Typography>
+
+        { userBelongsToWorkspace
+          ? !canManageSettings && (
+            <Tooltip
+              title="You cannot manage settings of agents on the workspace."
+              placement='right'
+            >
+              <InfoIcon color='warning' />
+            </Tooltip>
+          ) : !canManageSettingsAsAdmin && (
+            <Tooltip
+              title="Your admin privileges to manage settings of agents of any workspace has been revoked."
+              placement='right'
+            >
+              <InfoIcon color='warning' />
+            </Tooltip>
+          )
+        }
+      </Box>
+
       <Grid
         container
         spacing={3}
@@ -207,6 +237,10 @@ export default function SettingsTabPanel({
                       formState[option.key as keyof typeof formState] as boolean
                     }
                     onChange={handleToggleChange(option.key)}
+                    disabled={userBelongsToWorkspace
+                      ? !canManageSettings
+                      : !canManageSettingsAsAdmin
+                    }
                     sx={{
                       ml: 2,
                       '& .MuiSwitch-switchBase.Mui-checked': {
@@ -238,6 +272,10 @@ export default function SettingsTabPanel({
               value={formState.timezone}
               options={timezones}
               onChange={handleSelectChange('timezone')}
+
+              userBelongsToWorkspace={userBelongsToWorkspace}
+              canManageSettings={canManageSettings}
+              canManageSettingsAsAdmin={canManageSettingsAsAdmin}              
             />
 
             {/* Preferred Model Select */}
@@ -250,6 +288,10 @@ export default function SettingsTabPanel({
               options={Object.values(AIModel)}
               optionDescriptions={modelDescriptions}
               onChange={handleSelectChange('preferredModel')}
+
+              userBelongsToWorkspace={userBelongsToWorkspace}
+              canManageSettings={canManageSettings}
+              canManageSettingsAsAdmin={canManageSettingsAsAdmin}
             />
             <Divider sx={{ bgcolor: '#333', opacity: 0.5, my: 2 }} />
           </Stack>
@@ -257,16 +299,47 @@ export default function SettingsTabPanel({
 
         <Grid size={{ xs: 9 }} />
         <Grid size={{ xs: 3 }}>
-          <Box sx={{ mt: 3 }}>
+          <Box sx={{ mt: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
             <Button
               type="button"
               fullWidth
               variant={loading ? 'outlined' : 'contained'}
               onClick={handleSave}
-              disabled={loading}
+              disabled={loading
+                ? true
+                : userBelongsToWorkspace
+                  ? !canManageSettings
+                  : !canManageSettingsAsAdmin
+              }
+              sx={{
+                '&.Mui-disabled': {
+                    color:
+                    resolvedMode == 'dark'
+                        ? theme.palette.grey[400]
+                        : theme.palette.grey[500],
+                },                
+              }}             
             >
               {loading ? 'Saving...' : 'Save'}
             </Button>
+            
+            { userBelongsToWorkspace
+              ? !canManageSettings && (
+                <Tooltip
+                  title="You cannot manage settings of agents on the workspace."
+                  placement='right'
+                >
+                  <InfoIcon color='warning' />
+                </Tooltip>
+              ) : !canManageSettingsAsAdmin && (
+                <Tooltip
+                  title="Your admin privileges to manage settings of agents of any workspace has been revoked."
+                  placement='right'
+                >
+                  <InfoIcon color='warning' />
+                </Tooltip>
+              )
+            }
           </Box>
         </Grid>
       </Grid>
@@ -282,6 +355,9 @@ interface SelectFieldProps {
   options: string[];
   optionDescriptions?: Record<string, string>;
   onChange: (event: SelectChangeEvent<string>) => void;
+  userBelongsToWorkspace: boolean;
+  canManageSettings: boolean;
+  canManageSettingsAsAdmin: boolean;
 }
 
 function SelectField({
@@ -292,6 +368,9 @@ function SelectField({
   options,
   optionDescriptions,
   onChange,
+  userBelongsToWorkspace,
+  canManageSettings,
+  canManageSettingsAsAdmin
 }: SelectFieldProps) {
   return (
     <Box
@@ -342,6 +421,10 @@ function SelectField({
           },
           '& .MuiSelect-icon': { color: '#a0a0a0' },
         }}
+        disabled={userBelongsToWorkspace
+          ? !canManageSettings
+          : !canManageSettingsAsAdmin
+        }        
       >
         <Select value={value} onChange={onChange} displayEmpty>
           {options.map((option) => (

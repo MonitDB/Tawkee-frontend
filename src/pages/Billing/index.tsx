@@ -128,7 +128,7 @@ export default function Billing() {
       notify('You do not have permission to view Billing details of your workspace.', 'warning');
       navigate('/');
     }
-  }, [canView, userBelongsToSelectedWorkspace]);
+  }, [canView]);
 
   // Fetch list of workspaces
   useEffect(() => {
@@ -146,7 +146,7 @@ export default function Billing() {
       fetchOptions();
     }
 
-  }, [user?.role.name, fetchAllWorkspacesBasicInfo]);  
+  }, [userIsAdmin, fetchAllWorkspacesBasicInfo]);  
   
   // Fetch billing data of selected workspace (if admin is viewing other workspaces data)
   useEffect(() => {
@@ -198,7 +198,7 @@ export default function Billing() {
                   <InputLabel>
                     Select a Workspace
                     { !canViewAsAdmin && (
-                      <Tooltip title="Your admin privileges to view Billing details of other workspaces has been denied.">
+                      <Tooltip title="Your admin privileges to view Billing details of other workspaces has been revoked.">
                         <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
                       </Tooltip>
                     )}
@@ -300,12 +300,12 @@ export default function Billing() {
                     onClick={() => setOpenPlanDialog(true)}
                     disabled={!!subscriptionState?.cancelAtPeriodEnd}
                     sx={{
-                    '&.Mui-disabled': {
-                        color:
-                        resolvedMode == 'dark'
-                            ? theme.palette.grey[400]
-                            : theme.palette.grey[500],
-                    },
+                      '&.Mui-disabled': {
+                          color:
+                          resolvedMode == 'dark'
+                              ? theme.palette.grey[400]
+                              : theme.palette.grey[500],
+                      },
                     }}
                 >
                 { subscriptionState?.status === 'TRIAL' 
@@ -334,7 +334,7 @@ export default function Billing() {
                       </Tooltip>                    
                     )
                     : !canManageSubscriptionAsAdmin && (
-                      <Tooltip title="Your admin privileges to manage subscriptions of any workspace has been denied.">
+                      <Tooltip title="Your admin privileges to manage subscriptions of any workspace has been revoked.">
                         <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
                       </Tooltip>                    
                     )
@@ -388,7 +388,7 @@ export default function Billing() {
                         </Tooltip>                    
                       )
                       : !canPurchaseExtraCreditsAsAdmin && (
-                        <Tooltip title="Your admin privileges to purchase extra credits for any workspace has been denied.">
+                        <Tooltip title="Your admin privileges to purchase extra credits for any workspace has been revoked.">
                           <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
                         </Tooltip>                    
                       )
@@ -474,7 +474,7 @@ export default function Billing() {
                             </Tooltip>                    
                           )
                           : !canManageSmartRechargeSettingsAsAdmin && (
-                            <Tooltip title="Your admin privileges to manage smart recharge settings for any workspace has been denied.">
+                            <Tooltip title="Your admin privileges to manage smart recharge settings for any workspace has been revoked.">
                               <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
                             </Tooltip>                    
                           )

@@ -7,7 +7,11 @@ import {
   Button,
   Chip,
   Grid,
+  useTheme,
+  useColorScheme,
+  Tooltip,
 } from '@mui/material';
+import InfoIcon from '@mui/icons-material/Info';
 import { Agent, useAgents } from '../../../context/AgentsContext';
 import { elevenLabsIcon, googleCalendarIcon } from '../../../assets';
 import { useGoogleCalendarService } from '../../../hooks/useGoogleCalendarService';
@@ -47,7 +51,18 @@ export const DEFAULT_SCHEDULE_SETTINGS: ScheduleSettingsDto = {
 export default function IntegrationsTabPanel({
   agentData,
 }: IntegrationsTabPanelProps) {
-  const { token } = useAuth();
+  const theme = useTheme();
+  const { mode, systemMode } = useColorScheme();
+  const resolvedMode = (systemMode || mode) as 'light' | 'dark';
+
+  const { user, token, can } = useAuth();
+
+  const userBelongsToWorkspace = user?.workspaceId === agentData?.workspaceId;
+  const canActivateIntegrations = can('INTEGRATIONS_ACTIVATE', 'AGENT');
+  const canActivateIntegrationsAsAdmin = can('INTEGRATIONS_ACTIVATE_AS_ADMIN', 'AGENT');
+  const canManageIntegrations = can('INTEGRATIONS_MANAGE', 'AGENT');
+  const canManageIntegrationsAsAdmin = can('INTEGRATIONS_MANAGE_AS_ADMIN', 'AGENT');  
+
   const { authenticateAgent, updateScheduleSettings, revokeTokens, loading } =
     useGoogleCalendarService(token as string);
 
@@ -165,18 +180,70 @@ export default function IntegrationsTabPanel({
                   variant="outlined"
                   onClick={onConfigure}
                   sx={{ textTransform: 'none' }}
+                  disabled={userBelongsToWorkspace
+                    ? !canManageIntegrations
+                    : !canManageIntegrationsAsAdmin
+                  }                      
                 >
-                  Configure Integration
+                  Manage Integration
                 </Button>
+                { userBelongsToWorkspace
+                  ? !canManageIntegrations && (
+                    <Tooltip
+                      title="You cannot manage active integrations of agents on the workspace."
+                      placement='top-end'
+                    >
+                      <InfoIcon color='warning' />
+                    </Tooltip>
+                  ) : !canManageIntegrationsAsAdmin && (
+                    <Tooltip
+                      title="Your admin privileges to manage active integrations of agents of any workspace has been revoked."
+                      placement='top-end'
+                    >
+                      <InfoIcon color='warning' />
+                    </Tooltip>
+                  )
+                }                       
               </Box>
             ) : (
-              <Button
-                variant="contained"
-                onClick={onActivate}
-                sx={{ textTransform: 'none' }}
-              >
-                Activate Integration
-              </Button>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Button
+                  variant="contained"
+                  onClick={onActivate}
+                  sx={{ 
+                    textTransform: 'none',
+                    '&.Mui-disabled': {
+                        color:
+                        resolvedMode == 'dark'
+                            ? theme.palette.grey[400]
+                            : theme.palette.grey[500],
+                    },                  
+                  }}
+                  disabled={userBelongsToWorkspace
+                    ? !canActivateIntegrations
+                    : !canActivateIntegrationsAsAdmin
+                  }               
+                >
+                  Activate Integration
+                </Button>
+                { userBelongsToWorkspace
+                  ? !canActivateIntegrations && (
+                    <Tooltip
+                      title="You cannot activate integrations of agents on the workspace."
+                      placement='top-end'
+                    >
+                      <InfoIcon color='warning' />
+                    </Tooltip>
+                  ) : !canActivateIntegrationsAsAdmin && (
+                    <Tooltip
+                      title="Your admin privileges to activate integrations of agents of any workspace has been revoked."
+                      placement='top-end'
+                    >
+                      <InfoIcon color='warning' />
+                    </Tooltip>
+                  )
+                }                          
+              </Box>
             )}
           </Box>
         </CardContent>

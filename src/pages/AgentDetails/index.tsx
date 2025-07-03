@@ -84,9 +84,10 @@ export default function AgentDetails() {
   const location = useLocation();
 
   const { paginatedAgents, activateAgent, deactivateAgent, loading } =
-    useAgents();
+  useAgents();
   const { agents } = paginatedAgents;
   const { token } = useAuth();
+     
   const {
     getQRCode,
     disconnectChannel,
@@ -163,6 +164,15 @@ export default function AgentDetails() {
         {/* Changed overflowY to auto */}
         <Box sx={{ p: 3 }}>
           <Grid container spacing={3}>
+            <Grid size={{ xs: 12 }}>
+              <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => navigate(-1)}
+              >
+                &larr; Go back to Agents
+              </Button>
+            </Grid>
             {/* Agent Header (Keep as is) */}
             <Grid size={{ xs: 12 }}>
               <Box
@@ -277,7 +287,7 @@ export default function AgentDetails() {
               <TabPanel value={currentTab} index={5}>
                 <SettingsTabPanel
                   key={`${agentData.id}-${JSON.stringify(agentSettingsData)}`}
-                  agentId={agentData.id}
+                  agentData={agentData}
                   agentSettingsData={agentSettingsData}
                 />
               </TabPanel>

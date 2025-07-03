@@ -141,7 +141,7 @@ export default function PlanList() {
                         Create Plan
                     </Button>
                     { !canCreatePlanAsAdmin && (
-                        <Tooltip title="Your admin privileges to create new plans has been denied.">
+                        <Tooltip title="Your admin privileges to create new plans has been revoked.">
                             <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
                         </Tooltip> 
                     )}
@@ -182,7 +182,7 @@ export default function PlanList() {
                                             <EditIcon />
                                         </Button>
                                     ) : (
-                                        <Tooltip title="Your admin privileges to edit plans has been denied.">
+                                        <Tooltip title="Your admin privileges to edit plans has been revoked.">
                                             <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
                                         </Tooltip> 
                                     )}

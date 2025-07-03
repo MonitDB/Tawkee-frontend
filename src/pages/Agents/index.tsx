@@ -1,4 +1,4 @@
-import { ChangeEvent, SyntheticEvent, useState } from 'react';
+import { ChangeEvent, SyntheticEvent, useEffect, useState } from 'react';
 import {
   useAgents,
   AgentCommunicationType,
@@ -27,12 +27,22 @@ import {
   CardContent,
   Tooltip,
   Pagination,
+  FormControl,
+  InputLabel,
+  Select,
+  SelectChangeEvent,
+  MenuItem,
+  useColorScheme,
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
+import InfoIcon from '@mui/icons-material/Info';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import { useNavigate } from 'react-router-dom';
 import CreateAgentDialog from './components/CreateAgentDialog';
 import { Channel } from '../../services/channelService';
+import { useAuth } from '../../context/AuthContext';
+import { useHttpResponse } from '../../context/ResponseNotifier';
+import { useDashboardService } from '../../hooks/useDashboardService';
 
 const StyledTabs = styled(Tabs)(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
@@ -72,8 +82,29 @@ const agentActivityDescriptions: Record<number, string> = {
 
 export default function Agents() {
   const theme = useTheme();
+  const { mode, systemMode } = useColorScheme();
+  const resolvedMode = (systemMode || mode) as 'light' | 'dark';
+
   const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
   const navigate = useNavigate();
+
+  const { user, token, can } = useAuth();
+  const { notify } = useHttpResponse();
+  
+  const canView = can('VIEW', 'AGENT');
+  const canViewAsAdmin = can('VIEW_AS_ADMIN', 'AGENT');
+  const canCreate = can('CREATE', 'AGENT');
+  const canCreateAsAdmin = can('CREATE_AS_ADMIN', 'AGENT');
+  const canActivate = can('ACTIVATE', 'AGENT');
+  const canActivateAsAdmin = can('ACTIVATE_AS_ADMIN', 'AGENT');
+  const canDelete = can('DELETE', 'AGENT');
+  const canDeleteAsAdmin = can('DELETE_AS_ADMIN', 'AGENT');
+
+  const userIsAdmin = user?.role.name === 'ADMIN';
+  const [workspaceId, setWorkspaceId] = useState<string | null>(user?.workspaceId ?? null);
+  const [workspaceOptions, setWorkspaceOptions] = useState<
+    { id: string; name: string; email: string | null }[]
+  >([]);
 
   const [tab, setTab] = useState(0);
   const {
@@ -85,7 +116,13 @@ export default function Agents() {
     loading,
   } = useAgents();
 
+  const { fetchAllWorkspacesBasicInfo  } = useDashboardService(token as string);
+
   const { agents, meta } = paginatedAgents;
+
+  const handleWorkspaceChange = (event: SelectChangeEvent<string | null>) => {
+    setWorkspaceId(event.target.value);
+  }; 
 
   const handleTabChange = (_: SyntheticEvent, newValue: number) => {
     setTab(newValue);
@@ -112,8 +149,39 @@ export default function Agents() {
   };
 
   const handleDelete = (id: string) => {
+    if (userBelongsToSelectedWorkspace && !canDelete) {
+      notify('You cannot delete agents of the workspace!', 'warning');
+      return;
+    }
+
+    if (!userBelongsToSelectedWorkspace && !canDeleteAsAdmin) {
+      notify('Your admin privileges to delete agents of any workspace has been revoked!', 'warning');
+      return;
+    }
+
     deleteAgent(id);
   };
+
+  const handleActivateOrDeactivate = (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    agentActivityStatus: boolean,
+    agentId: string
+  ) => {
+    event.stopPropagation();
+    if (userBelongsToSelectedWorkspace && !canActivate) {
+      notify('You do not have permission to activate/deactivate agents of the workspace.', 'warning');
+      return;
+    }
+
+    if (!userBelongsToSelectedWorkspace && !canActivateAsAdmin) {
+      notify('Your admin privileges to activate/deactivate agents of any workspace has been revoked.', 'warning');
+      return;
+    }
+    
+    agentActivityStatus
+      ? deactivateAgent(agentId)
+      : activateAgent(agentId);
+  }
 
   const handleOpenSettings = (agentId: string) => {
     navigate(`/agents/${agentId}?tabName=settings`);
@@ -135,6 +203,34 @@ export default function Agents() {
       </Tooltip>
     );
   }
+
+  // Handle unauthorized access to the page
+  useEffect(() => {
+    if (!canView) {
+      notify('You do not have permission to view Agents of your workspace.', 'warning');
+      navigate('/');
+    }
+  }, [canView]);  
+
+  // Fetch list of workspaces
+  useEffect(() => {
+
+    if (userIsAdmin) {
+      // Fetch list of all workspaces
+      const fetchOptions = async () => {
+        try {
+          const all = await fetchAllWorkspacesBasicInfo();
+          setWorkspaceOptions(all);
+        } catch (err) {
+          console.error('Failed to load workspace options:', err);
+        }
+      };
+      fetchOptions();
+    }
+
+  }, [canViewAsAdmin, fetchAllWorkspacesBasicInfo]);   
+
+  const userBelongsToSelectedWorkspace = user?.workspaceId === workspaceId;
 
   return (
     <Card variant="outlined" sx={{ margin: '0 auto', width: '100%' }}>
@@ -173,13 +269,67 @@ export default function Agents() {
               </Box>
               Agents
             </Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => handleOpenModal()}
-            >
-              Create Agent
-            </Button>
+            
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              { userIsAdmin && (
+                <FormControl variant='standard' fullWidth error={!workspaceId} required>
+                  <InputLabel>
+                    Select a Workspace
+                    { !canViewAsAdmin && (
+                      <Tooltip title="Your admin privileges to view Agents of other workspaces has been revoked.">
+                        <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
+                      </Tooltip>
+                    )}
+                  </InputLabel>
+                  <Select
+                    label="Select a Workspace"
+                    value={workspaceId}
+                    onChange={handleWorkspaceChange}
+                    sx={{ p: 1 }}
+                    disabled={!canViewAsAdmin}
+                  >
+                    {workspaceOptions.map((workspace) => (
+                      <MenuItem key={workspace.id} value={workspace.id}>
+                        {`${workspace.name}${workspace.email ? ` (${workspace.email})` : ` (${workspace.id})`}`}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => handleOpenModal()}
+                disabled={userBelongsToSelectedWorkspace
+                  ? !canCreate
+                  : !canCreateAsAdmin
+                }
+                sx={{
+                  height: '100%',
+                  '&.Mui-disabled': {
+                      color:
+                      resolvedMode == 'dark'
+                          ? theme.palette.grey[400]
+                          : theme.palette.grey[500],
+                  },
+                }}
+              >
+                Create Agent
+              </Button>
+              { userBelongsToSelectedWorkspace
+                ? !canCreate && (
+                  <Tooltip title="You cannot create agents on the workspace.">
+                    <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
+                  </Tooltip>
+                ) : !canCreateAsAdmin && (
+                  <Tooltip title="Your admin privileges to create Agents of other workspaces has been revoked.">
+                    <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
+                  </Tooltip>
+                )
+              }
+            </Box>
+
           </Box>
 
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
@@ -240,12 +390,7 @@ export default function Agents() {
                             : 0
                         ]
                       }
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        agent.isActive
-                          ? deactivateAgent(agent.id)
-                          : activateAgent(agent.id);
-                      }}
+                      onClick={(event) => handleActivateOrDeactivate(event, agent.isActive, agent.id)}                     
                     >
                       <Chip
                         color={
@@ -303,6 +448,7 @@ export default function Agents() {
                     <ActionMenu
                       agent={agent}
                       handleDelete={handleDelete}
+                      handleActivateOrDeactivate={handleActivateOrDeactivate}
                       handleOpenSettings={handleOpenSettings}
                       theme={theme}
                     />
