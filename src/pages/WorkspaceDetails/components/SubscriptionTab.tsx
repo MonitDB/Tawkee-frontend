@@ -31,12 +31,12 @@ export interface Subscription {
   trialEnd?: string;
   customStripePriceId?: string;
   featureOverrides?: string[];
-  creditsLimitOverrides?: number | 'UNLIMITED';
-  agentLimitOverrides?: number | 'UNLIMITED';
-  trainingTextLimitOverrides?: number | 'UNLIMITED';
-  trainingWebsiteLimitOverrides?: number | 'UNLIMITED';
-  trainingVideoLimitOverrides?: number | 'UNLIMITED';
-  trainingDocumentLimitOverrides?: number | 'UNLIMITED';
+  creditsLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
+  agentLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
+  trainingTextLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
+  trainingWebsiteLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
+  trainingVideoLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
+  trainingDocumentLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
   plan: any;
 }
 

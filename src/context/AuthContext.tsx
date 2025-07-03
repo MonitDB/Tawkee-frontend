@@ -90,12 +90,12 @@ export interface User {
     trialEnd?: string;
     customStripePriceId?: string | null;
     featureOverrides?: string[] | null;
-    creditsLimitOverrides?: number | null;
-    agentLimitOverrides?: number | null;
-    trainingTextLimitOverrides?: number | null;
-    trainingWebsiteLimitOverrides?: number | null;
-    trainingVideoLimitOverrides?: number | null;
-    trainingDocumentLimitOverrides?: number | null;
+    creditsLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
+    agentLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
+    trainingTextLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
+    trainingWebsiteLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
+    trainingVideoLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
+    trainingDocumentLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
     cancelAtPeriodEnd: boolean | null,
     canceledAt: string | null,
   };

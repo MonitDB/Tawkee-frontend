@@ -98,6 +98,9 @@ export interface AgentWrapper {
   agent: Agent;
   settings: AgentSettings;
   webhooks: AgentWebhooks;
+  subscriptionLimits?: {
+    agentLimit: number | 'UNLIMITED',
+  }
 }
 
 export interface PaginatedAgentWrapper {
@@ -107,6 +110,14 @@ export interface PaginatedAgentWrapper {
     page: number;
     pageSize: number;
     totalPages: number;
+  };
+  subscriptionLimits?: {
+    agentLimit: number | 'UNLIMITED',
+    creditsLimit: number | 'UNLIMITED',
+    trainingTextLimit: number | 'UNLIMITED',
+    trainingWebsiteLimit: number | 'UNLIMITED',
+    trainingVideoLimit: number | 'UNLIMITED',
+    trainingDocumentLimit: number | 'UNLIMITED'    
   };
 }
 
@@ -1749,7 +1760,8 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
       return {
         agents: data.data || [],
-        meta: data.meta
+        meta: data.meta,
+        subscriptionLimits: data.subscriptionLimits
       };
 
     } catch (error) {

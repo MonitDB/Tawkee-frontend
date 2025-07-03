@@ -35,6 +35,7 @@ import {
   SelectChangeEvent,
   MenuItem,
   useColorScheme,
+  Stack,
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import InfoIcon from '@mui/icons-material/Info';
@@ -88,10 +89,12 @@ export default function Agents() {
   const { mode, systemMode } = useColorScheme();
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
 
-  const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
+  const isMdUp = useMediaQuery(theme.breakpoints.up('sm'));
+  const isLgUp = useMediaQuery(theme.breakpoints.up('lg'));
   const navigate = useNavigate();
 
   const { user, token, can } = useAuth();
+
   const { notify } = useHttpResponse();
 
   const canView = can('VIEW', 'AGENT');
@@ -131,6 +134,18 @@ export default function Agents() {
 
   const [agentsState, setAgentsState] = useState<AgentWrapper[]>(agents);
   const [metaState, setMetaState] = useState<PaginatedAgentWrapper['meta']>(meta);
+
+  const [agentLimitState, setAgentLimitState] = useState<number | 'UNLIMITED' | undefined>(
+    user?.subscription?.agentLimitOverrides?.explicitlySet
+      ? user?.subscription?.agentLimitOverrides?.value
+      : user?.plan?.agentLimit
+  )
+
+  const agentLimit = userBelongsToSelectedWorkspace
+    ? user?.subscription?.agentLimitOverrides?.explicitlySet
+      ? user?.subscription?.agentLimitOverrides?.value
+      : user?.plan?.agentLimit
+    : agentLimitState;
 
   const handleWorkspaceChange = (event: SelectChangeEvent<string | null>) => {
     setWorkspaceId(event.target.value);
@@ -201,7 +216,12 @@ export default function Agents() {
         if (deletedPermanently) {
           setAgentsState(previousAgentsWrapper => previousAgentsWrapper.filter(wrapper => {
             return wrapper.agent.id != id;
-          }))
+          }));
+          setMetaState({
+            ...metaState,
+            total: metaState.total - 1
+          });
+
         } else {
           setAgentsState(previousAgentsWrapper => previousAgentsWrapper.map(wrapper => {
             if (wrapper.agent.id === id) return {
@@ -214,7 +234,11 @@ export default function Agents() {
             };
     
             return wrapper;
-          }))
+          }));
+          setMetaState({
+            ...metaState,
+            total: metaState.total - 1
+          })          
         }
 
       } catch {
@@ -243,7 +267,11 @@ export default function Agents() {
           };
   
           return wrapper;
-        }))
+        }));
+        setMetaState({
+          ...metaState,
+          total: metaState.total + 1
+        });
 
       } catch {
 
@@ -266,7 +294,21 @@ export default function Agents() {
       notify('Your admin privileges to activate/deactivate agents of any workspace has been revoked.', 'warning');
       return;
     }
-    
+
+    if (agentActivityStatus == false && userBelongsToSelectedWorkspace &&
+      (agentLimit != 'UNLIMITED' && agents.filter(wrapper => wrapper.agent.isActive).length >= (agentLimit as number))
+    ) {
+      notify(`You cannot have more than ${agentLimit} active agent(s) at once!`, 'warning');
+      return;
+    }
+
+    if (agentActivityStatus == false && !userBelongsToSelectedWorkspace &&
+      (agentLimit != 'UNLIMITED' && agentsState.filter(wrapper => wrapper.agent.isActive).length >= (agentLimit as number))
+    ) {
+      notify(`This workspace cannot have more than ${agentLimit} active agent(s) at once!`, 'warning');
+      return;
+    }
+
     try {
       agentActivityStatus
         ? deactivateAgent(agentId)
@@ -343,6 +385,7 @@ export default function Agents() {
       const response = await fetchAgentsOfOtherWorkspaces(workspaceId) as PaginatedAgentWrapper;
       setAgentsState(response.agents);
       setMetaState(response.meta);
+      setAgentLimitState(response.subscriptionLimits?.agentLimit);
     }
     
     if (!userBelongsToSelectedWorkspace) {
@@ -354,14 +397,39 @@ export default function Agents() {
   return (
     <Card variant="outlined" sx={{ margin: '0 auto', width: '100%' }}>
       <CardContent>
-        <Box sx={{ p: 3 }}>
+        <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          { userIsAdmin && (
+            <FormControl variant='standard' fullWidth error={!workspaceId} required>
+              <InputLabel>
+                Select a Workspace
+                { !canViewAsAdmin && (
+                  <Tooltip title="Your admin privileges to view Agents of other workspaces has been revoked.">
+                    <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
+                  </Tooltip>
+                )}
+              </InputLabel>
+              <Select
+                label="Select a Workspace"
+                value={workspaceOptions.some(w => w.id === workspaceId) ? workspaceId : ''}
+                onChange={handleWorkspaceChange}
+                sx={{ p: 1 }}
+                disabled={!canViewAsAdmin}
+              >
+                {workspaceOptions.map((workspace) => (
+                  <MenuItem key={workspace.id} value={workspace.id}>
+                    {`${workspace.name}${workspace.email ? ` (${workspace.email})` : ` (${workspace.id})`}`}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+                    
           <Box
             sx={{
               display: 'flex',
               justifyContent: 'space-between',
-              alignItems: 'center',
               mb: 4,
-              gap: 1
+              gap: 3
             }}
           >
             <Typography
@@ -389,40 +457,19 @@ export default function Agents() {
               </Box>
               Agents
             </Typography>
-            
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              { userIsAdmin && (
-                <FormControl variant='standard' fullWidth error={!workspaceId} required>
-                  <InputLabel>
-                    Select a Workspace
-                    { !canViewAsAdmin && (
-                      <Tooltip title="Your admin privileges to view Agents of other workspaces has been revoked.">
-                        <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
-                      </Tooltip>
-                    )}
-                  </InputLabel>
-                  <Select
-                    label="Select a Workspace"
-                    value={workspaceOptions.some(w => w.id === workspaceId) ? workspaceId : ''}                    onChange={handleWorkspaceChange}
-                    sx={{ p: 1 }}
-                    disabled={!canViewAsAdmin}
-                  >
-                    {workspaceOptions.map((workspace) => (
-                      <MenuItem key={workspace.id} value={workspace.id}>
-                        {`${workspace.name}${workspace.email ? ` (${workspace.email})` : ` (${workspace.id})`}`}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )}
 
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
                 onClick={() => handleOpenModal()}
                 disabled={userBelongsToSelectedWorkspace
                   ? !canCreate
+                    ? true
+                    : (agentLimit != 'UNLIMITED' && meta.total >= (agentLimit as number))
                   : !canCreateAsAdmin
+                    ? true
+                    : (agentLimit != 'UNLIMITED' && metaState.total >= (agentLimit as number))
                 }
                 sx={{
                   height: '100%',
@@ -451,9 +498,67 @@ export default function Agents() {
 
           </Box>
 
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-            Create, train and manage your AI agents
-          </Typography>
+          <Box sx={{ 
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 3
+          }}>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+              Create, train and manage your AI agents
+            </Typography>
+
+            <Stack>
+              <Typography variant="body1" color="text.secondary" textAlign="end">
+                {agentLimit === 'UNLIMITED'
+                  ? 'Your subscription allows working with unlimited agents.'
+                  : agentLimit === 0
+                    ? 'Your subscription does not allow creating or activating agents.'
+                    : agentLimit === 1
+                      ? 'Your subscription allows working with up to one agent.'
+                      : `Your subscription allows working with up to ${agentLimit} agents.`
+                }
+              </Typography>
+              <Typography 
+                variant="body1"
+                color={
+                  agentLimit === 'UNLIMITED'
+                    ? "text.primary"
+                    : userBelongsToSelectedWorkspace
+                      ? meta.total > (agentLimit as number)
+                        ? "error"
+                        : "text.primary"
+                      : metaState.total > (agentLimit as number)
+                        ? "error"
+                        : "text.primary"
+                }
+                fontWeight="bold"
+                textAlign="end"
+              >
+                {agentLimit === 'UNLIMITED'
+                  ? `${userBelongsToSelectedWorkspace ? meta.total : metaState.total} agents in use.`
+                  : agentLimit === 0
+                    ? ''
+                    : `${userBelongsToSelectedWorkspace ? meta.total || 'None' : metaState.total || 'None'} of ${agentLimit} in use.`
+                }
+                {
+                  agentLimit !== 'UNLIMITED' && userBelongsToSelectedWorkspace
+                    ? meta.total > (agentLimit as number) && (
+                      <Tooltip title="You will not be able to keep all existing agents active at the same time.">
+                        <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='error' />
+                      </Tooltip>
+                    )
+                    : metaState.total > (agentLimit as number) && (
+                      <Tooltip title="This workspace cannot keep all existing agents active at the same time.">
+                        <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='error' />
+                      </Tooltip>
+                    )
+                }
+                
+              </Typography>
+            </Stack>
+          </Box>
 
           <StyledTabs value={tab} onChange={handleTabChange}>
             <Tab label="All" />
@@ -552,7 +657,7 @@ export default function Agents() {
                         <Chip label={agent.communicationType} />
                       </Tooltip>
                     )}
-                    {isMdUp && (
+                    {isLgUp && (
                       <Tooltip
                         title={agentTypeDescriptions[agent.type]}
                         placement="top"
@@ -560,7 +665,7 @@ export default function Agents() {
                         <Chip label={agent.type} />
                       </Tooltip>
                     )}
-                    {isMdUp && (
+                    {isLgUp && (
                       <TruncatedText
                         text={
                           agent.behavior
@@ -569,7 +674,7 @@ export default function Agents() {
                               ? agent.jobDescription
                               : ''
                         }
-                        maxChars={50}
+                        maxChars={15}
                       />
                     )}
                     <ActionMenu
