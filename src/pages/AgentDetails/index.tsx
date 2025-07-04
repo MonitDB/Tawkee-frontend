@@ -95,8 +95,10 @@ export default function AgentDetails() {
   const { agents } = paginatedAgents;
   const { token, user } = useAuth();
 
-  const userBelongsToWorkspace: boolean = user?.workspaceId === params?.agentId;
-     
+  const userBelongsToWorkspace: boolean = user?.workspaceId === agents.find(
+    (wrapper) => wrapper.agent.id === params.agentId
+  )?.agent?.workspaceId;
+
   const {
     getQRCode,
     disconnectChannel,

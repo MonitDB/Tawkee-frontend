@@ -105,11 +105,12 @@ export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }:
       setExpanded(isExpanded ? panel : false);
     };
 
+  const fetchTrainingData = async (agentId: string) => {
+    const paginatedTrainings = await fetchTrainings(agentId, page);
+    setTrainingData(paginatedTrainings as PaginatedTrainingsResponseDto);
+  };
+
   useEffect(() => {
-    const fetchTrainingData = async (agentId: string) => {
-      const paginatedTrainings = await fetchTrainings(agentId, page);
-      setTrainingData(paginatedTrainings as PaginatedTrainingsResponseDto);
-    };
 
     if (!agentData) return;
 
@@ -244,8 +245,12 @@ export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }:
     setDialogOpen(false);
   };
 
-  const handleSubmitTraining = (training: CreateTrainingDto) => {
-    createTraining(agentData?.id as string, training);
+  const handleSubmitTraining = async (training: CreateTrainingDto) => {
+    await createTraining(agentData?.id as string, training);
+
+    if (!userBelongsToWorkspace) {
+      fetchTrainingData(agentData?.id as string);
+    }
   };
 
   const handlePageChange = (_: ChangeEvent<unknown>, value: number) => {
@@ -298,6 +303,8 @@ export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }:
   const noWebsiteLimit = websiteLimit === 0;
   const singleWebsiteLimit = websiteLimit === 1;
   const websiteAmountReachedLimit = !unlimitedWebsiteLimit && websiteTrainingAmount >= (websiteLimit as number);
+
+  const reachedAllLimits = textAmountReachedLimit && documentAmountReachedLimit && videoAmountReachedLimit && websiteAmountReachedLimit;
 
   return (
     <Box sx={{ p: 3 }}>
@@ -474,8 +481,10 @@ export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }:
             disabled={userBelongsToWorkspace
               ? !canCreateTraining
                 ? true
-                : textAmountReachedLimit && documentAmountReachedLimit && videoAmountReachedLimit && websiteAmountReachedLimit
+                : reachedAllLimits
               : !canCreateTrainingAsAdmin
+                ? true
+                : reachedAllLimits
             }
             sx={{
               textTransform: 'none',
@@ -493,20 +502,39 @@ export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }:
           </Button>
 
           { userBelongsToWorkspace
-            ? !canCreateTraining && (
-              <Tooltip
-                title="You cannot create training materials of agents on the workspace."
-                placement='top-start'
-              >
-                <InfoIcon color='warning' />
-              </Tooltip>
-            ) : !canCreateTrainingAsAdmin && (
-              <Tooltip
-                title="Your admin privileges to create training materials of agents of any workspace has been revoked."
-                placement='right'
-              >
-                <InfoIcon color='warning' />
-              </Tooltip>
+            ? !canCreateTraining ? (
+                <Tooltip
+                  title="You cannot create training materials of agents on the workspace."
+                  placement='top-start'
+                >
+                  <InfoIcon color='warning' />
+                </Tooltip>
+            ) : (
+              reachedAllLimits && (
+                <Tooltip
+                  title="Your subscription already reached all training material limits."
+                  placement='top-start'
+                >
+                  <InfoIcon color='warning' />
+                </Tooltip>
+              )
+            )
+          : !canCreateTrainingAsAdmin ? (
+                <Tooltip
+                  title="Your admin privileges to create training materials of agents of any workspace has been revoked."
+                  placement='top-start'
+                >
+                  <InfoIcon color='warning' />
+                </Tooltip>
+            ) : (
+              reachedAllLimits && (
+                <Tooltip
+                  title="Your subscription already reached all training material limits."
+                  placement='top-start'
+                >
+                  <InfoIcon color='warning' />
+                </Tooltip>
+              )
             )
           }
         </Box>
@@ -806,7 +834,7 @@ export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }:
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
         <MenuItem
-          onClick={() => {
+          onClick={async () => {
             if (userBelongsToWorkspace && !canDeleteTraining) {
               notify('You cannot delete training materials of agents on the workspace!', 'warning');
               return;
@@ -817,7 +845,11 @@ export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }:
               return;
             }
 
-            deleteTraining(agentData.id, selectedItem?.id as string);
+            await deleteTraining(agentData.id, selectedItem?.id as string);
+
+            if (!userBelongsToWorkspace) {
+              fetchTrainingData(agentData?.id as string);
+            }            
             handleMenuClose();
           }}
         >
