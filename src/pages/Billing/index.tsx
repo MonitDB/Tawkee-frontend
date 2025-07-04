@@ -28,6 +28,27 @@ import { useDashboardService } from '../../hooks/useDashboardService';
 import { useNavigate } from 'react-router-dom';
 import { useHttpResponse } from '../../context/ResponseNotifier';
 import LoadingBackdrop from '../../components/LoadingBackdrop';
+import { SubscriptionStatus } from '../Workspaces';
+
+export const subscriptionColorsTypography: Record<SubscriptionStatus, 'primary' | 'secondary' | 'warning' | 'error'> = {
+  TRIAL: 'secondary',
+  ACTIVE: 'primary',
+  PAST_DUE: 'error',
+  CANCELED: 'warning',
+  INCOMPLETE: 'error',
+  INCOMPLETE_EXPIRED: 'error',
+  UNPAID: 'error',
+};
+
+export const friendlySubscriptionStatus: Record<SubscriptionStatus, string> = {
+  TRIAL: 'in a trial period.',
+  ACTIVE: 'active.',
+  PAST_DUE: 'past due — payment required.',
+  CANCELED: 'canceled.',
+  INCOMPLETE: 'incomplete — setup not finished.',
+  INCOMPLETE_EXPIRED: 'incomplete and expired due to inactivity.',
+  UNPAID: 'unpaid after multiple failed attempts.',
+};
 
 export default function Billing() {
   const navigate = useNavigate();
@@ -219,20 +240,39 @@ export default function Billing() {
                 </FormControl>
               )}
 
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 2, width: '100%', textAlign: 'right' }}>
-                <Typography variant='h5'>
-                  { userBelongsToSelectedWorkspace
-                    ? 'Your subscription is '
-                    : `This subscription is `
-                  }
-                </Typography>
-                <Typography variant="h4" component="span" color="primary">
-                  {userBelongsToSelectedWorkspace
-                    ? subscription?.status
-                    : subscriptionState?.status
-                  }
-                </Typography>
-              </Box>
+              { userBelongsToSelectedWorkspace 
+                ? subscription?.status && (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'flex-end', width: '100%', textAlign: 'right' }}>
+                    <Typography variant='h5'>
+                      Your subscription is 
+                    </Typography>
+                    <Typography
+                      variant="h4"
+                      component="span"
+                      color={
+                        subscriptionColorsTypography[subscription?.status as SubscriptionStatus]
+                      }
+                    >
+                      { friendlySubscriptionStatus[subscription?.status as SubscriptionStatus] }
+                    </Typography>
+                  </Box>
+                ) : subscriptionState?.status && (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'flex-end', width: '100%', textAlign: 'right' }}>
+                    <Typography variant='h5'>
+                      This subscription is 
+                    </Typography>
+                    <Typography
+                      variant="h4"
+                      component="span"
+                      color={
+                        subscriptionColorsTypography[subscriptionState?.status as SubscriptionStatus]
+                      }
+                    >
+                      { friendlySubscriptionStatus[subscriptionState?.status as SubscriptionStatus] }
+                    </Typography>
+                  </Box>
+                )
+              }
             </Box>
           </Typography>
 
