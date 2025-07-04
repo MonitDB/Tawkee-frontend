@@ -4,6 +4,8 @@ import {
   useState,
   useEffect,
   ReactNode,
+  useRef,
+  RefObject,
 } from 'react';
 import env from '../config/env';
 import { useHttpResponse } from './ResponseNotifier';
@@ -18,6 +20,7 @@ interface AuthContextType {
   register: (credentials: RegisterCredentials) => Promise<Result>;
   profile: (token: string) => Promise<Result>;
   logout: () => void;
+  isLoggingOutRef: RefObject<boolean>;
   resetPassword: (input: PasswordResetInput) => Promise<Result>;
 
   can: (action: string, resource: string) => boolean;
@@ -137,6 +140,8 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 // Auth Provider Component
 export function AuthProvider({ children }: AuthProviderProps) {
+  const isLoggingOutRef = useRef(false);
+
   const { notify } = useHttpResponse();
 
   // State to hold JWT token
@@ -422,6 +427,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     try {
+      isLoggingOutRef.current = true;
       setLoading(true);
       const response = await fetch(`${env.API_URL}/auth/logout`, {
         method: 'POST',
@@ -474,6 +480,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       };
     } finally {
       setLoading(false);
+      isLoggingOutRef.current = false;
     }
   };
 
@@ -631,6 +638,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     register,
     profile,
     logout,
+    isLoggingOutRef,
     resetPassword,
 
     can,

@@ -93,7 +93,7 @@ export default function Agents() {
   const isLgUp = useMediaQuery(theme.breakpoints.up('lg'));
   const navigate = useNavigate();
 
-  const { user, token, can } = useAuth();
+  const { user, token, isLoggingOutRef, can } = useAuth();
 
   const { notify } = useHttpResponse();
 
@@ -364,7 +364,7 @@ export default function Agents() {
   // Fetch list of workspaces
   useEffect(() => {
 
-    if (userIsAdmin) {
+    if (!isLoggingOutRef.current && userIsAdmin) {
       // Fetch list of all workspaces
       const fetchOptions = async () => {
         try {

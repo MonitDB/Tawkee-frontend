@@ -35,7 +35,7 @@ export default function Billing() {
   const { mode, systemMode } = useColorScheme();
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
 
-  const { token, user, workspacePlanCredits, workspaceExtraCredits, can } = useAuth();
+  const { token, user, isLoggingOutRef, workspacePlanCredits, workspaceExtraCredits, can } = useAuth();
   const { notify } = useHttpResponse();
 
   const userIsAdmin = user?.role.name === 'ADMIN';
@@ -133,7 +133,7 @@ export default function Billing() {
   // Fetch list of workspaces
   useEffect(() => {
 
-    if (userIsAdmin) {
+    if (!isLoggingOutRef.current && userIsAdmin) {
       // Fetch list of all workspaces
       const fetchOptions = async () => {
         try {

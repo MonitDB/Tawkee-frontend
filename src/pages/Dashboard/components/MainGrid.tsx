@@ -32,7 +32,7 @@ export default function MainGrid() {
   const { mode, systemMode } = useColorScheme();
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
 
-  const { token, user, can } = useAuth();
+  const { token, user, isLoggingOutRef, can } = useAuth();
   const { fetchDashboardMetrics, fetchAllWorkspacesBasicInfo, loading } = useDashboardService(
     token as string
   );
@@ -70,8 +70,7 @@ export default function MainGrid() {
 
   // Fetch list of workspaces
   useEffect(() => {
-
-    if (user?.role.name == 'ADMIN') {
+    if (!isLoggingOutRef.current && user?.role.name == 'ADMIN') {
       // Fetch list of all workspaces
       const fetchOptions = async () => {
         try {
