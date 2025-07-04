@@ -26,6 +26,8 @@ import {
   useColorScheme,
   Pagination,
   useTheme,
+  Grid,
+  Divider,
 } from '@mui/material';
 import {
   MoreVert as MoreVertIcon,
@@ -40,7 +42,7 @@ import {
 } from '@mui/icons-material';
 import InfoIcon from '@mui/icons-material/Info';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Agent } from '../../../context/AgentsContext';
+import { Agent, PaginatedAgentWrapper } from '../../../context/AgentsContext';
 import { useTrainingService } from '../../../hooks/useTrainingService';
 import { useAuth } from '../../../context/AuthContext';
 import {
@@ -55,9 +57,10 @@ import { useHttpResponse } from '../../../context/ResponseNotifier';
 
 interface TrainingTabPanelProps {
   agentData: Agent | null;
+  agentSubscriptionLimits: Partial<PaginatedAgentWrapper['subscriptionLimits']> | null;
 }
 
-export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
+export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }: TrainingTabPanelProps) {
   const theme = useTheme();
   const { mode, systemMode } = useColorScheme();
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
@@ -257,19 +260,200 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
     return matchesSearch && matchesTab;
   });
 
+  const textTrainingAmount = trainingData.data.filter((item) => item.type === 'TEXT').length;
+  const documentTrainingAmount = trainingData.data.filter((item) => item.type === 'DOCUMENT').length;
+  const videoTrainingAmount = trainingData.data.filter((item) => item.type === 'VIDEO').length;
+  const websiteTrainingAmount = trainingData.data.filter((item) => item.type === 'WEBSITE').length;
+
   const tabCounts = {
     all: trainingData.data.length,
-    TEXT: trainingData.data.filter((item) => item.type === 'TEXT').length,
-    DOCUMENT: trainingData.data.filter((item) => item.type === 'DOCUMENT')
-      .length,
-    VIDEO: trainingData.data.filter((item) => item.type === 'VIDEO').length,
-    WEBSITE: trainingData.data.filter((item) => item.type === 'WEBSITE').length,
+    TEXT: textTrainingAmount,
+    DOCUMENT: documentTrainingAmount,
+    VIDEO: videoTrainingAmount,
+    WEBSITE: websiteTrainingAmount
   };
 
   if (!agentData) return null;
 
+  const textLimit = agentSubscriptionLimits?.trainingTextLimit;
+  const unlimitedTextLimit = textLimit === 'UNLIMITED' || textLimit === null;
+  const noTextLimit = textLimit === 0;
+  const singleTextLimit = textLimit === 1;
+  const textAmountReachedLimit = !unlimitedTextLimit && textTrainingAmount >= (textLimit as number);
+
+  const documentLimit = agentSubscriptionLimits?.trainingDocumentLimit;
+  const unlimitedDocumentLimit = documentLimit === 'UNLIMITED' || documentLimit === null;
+  const noDocumentLimit = documentLimit === 0;
+  const singleDocumentLimit = documentLimit === 1;
+  const documentAmountReachedLimit = !unlimitedDocumentLimit && documentTrainingAmount >= (documentLimit as number);
+
+  const videoLimit = agentSubscriptionLimits?.trainingVideoLimit;
+  const unlimitedVideoLimit = videoLimit === 'UNLIMITED' || videoLimit === null;
+  const noVideoLimit = videoLimit === 0;
+  const singleVideoLimit = videoLimit === 1;
+  const videoAmountReachedLimit = !unlimitedVideoLimit && videoTrainingAmount >= (videoLimit as number);
+
+  const websiteLimit = agentSubscriptionLimits?.trainingWebsiteLimit;
+  const unlimitedWebsiteLimit = websiteLimit === 'UNLIMITED' || websiteLimit === null;
+  const noWebsiteLimit = websiteLimit === 0;
+  const singleWebsiteLimit = websiteLimit === 1;
+  const websiteAmountReachedLimit = !unlimitedWebsiteLimit && websiteTrainingAmount >= (websiteLimit as number);
+
   return (
     <Box sx={{ p: 3 }}>
+      <Grid container columns={12} margin={2} rowSpacing={2}>
+        <Grid size={{ xs: 12 }}>
+          <Typography variant="body1" color="text.primary" textAlign="center">
+            {userBelongsToWorkspace ? 'Your ' : 'This '} subscription allows the following training material limits:
+          </Typography>
+          <Divider/>
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <Stack>
+            <Typography variant="body1" color="text.secondary" textAlign="start">
+              &#9679;{' '}
+              {unlimitedTextLimit
+                ? 'unlimited texts'
+                : noTextLimit
+                  ? 'does not allow training with text.'
+                  : singleTextLimit
+                    ? 'up to one text material.'
+                    : `up to ${textLimit} texts`
+              }
+            </Typography>
+            <Typography 
+              variant="body1"
+              color={
+                unlimitedTextLimit
+                  ? "text.primary"
+                  : textTrainingAmount > (textLimit as number)
+                      ? "error"
+                      : "text.primary"
+              }
+              fontWeight="bold"
+              textAlign="start"
+            >
+              {unlimitedTextLimit
+                ? `${textTrainingAmount == 0 ? 'No' : textTrainingAmount} text training materials in use.`
+                : noTextLimit
+                  ? ''
+                  : `${textTrainingAmount == 0 ? 'None' : textTrainingAmount} of ${textLimit} in use.`
+              }         
+            </Typography>
+          </Stack>
+        </Grid>
+               
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <Stack>
+            <Typography variant="body1" color="text.secondary" textAlign="end">
+              &#9679;{' '}
+              {unlimitedDocumentLimit
+                ? 'unlimited documents.'
+                : noDocumentLimit
+                  ? 'does not allow training with document.'
+                  : singleDocumentLimit
+                    ? 'up to one document material.'
+                    : `up to ${documentLimit} documents.`
+              }
+            </Typography>
+            <Typography 
+              variant="body1"
+              color={
+                unlimitedDocumentLimit
+                  ? "text.primary"
+                  : documentTrainingAmount > (documentLimit as number)
+                      ? "error"
+                      : "text.primary"
+              }
+              fontWeight="bold"
+              textAlign="end"
+            >
+              {unlimitedDocumentLimit
+                ? `${documentTrainingAmount == 0 ? 'No' : documentTrainingAmount} document training materials in use.`
+                : noDocumentLimit
+                  ? ''
+                  : `${documentTrainingAmount == 0 ? 'None' : documentTrainingAmount} of ${documentLimit} in use.`
+              }         
+            </Typography>
+          </Stack>
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <Stack>
+            <Typography variant="body1" color="text.secondary" textAlign="start">
+              &#9679;{' '}
+              {unlimitedWebsiteLimit
+                ? 'unlimited websites.'
+                : noWebsiteLimit
+                  ? 'does not allow training with website.'
+                  : singleWebsiteLimit
+                    ? 'up to one website material.'
+                    : `up to ${websiteLimit} websites.`
+              }
+            </Typography>
+            <Typography 
+              variant="body1"
+              color={
+                unlimitedWebsiteLimit
+                  ? "text.primary"
+                  : websiteTrainingAmount > (websiteLimit as number)
+                      ? "error"
+                      : "text.primary"
+              }
+              fontWeight="bold"
+              textAlign="start"
+            >
+              {unlimitedWebsiteLimit
+                ? `${websiteTrainingAmount == 0 ? 'No' : websiteTrainingAmount} website training materials in use.`
+                : noWebsiteLimit
+                  ? ''
+                  : `${websiteTrainingAmount == 0 ? 'None' : websiteTrainingAmount} of ${websiteLimit} in use.`
+              }         
+            </Typography>          
+          </Stack>
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <Stack>
+          <Typography variant="body1" color="text.secondary" textAlign="end">
+            &#9679;{' '}
+            {unlimitedVideoLimit
+              ? 'unlimited videos.'
+              : noVideoLimit
+                ? 'does not allow training with video.'
+                : singleVideoLimit
+                  ? 'up to one video material.'
+                  : `up to ${videoLimit} videos.`
+            }
+          </Typography>
+          <Typography 
+            variant="body1"
+            color={
+              unlimitedVideoLimit
+                ? "text.primary"
+                : textTrainingAmount > (videoLimit as number)
+                    ? "error"
+                    : "text.primary"
+            }
+            fontWeight="bold"
+            textAlign="end"
+          >
+            {unlimitedVideoLimit
+              ? `${textTrainingAmount == 0 ? 'No' : textTrainingAmount} video training materials in use.`
+              : noVideoLimit
+                ? ''
+                : `${textTrainingAmount == 0 ? 'None' : textTrainingAmount} of ${videoLimit} in use.`
+            }         
+          </Typography>
+          </Stack>
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
+          <Divider/>
+        </Grid>        
+      </Grid>
+
       {/* Header */}
       <Box
         sx={{
@@ -289,6 +473,8 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
             onClick={() => setDialogOpen(true)}
             disabled={userBelongsToWorkspace
               ? !canCreateTraining
+                ? true
+                : textAmountReachedLimit && documentAmountReachedLimit && videoAmountReachedLimit && websiteAmountReachedLimit
               : !canCreateTrainingAsAdmin
             }
             sx={{
@@ -662,6 +848,12 @@ export default function TrainingTabPanel({ agentData }: TrainingTabPanelProps) {
         open={dialogOpen}
         onClose={handleCloseDialog}
         onSubmit={handleSubmitTraining}
+        allowedTrainings={{
+          textAmountReachedLimit,
+          documentAmountReachedLimit,
+          videoAmountReachedLimit,
+          websiteAmountReachedLimit
+        }}
       />
     </Box>
   );

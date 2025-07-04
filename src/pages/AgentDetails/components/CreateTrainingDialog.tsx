@@ -44,12 +44,24 @@ interface NewTrainingDialogProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (training: CreateTrainingDto) => void;
+  allowedTrainings: {
+    textAmountReachedLimit: boolean,
+    documentAmountReachedLimit: boolean,
+    videoAmountReachedLimit: boolean,
+    websiteAmountReachedLimit: boolean
+  }
 }
 
 export default function CreateTrainingDialog({
   open,
   onClose,
   onSubmit,
+  allowedTrainings: {
+    textAmountReachedLimit,
+    documentAmountReachedLimit,
+    videoAmountReachedLimit,
+    websiteAmountReachedLimit
+  }
 }: NewTrainingDialogProps) {
   const { mode, systemMode } = useColorScheme();
   const theme = useTheme();
@@ -324,10 +336,10 @@ export default function CreateTrainingDialog({
           textColor="primary"
           variant="fullWidth"
         >
-          <Tab label="Text" value={TrainingType.TEXT} />
-          <Tab label="Website" value={TrainingType.WEBSITE} />
-          <Tab label="Document" value={TrainingType.DOCUMENT} />
-          <Tab label="Video" value={TrainingType.VIDEO} />
+          { !textAmountReachedLimit && <Tab label="Text" value={TrainingType.TEXT} disabled={textAmountReachedLimit} /> }
+          { !documentAmountReachedLimit && <Tab label="Document" value={TrainingType.DOCUMENT} disabled={documentAmountReachedLimit} /> }
+          { !websiteAmountReachedLimit && <Tab label="Website" value={TrainingType.WEBSITE} disabled={websiteAmountReachedLimit} /> }
+          { !videoAmountReachedLimit && <Tab label="Video" value={TrainingType.VIDEO} disabled={videoAmountReachedLimit} /> }
         </Tabs>
 
         <Box sx={{ mt: 3 }}>

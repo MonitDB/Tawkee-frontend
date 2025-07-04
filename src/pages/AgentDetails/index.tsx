@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 // Keep necessary imports from original file
 import { useAuth } from '../../context/AuthContext';
-import { Agent, AgentSettings, AgentWrapper, useAgents } from '../../context/AgentsContext';
+import { Agent, AgentSettings, AgentWrapper, PaginatedAgentWrapper, useAgents } from '../../context/AgentsContext';
 import { useChannelService } from '../../hooks/useChannelService';
 import { Channel } from '../../services/channelService';
 import LoadingBackdrop from '../../components/LoadingBackdrop';
@@ -107,6 +107,7 @@ export default function AgentDetails() {
   const [agentData, setAgentData] = useState<Agent | null>(null);
   const [agentSettingsData, setAgentSettingsData] =
     useState<AgentSettings | null>(null);
+  const [agentSubscriptionLimits, setAgentSubscriptionLimits] = useState<Partial<PaginatedAgentWrapper['subscriptionLimits']> | null>(null);
 
   const [QRCode, setQRCode] = useState<string | undefined>(undefined);
 
@@ -152,6 +153,21 @@ export default function AgentDetails() {
         if (agentWrapper?.agent) {
           setAgentData(agentWrapper?.agent);
           setAgentSettingsData(agentWrapper?.settings);
+          setAgentSubscriptionLimits({
+            trainingDocumentLimit: user?.subscription?.trainingDocumentLimitOverrides?.explicitlySet
+              ? user?.subscription?.trainingDocumentLimitOverrides?.value
+              : user?.plan?.trainingDocumentLimit,
+            trainingTextLimit: user?.subscription?.trainingTextLimitOverrides?.explicitlySet
+              ? user?.subscription?.trainingTextLimitOverrides?.value
+              : user?.plan?.trainingTextLimit,
+            trainingVideoLimit: user?.subscription?.trainingVideoLimitOverrides?.explicitlySet
+              ? user?.subscription?.trainingVideoLimitOverrides?.value
+              : user?.plan?.trainingVideoLimit,
+            trainingWebsiteLimit: user?.subscription?.trainingWebsiteLimitOverrides?.explicitlySet
+              ? user?.subscription?.trainingWebsiteLimitOverrides?.value
+              : user?.plan?.trainingWebsiteLimit,
+          });
+          
           if (tabName) {
             setCurrentTab(tabIndexFromName[tabName as TabName]);
           }
@@ -162,6 +178,8 @@ export default function AgentDetails() {
           const response = await fetchAgentOfOtherWorkspaces(agentId) as AgentWrapper;
           setAgentData(response.agent);
           setAgentSettingsData(response.settings);
+          setAgentSubscriptionLimits(response.subscriptionLimits);
+
           if (tabName) {
             setCurrentTab(tabIndexFromName[tabName as TabName]);
           }
@@ -299,7 +317,7 @@ export default function AgentDetails() {
                 <WorkTabPanel agentData={agentData} loading={loading} />
               </TabPanel>
               <TabPanel value={currentTab} index={2}>
-                <TrainingTabPanel agentData={agentData} />
+                <TrainingTabPanel agentData={agentData} agentSubscriptionLimits={agentSubscriptionLimits} />
               </TabPanel>
               <TabPanel value={currentTab} index={3}>
                 <IntegrationsTabPanel agentData={agentData} />

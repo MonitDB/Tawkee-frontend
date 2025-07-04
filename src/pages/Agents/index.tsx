@@ -511,7 +511,7 @@ export default function Agents() {
 
             <Stack>
               <Typography variant="body1" color="text.secondary" textAlign="end">
-                {agentLimit === 'UNLIMITED'
+                {agentLimit === 'UNLIMITED' || agentLimit === null
                   ? 'Your subscription allows working with unlimited agents.'
                   : agentLimit === 0
                     ? 'Your subscription does not allow creating or activating agents.'
@@ -523,7 +523,7 @@ export default function Agents() {
               <Typography 
                 variant="body1"
                 color={
-                  agentLimit === 'UNLIMITED'
+                  agentLimit === 'UNLIMITED' || agentLimit === null
                     ? "text.primary"
                     : userBelongsToSelectedWorkspace
                       ? meta.total > (agentLimit as number)
@@ -536,14 +536,14 @@ export default function Agents() {
                 fontWeight="bold"
                 textAlign="end"
               >
-                {agentLimit === 'UNLIMITED'
+                {agentLimit === 'UNLIMITED' || agentLimit === null
                   ? `${userBelongsToSelectedWorkspace ? meta.total : metaState.total} agents in use.`
                   : agentLimit === 0
                     ? ''
                     : `${userBelongsToSelectedWorkspace ? meta.total || 'None' : metaState.total || 'None'} of ${agentLimit} in use.`
                 }
                 {
-                  agentLimit !== 'UNLIMITED' && userBelongsToSelectedWorkspace
+                  (agentLimit !== 'UNLIMITED' && agentLimit !== null) && userBelongsToSelectedWorkspace
                     ? meta.total > (agentLimit as number) && (
                       <Tooltip title="You will not be able to keep all existing agents active at the same time.">
                         <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='error' />
