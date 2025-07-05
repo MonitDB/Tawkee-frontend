@@ -108,8 +108,9 @@ export default function Agents() {
   
   const userIsAdmin = user?.role.name === 'ADMIN';
   const [workspaceId, setWorkspaceId] = useState<string | null>(user?.workspaceId ?? null);
+  const [workspaceIsActive, setWorkspaceIsActive] = useState<boolean>(user?.workspaceIsActive || false);
   const [workspaceOptions, setWorkspaceOptions] = useState<
-  { id: string; name: string; email: string | null }[]
+  { id: string; name: string; isActive: boolean, email: string | null }[]
   >([]);
   
   const userBelongsToSelectedWorkspace = user?.workspaceId === workspaceId;
@@ -149,6 +150,11 @@ export default function Agents() {
 
   const handleWorkspaceChange = (event: SelectChangeEvent<string | null>) => {
     setWorkspaceId(event.target.value);
+    setWorkspaceIsActive(
+      workspaceOptions && event.target.value
+        ? workspaceOptions.find(ws => ws.id === event.target.value)?.isActive ?? false
+        : false
+    );
   }; 
 
   const handleTabChange = (_: SyntheticEvent, newValue: number) => {
@@ -205,7 +211,7 @@ export default function Agents() {
     }
 
     if (userBelongsToSelectedWorkspace) {
-      deleteAgent(id);
+      await deleteAgent(id);
       return;
     }
 
@@ -217,10 +223,6 @@ export default function Agents() {
           setAgentsState(previousAgentsWrapper => previousAgentsWrapper.filter(wrapper => {
             return wrapper.agent.id != id;
           }));
-          setMetaState({
-            ...metaState,
-            total: metaState.total - 1
-          });
 
         } else {
           setAgentsState(previousAgentsWrapper => previousAgentsWrapper.map(wrapper => {
@@ -311,9 +313,9 @@ export default function Agents() {
 
     try {
       agentActivityStatus
-        ? deactivateAgent(agentId)
-        : activateAgent(agentId);
-  
+        ? await deactivateAgent(agentId)
+        : await activateAgent(agentId);      
+
       if (!userBelongsToSelectedWorkspace) {
         setAgentsState(previousAgentsWrapper => previousAgentsWrapper.map(wrapper => {
           if (wrapper.agent.id === agentId) return {
@@ -463,13 +465,15 @@ export default function Agents() {
                 variant="contained"
                 startIcon={<AddIcon />}
                 onClick={() => handleOpenModal()}
-                disabled={userBelongsToSelectedWorkspace
-                  ? !canCreate
-                    ? true
-                    : (agentLimit != 'UNLIMITED' && meta.total >= (agentLimit as number))
-                  : !canCreateAsAdmin
-                    ? true
-                    : (agentLimit != 'UNLIMITED' && metaState.total >= (agentLimit as number))
+                disabled={workspaceIsActive
+                  ? userBelongsToSelectedWorkspace
+                    ? !canCreate
+                      ? true
+                      : (agentLimit != 'UNLIMITED' && meta.total >= (agentLimit as number))
+                    : true
+                      ? !workspaceIsActive
+                      : (agentLimit != 'UNLIMITED' && metaState.total >= (agentLimit as number))
+                  : true
                 }
                 sx={{
                   height: '100%',
@@ -483,7 +487,18 @@ export default function Agents() {
               >
                 Create Agent
               </Button>
-              { userBelongsToSelectedWorkspace
+              { !workspaceIsActive && userBelongsToSelectedWorkspace && (
+                <Tooltip title="Your workspace is not active." placement='left-start'>
+                  <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='error' />
+                </Tooltip>
+              )}
+              { !workspaceIsActive && !userBelongsToSelectedWorkspace && (
+                <Tooltip title="This workspace is not active." placement='left-start'>
+                  <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='error' />
+                </Tooltip>
+              )}
+
+              { workspaceIsActive && userBelongsToSelectedWorkspace
                 ? !canCreate && (
                   <Tooltip title="You cannot create agents on the workspace.">
                     <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />

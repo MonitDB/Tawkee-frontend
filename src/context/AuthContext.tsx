@@ -57,6 +57,8 @@ interface PasswordResetInput {
 export interface User {
   id: string;
   workspaceId: string;
+  workspaceIsActive: boolean;
+
   name: string;
   email: string;
   provider?: 'google' | 'facebook' | 'password';

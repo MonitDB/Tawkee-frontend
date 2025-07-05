@@ -45,7 +45,7 @@ export const friendlySubscriptionStatus: Record<SubscriptionStatus, string> = {
   ACTIVE: 'active.',
   PAST_DUE: 'past due — payment required.',
   CANCELED: 'canceled.',
-  INCOMPLETE: 'incomplete — setup not finished.',
+  INCOMPLETE: 'incomplete — trial period expired.',
   INCOMPLETE_EXPIRED: 'incomplete and expired due to inactivity.',
   UNPAID: 'unpaid after multiple failed attempts.',
 };

@@ -179,7 +179,7 @@ export class DashboardService {
   }
 
   async listAllWorkspacesBasicInfo(): Promise<
-    { id: string; name: string; email: string | null }[]
+    { id: string; name: string; isActive: boolean, email: string | null }[]
   > {
     const url = new URL(`${this.apiUrl}/workspaces/basic`);
 
@@ -201,7 +201,7 @@ export class DashboardService {
 
       const data = await response.json();
 
-      return data.data as { id: string; name: string; email: string | null }[];
+      return data.data as { id: string; name: string; isActive: boolean, email: string | null }[];
 
     } catch (error: unknown) {
       throw error;

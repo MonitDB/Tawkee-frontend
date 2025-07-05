@@ -117,7 +117,7 @@ export const useDashboardService = (token: string) => {
   );
 
   const fetchAllWorkspacesBasicInfo = useCallback(
-    async (): Promise<{ id: string; name: string; email: string | null }[]> => {
+    async (): Promise<{ id: string; name: string; isActive: boolean, email: string | null }[]> => {
       try {
         setLoading(true);
         const data = await service.listAllWorkspacesBasicInfo();

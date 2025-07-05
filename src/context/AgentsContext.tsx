@@ -442,7 +442,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
       notify('Agent activated!', 'success');
       return true;
-    } catch (error) {
+    } catch (error) {     
       const errorMessage = error instanceof Error ? error.message : '';
       handleTokenExpirationError(errorMessage); // Handle token expiration error
       notify(errorMessage, 'error');
