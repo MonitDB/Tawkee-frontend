@@ -181,7 +181,13 @@ export default function CreateAgentDialog({
       onClose={handleCloseModal}
       fullWidth
       maxWidth="md"
-      slotProps={{ transition: { timeout: 500 } }}
+      slotProps={{ 
+        transition: { timeout: 500 },
+        paper: {
+          component: 'form',
+          sx: { backgroundImage: 'none' },
+        },        
+      }}     
     >
       <DialogTitle sx={{ textAlign: 'center', pb: 3 }}>
         Create Agent
@@ -233,23 +239,26 @@ export default function CreateAgentDialog({
                     src={newAgent}
                     style={{ width: '10.0rem', borderRadius: '8px' }}
                   />
+                  
                   <Typography variant="h6" gutterBottom>
                     What is your agent called?
                   </Typography>
+                  
                   <Typography>
                     Be creative — choose the name your agent will use to
                     introduce itself.
                   </Typography>
+
                   <TextField
                     autoFocus
-                    variant="standard"
+                    variant="outlined"
                     value={selectedAgent?.name || ''}
                     onChange={(e) =>
                       setSelectedAgent((prev) =>
                         prev ? { ...prev, name: e.target.value } : prev
                       )
                     }
-                    sx={{ mt: 2, width: '50%' }}
+                    sx={{ mt: 2, width: '50%', fontWeight: 'bold' }}
                   />
                 </Box>
               )}

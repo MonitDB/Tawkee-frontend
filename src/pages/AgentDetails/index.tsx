@@ -124,7 +124,10 @@ export default function AgentDetails() {
   const handleRefreshQrCode = async (channelId: string) => {
     try {
       const { qrCode } = await getQRCode(channelId);
-      setQRCode(qrCode as string);
+
+      if (qrCode) {
+        setQRCode(qrCode as string);
+      }
     } catch (error) {
       console.error('Failed to refresh QR code:', error);
     }
