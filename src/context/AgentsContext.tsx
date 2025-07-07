@@ -47,6 +47,7 @@ export interface AgentSettings {
   timezone: string;
   enabledHumanTransfer: boolean;
   enabledReminder: boolean;
+  reminderIntervalMinutes: number;
   splitMessages: boolean;
   enabledEmoji: boolean;
   limitSubjects: boolean;
@@ -941,6 +942,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
               timezone: '(GMT+00:00) London',
               enabledHumanTransfer: false,
               enabledReminder: false,
+              reminderIntervalMinutes: 10,
               splitMessages: false,
               enabledEmoji: false,
               limitSubjects: false,

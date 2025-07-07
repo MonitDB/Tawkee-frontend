@@ -32,7 +32,7 @@ export interface Workspace {
   name: string;
   createdAt: string;
   isActive: boolean;
-  workspacePlanCredits: number,
+  workspacePlanCredits: number | 'UNLIMITED',
   workspaceExtraCredits: number,
   subscription: Partial<Subscription>;
   agents?: Partial<Agent>[];

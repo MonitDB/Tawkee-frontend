@@ -33,7 +33,9 @@ export default function CreditsBadge() {
       label={
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <Typography variant="body2" fontWeight="bold">
-            {workspaceCredits.toLocaleString('en-US')}
+            { workspaceCredits == Infinity
+              ? 'unlimited'
+              : workspaceCredits.toLocaleString('en-US')}
           </Typography>
           <Typography variant="caption">credits</Typography>
         </Box>

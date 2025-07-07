@@ -22,8 +22,8 @@ export default function WorkspaceOverviewTab({ workspace }: WorkspaceOverviewTab
   );
   const inactiveAgents = agents?.filter((agent) => !agent.isActive);
 
-  const planCredits = workspace?.workspacePlanCredits ?? 0;
-  const extraCredits = workspace?.workspaceExtraCredits ?? 0;
+  const planCredits = workspace.workspacePlanCredits ?? 'Unlimited';
+  const extraCredits = workspace.workspaceExtraCredits;
 
   return (
     <Box>
@@ -48,8 +48,8 @@ export default function WorkspaceOverviewTab({ workspace }: WorkspaceOverviewTab
             <CardContent sx={{ display: 'flex', alignItems: 'center', minHeight: 90, gap: 2 }}>
               <MonetizationOnIcon fontSize="large" color="primary" />
               <Box>
-                <Typography variant="h5">{planCredits.toLocaleString()}</Typography>
-                <Typography color="text.secondary">Remaining Plan Credits</Typography>
+                <Typography variant="h5">{planCredits.toLocaleString('en-US')}</Typography>
+                <Typography color="text.secondary">{planCredits.toLocaleString('en-US') === 'Unlimited' ? '': 'Remaining'} Plan Credits</Typography>
               </Box>
             </CardContent>
           </Card>
@@ -60,7 +60,7 @@ export default function WorkspaceOverviewTab({ workspace }: WorkspaceOverviewTab
             <CardContent sx={{ display: 'flex', alignItems: 'center', minHeight: 90, gap: 2 }}>
               <MonetizationOnIcon fontSize="large" color="secondary" />
               <Box>
-                <Typography variant="h5">{extraCredits.toLocaleString()}</Typography>
+                <Typography variant="h5">{extraCredits.toLocaleString('en-US')}</Typography>
                 <Typography color="text.secondary">Remaining Extra Credits</Typography>
               </Box>
             </CardContent>

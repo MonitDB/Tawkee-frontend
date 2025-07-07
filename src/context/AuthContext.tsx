@@ -209,7 +209,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (creditsData.error) throw new Error(creditsData.error);
         if (subscriptionData.error) throw new Error(subscriptionData.error);
 
-        setWorkspacePlanCredits(creditsData.data.planCreditsRemaining);
+        setWorkspacePlanCredits(creditsData.data.planCreditsRemaining ?? Infinity);
         setWorkspaceExtraCredits(creditsData.data.extraCreditsRemaining);
         syncWorkspaceSubscriptionUpdate(
           subscriptionData.data.subscription,

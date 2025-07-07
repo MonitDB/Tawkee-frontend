@@ -50,7 +50,12 @@ const settingsOptions = [
     key: 'enabledHumanTransfer',
     label: 'Enable Human Transfer',
     description:
-      'Allows the AI to transfer the conversation to a human agent when needed.',
+      'Allows the AI to transfer the conversation to a human agent when needed or requested by the client.',
+  },
+  {
+    key: 'enabledEmoji',
+    label: 'Enable Emoji',
+    description: 'Allows the use of emojis in the conversation.',
   },
   {
     key: 'enabledReminder',
@@ -63,11 +68,6 @@ const settingsOptions = [
     label: 'Split Messages',
     description:
       'Breaks long messages into smaller parts to improve readability.',
-  },
-  {
-    key: 'enabledEmoji',
-    label: 'Enable Emoji',
-    description: 'Allows the use of emojis in the conversation.',
   },
   {
     key: 'limitSubjects',

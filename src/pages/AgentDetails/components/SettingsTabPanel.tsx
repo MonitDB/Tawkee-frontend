@@ -22,11 +22,11 @@ import {
   useColorScheme,
 } from '@mui/material';
 import {
-  // PersonAdd,
+  PersonAdd,
   EmojiEmotions,
   FilterList,
   // SplitscreenOutlined,
-  // Memory,
+  Memory,
   Schedule,
   SmartToy,
 } from '@mui/icons-material';
@@ -42,6 +42,10 @@ const modelDescriptions: Record<AIModel, string> = {
   [AIModel.DEEPSEEK_CHAT]:
     'DeepSeek-Chat: Open-source large language model optimized for conversational tasks.',
 };
+
+const reminderIntervalOptionsMinutes = [
+  5, 10, 15, 20, 25, 30, 35, 40, 45, 60, 90, 120, 240, 360
+]
 
 const timezones = [
   '(GMT-12:00) Baker Island',
@@ -72,13 +76,24 @@ const timezones = [
 ];
 
 const settingsOptions = [
-  // { key: 'enabledHumanTransfer', label: 'Request Human Assistance', description: 'Enable this so the agent can transfer the interaction to a human team.', icon: <PersonAdd /> },
+  { key: 'enabledHumanTransfer',
+    label: 'Request Human Assistance',
+    description: 'Allows the AI to transfer the conversation to a human agent when needed or requested by the client.',
+    icon: <PersonAdd />
+  },
   {
     key: 'enabledEmoji',
     label: 'Use Emojis in Responses',
-    description: 'Defines whether the agent can use emojis in its responses.',
+    description: 'Allows the use of emojis in the conversation.',
     icon: <EmojiEmotions />,
   },
+  { 
+    key: 'enabledReminder',
+    label: 'Allow Setting Reminders',
+    description: 'Sends automated reminder messages after a period of user inactivity.',
+    icon: <Memory />
+  },
+  // { key: 'splitMessages', label: 'Split Response into Parts', description: 'Breaks long messages into smaller parts to improve readability.', icon: <SplitscreenOutlined /> },
   {
     key: 'limitSubjects',
     label: 'Restrict Allowed Topics',
@@ -86,8 +101,6 @@ const settingsOptions = [
       'Check this option to prevent the agent from discussing unrelated topics.',
     icon: <FilterList />,
   },
-  // { key: 'splitMessages', label: 'Split Response into Parts', description: 'If the message becomes too long, the agent can split it into multiple messages.', icon: <SplitscreenOutlined /> },
-  // { key: 'enabledReminder', label: 'Allow Setting Reminders', description: 'Enable this so the agent can set reminders for the user.', icon: <Memory /> },
 ];
 
 interface SettingsTabPanelProps {
@@ -123,6 +136,7 @@ export default function SettingsTabPanel({
       limitSubjects: actualSettings?.limitSubjects ?? false,
       splitMessages: actualSettings?.splitMessages ?? false,
       enabledReminder: actualSettings?.enabledReminder ?? false,
+      reminderIntervalMinutes: actualSettings?.reminderIntervalMinutes ?? 10,
       timezone: actualSettings?.timezone ?? '(GMT+00:00) London',
       preferredModel: actualSettings?.preferredModel ?? AIModel.GPT_4_1,
     };
@@ -208,8 +222,6 @@ export default function SettingsTabPanel({
                         mt: 0.5,
                         p: 0.5,
                         borderRadius: 1,
-                        bgcolor: 'rgba(138, 43, 226, 0.2)',
-                        color: '#8a2be2',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -220,13 +232,15 @@ export default function SettingsTabPanel({
                     <Box sx={{ flex: 1 }}>
                       <Typography
                         variant="body1"
-                        sx={{ fontWeight: 500, mb: 0.5 }}
+                        color='secondary'
+                        fontWeight='bold'
+                        sx={{ mb: 0.5 }}
                       >
                         {option.label}
                       </Typography>
                       <Typography
                         variant="body2"
-                        sx={{ lineHeight: 1.4, color: 'text.secondary' }}
+                        sx={{ lineHeight: 1.4 }}
                       >
                         {option.description}
                       </Typography>
@@ -244,10 +258,10 @@ export default function SettingsTabPanel({
                     sx={{
                       ml: 2,
                       '& .MuiSwitch-switchBase.Mui-checked': {
-                        color: '#8a2be2',
+                        color: theme.palette.secondary.main,
                       },
                       '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track':
-                        { backgroundColor: '#8a2be2' },
+                        { backgroundColor: theme.palette.secondary.main },
                       '& .MuiSwitch-switchBase': {
                         color:
                           resolvedMode == 'dark'
@@ -257,6 +271,40 @@ export default function SettingsTabPanel({
                     }}
                   />
                 </Box>
+                { option.key == 'enabledReminder' && formState[option.key as keyof typeof formState] && (
+                  <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 1 }}>
+                    <Typography>Send message after</Typography>
+                    <FormControl
+                      size="small"
+                      sx={{
+                        minWidth: 80,
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': { borderColor: theme.palette.grey[500] },
+                          '&:hover fieldset': { borderColor: theme.palette.secondary.main },
+                          '&.Mui-focused fieldset': { borderColor: theme.palette.secondary.main  },
+                        },
+                        '& .MuiSelect-icon': { color: theme.palette.grey[100] },
+                      }}
+                      disabled={userBelongsToWorkspace
+                        ? !canManageSettings
+                        : !canManageSettingsAsAdmin
+                      }        
+                    >
+                      <Select
+                        value={formState.reminderIntervalMinutes}
+                        onChange={handleSelectChange('reminderIntervalMinutes')}
+                        displayEmpty
+                      >
+                        {reminderIntervalOptionsMinutes.map((option) => (
+                          <MenuItem key={option} value={option}>
+                            <Typography>{option}</Typography>
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>                    
+                    <Typography>minutes</Typography>
+                  </Box>
+                )}
                 {index < settingsOptions.length - 1 && (
                   <Divider sx={{ bgcolor: '#333', opacity: 0.3 }} />
                 )}
@@ -372,6 +420,8 @@ function SelectField({
   canManageSettings,
   canManageSettingsAsAdmin
 }: SelectFieldProps) {
+  const theme = useTheme();
+
   return (
     <Box
       sx={{
@@ -388,8 +438,6 @@ function SelectField({
             mt: 0.5,
             p: 0.5,
             borderRadius: 1,
-            bgcolor: 'rgba(138, 43, 226, 0.2)',
-            color: '#8a2be2',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -415,11 +463,11 @@ function SelectField({
           minWidth: 200,
           ml: 2,
           '& .MuiOutlinedInput-root': {
-            '& fieldset': { borderColor: '#404040' },
-            '&:hover fieldset': { borderColor: '#8a2be2' },
-            '&.Mui-focused fieldset': { borderColor: '#8a2be2' },
+            '& fieldset': { borderColor: theme.palette.grey[500] },
+            '&:hover fieldset': { borderColor: theme.palette.secondary.main },
+            '&.Mui-focused fieldset': { borderColor: theme.palette.secondary.main  },
           },
-          '& .MuiSelect-icon': { color: '#a0a0a0' },
+          '& .MuiSelect-icon': { color: theme.palette.grey[100] },
         }}
         disabled={userBelongsToWorkspace
           ? !canManageSettings
