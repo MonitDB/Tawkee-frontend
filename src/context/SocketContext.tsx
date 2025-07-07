@@ -118,8 +118,12 @@ export function SocketProvider({ children }: SocketProviderProps) {
       syncWorkspaceSubscriptionUpdate(data.subscription, data.plan);
     }
 
-    const handleWorkspaceCreditsUpdate = (data: { planCredits: number, extraCredits: number }) => {
-      syncWorkspaceCreditsUpdate(data.planCredits, data.extraCredits);
+    const handleWorkspaceCreditsUpdate = (data: { planCredits: number | 'UNLIMITED', extraCredits: number }) => {
+      const unlimitedPlanCredits = data.planCredits === 'UNLIMITED' || data.planCredits === null;
+      syncWorkspaceCreditsUpdate(
+        unlimitedPlanCredits ? Infinity : data.planCredits as number,
+        data.extraCredits
+      );
     };
 
     const handleSocketError = (error: ErrorPayload) => {

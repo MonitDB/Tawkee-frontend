@@ -25,8 +25,9 @@ import {
   PersonAdd,
   EmojiEmotions,
   FilterList,
-  // SplitscreenOutlined,
+  SplitscreenOutlined,
   Memory,
+  HourglassBottom,
   Schedule,
   SmartToy,
 } from '@mui/icons-material';
@@ -43,9 +44,34 @@ const modelDescriptions: Record<AIModel, string> = {
     'DeepSeek-Chat: Open-source large language model optimized for conversational tasks.',
 };
 
+const modelFriendlyNames: Record<AIModel, string> = {
+  [AIModel.GPT_4]: 'GPT-4',
+  [AIModel.GPT_4_O]: 'GPT-4o',
+  [AIModel.GPT_4_O_MINI]: 'GPT-4o-mini',
+  [AIModel.GPT_4_1_MINI]: 'GPT-4.1-mini',
+  [AIModel.GPT_4_1]: 'GPT-4.1',
+  [AIModel.DEEPSEEK_CHAT]: 'DeepSeek Chat',
+};
+
 const reminderIntervalOptionsMinutes = [
   5, 10, 15, 20, 25, 30, 35, 40, 45, 60, 90, 120, 240, 360
 ]
+
+export enum ResponseDelayOptions {
+  IMMEDIATELY = 'IMMEDIATELY',
+  FIVE_SECONDS = 'FIVE_SECONDS',
+  TEN_SECONDS = 'TEN_SECONDS',
+  THIRTY_SECONDS = 'THIRTY_SECONDS',
+  ONE_MINUTE = 'ONE_MINUTE'
+}
+
+const responseDelayOptionsToSecondsMap: Record<ResponseDelayOptions, string> = {
+  IMMEDIATELY: 'Immediately',
+  FIVE_SECONDS: '5 seconds',
+  TEN_SECONDS: '10 seconds',
+  THIRTY_SECONDS: '30 seconds',
+  ONE_MINUTE: '1 minute'
+}
 
 const timezones = [
   '(GMT-12:00) Baker Island',
@@ -93,7 +119,12 @@ const settingsOptions = [
     description: 'Sends automated reminder messages after a period of user inactivity.',
     icon: <Memory />
   },
-  // { key: 'splitMessages', label: 'Split Response into Parts', description: 'Breaks long messages into smaller parts to improve readability.', icon: <SplitscreenOutlined /> },
+  {
+    key: 'splitMessages',
+    label: 'Split Response into Parts',
+    description: 'Breaks long messages into smaller parts to improve readability.',
+    icon: <SplitscreenOutlined />
+  },
   {
     key: 'limitSubjects',
     label: 'Restrict Allowed Topics',
@@ -137,6 +168,7 @@ export default function SettingsTabPanel({
       splitMessages: actualSettings?.splitMessages ?? false,
       enabledReminder: actualSettings?.enabledReminder ?? false,
       reminderIntervalMinutes: actualSettings?.reminderIntervalMinutes ?? 10,
+      responseDelaySeconds: actualSettings?.responseDelaySeconds ?? ResponseDelayOptions.IMMEDIATELY,
       timezone: actualSettings?.timezone ?? '(GMT+00:00) London',
       preferredModel: actualSettings?.preferredModel ?? AIModel.GPT_4_1,
     };
@@ -271,6 +303,7 @@ export default function SettingsTabPanel({
                     }}
                   />
                 </Box>
+
                 { option.key == 'enabledReminder' && formState[option.key as keyof typeof formState] && (
                   <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 1 }}>
                     <Typography>Send message after</Typography>
@@ -305,11 +338,28 @@ export default function SettingsTabPanel({
                     <Typography>minutes</Typography>
                   </Box>
                 )}
+
                 {index < settingsOptions.length - 1 && (
                   <Divider sx={{ bgcolor: '#333', opacity: 0.3 }} />
                 )}
               </Fragment>
             ))}
+
+            {/* Response Delay Select */}
+            <Divider sx={{ bgcolor: '#333', opacity: 0.5, my: 2 }} />
+            <SelectField
+              icon={<HourglassBottom />}
+              label="Response Delay Interval"
+              description="Defines how long the agent should wait before sending a response, simulating a more human-like typing experience."
+              value={formState.responseDelaySeconds}
+              options={Object.keys(ResponseDelayOptions)}
+              optionFriendlyNames={responseDelayOptionsToSecondsMap}
+              onChange={handleSelectChange('responseDelaySeconds')}
+
+              userBelongsToWorkspace={userBelongsToWorkspace}
+              canManageSettings={canManageSettings}
+              canManageSettingsAsAdmin={canManageSettingsAsAdmin}              
+            />
 
             {/* Timezone Select */}
             <Divider sx={{ bgcolor: '#333', opacity: 0.5, my: 2 }} />
@@ -334,6 +384,7 @@ export default function SettingsTabPanel({
               description="Select the AI model the agent will use for generating responses."
               value={formState.preferredModel}
               options={Object.values(AIModel)}
+              optionFriendlyNames={modelFriendlyNames}
               optionDescriptions={modelDescriptions}
               onChange={handleSelectChange('preferredModel')}
 
@@ -401,6 +452,7 @@ interface SelectFieldProps {
   description: string;
   value: string;
   options: string[];
+  optionFriendlyNames?: Record<string, string>;
   optionDescriptions?: Record<string, string>;
   onChange: (event: SelectChangeEvent<string>) => void;
   userBelongsToWorkspace: boolean;
@@ -414,6 +466,7 @@ function SelectField({
   description,
   value,
   options,
+  optionFriendlyNames,
   optionDescriptions,
   onChange,
   userBelongsToWorkspace,
@@ -446,13 +499,15 @@ function SelectField({
           {icon}
         </Box>
         <Box sx={{ flex: 1 }}>
-          <Typography variant="body1" sx={{ fontWeight: 500, mb: 0.5 }}>
+          <Typography
+            variant="body1"
+            color='secondary'
+            fontWeight='bold'            
+            sx={{ mb: 0.5 }}
+          >
             {label}
           </Typography>
-          <Typography
-            variant="body2"
-            sx={{ lineHeight: 1.4, color: 'text.secondary' }}
-          >
+          <Typography variant="body2">
             {description}
           </Typography>
         </Box>
@@ -478,7 +533,7 @@ function SelectField({
           {options.map((option) => (
             <MenuItem key={option} value={option}>
               <Tooltip title={optionDescriptions?.[option]}>
-                <Typography>{option}</Typography>
+                <Typography>{optionFriendlyNames?.[option] || option}</Typography>
               </Tooltip>
             </MenuItem>
           ))}

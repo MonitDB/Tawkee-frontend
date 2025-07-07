@@ -83,7 +83,7 @@ export default function Billing() {
 
   const [planState, setPlanState] = useState(plan);
   const [subscriptionState, setSubscriptionState] = useState(subscription);
-  const [workspacePlanCreditsState, setWorkspacePlanCreditsState] = useState<number>(workspacePlanCredits);
+  const [workspacePlanCreditsState, setWorkspacePlanCreditsState] = useState<number | 'UNLIMITED'>(workspacePlanCredits);
   const [workspaceExtraCreditsState, setWorkspaceExtraCreditsState] = useState<number>(workspaceExtraCredits);
 
   const [openPlanDialog, setOpenPlanDialog] = useState(false);
@@ -181,7 +181,7 @@ export default function Billing() {
       setRechargeThreshold(response?.smartRecharge?.threshold);
       setAutoRechargeAmount(response?.smartRecharge?.rechargeAmount);
 
-      setWorkspacePlanCreditsState(response?.planCreditsRemaining as number);
+      setWorkspacePlanCreditsState(response?.planCreditsRemaining as number | 'UNLIMITED');
       setWorkspaceExtraCreditsState(response?.extraCreditsRemaining as number);
     }
     
@@ -200,6 +200,8 @@ export default function Billing() {
   }, [userBelongsToSelectedWorkspace, workspaceId]);
 
   const relativeTerm = user?.workspaceId === workspaceId ? 'Your' : 'The'
+
+  const workspacePlanCreditsLabel = workspacePlanCredits == Infinity ? 'Unlimited' : workspacePlanCredits;
 
   return (
     <Card variant="outlined" sx={{ margin: '0 auto', width: '100%' }}>
@@ -283,14 +285,14 @@ export default function Billing() {
             }
             { userBelongsToSelectedWorkspace ? (
               <Chip
-                label={`${workspacePlanCredits.toLocaleString('en-US') || 'No'} credits`}
+                label={`${workspacePlanCreditsLabel?.toLocaleString('en-US') || 'No'} credits`}
                 color="primary"
                 variant="outlined"
                 size="small"
               />
             ) : (
               <Chip
-                label={`${workspacePlanCreditsState.toLocaleString('en-US') || 'No'} credits`}
+                label={`${workspacePlanCreditsState?.toLocaleString('en-US') || 'No'} credits`}
                 color="primary"
                 variant="outlined"
                 size="small"
@@ -299,14 +301,14 @@ export default function Billing() {
             { subscriptionState?.status !== 'TRIAL' && (
               userBelongsToSelectedWorkspace ? (
                 <Chip
-                  label={`${workspaceExtraCredits.toLocaleString('en-US') || 'No'} extra credits`}
+                  label={`${workspaceExtraCredits?.toLocaleString('en-US') || 'No'} extra credits`}
                   color="primary"
                   variant="outlined"
                   size="small"
                 />
               ) : (
                 <Chip
-                  label={`${workspaceExtraCreditsState.toLocaleString('en-US') || 'No'} extra credits`}
+                  label={`${workspaceExtraCreditsState?.toLocaleString('en-US') || 'No'} extra credits`}
                   color="primary"
                   variant="outlined"
                   size="small"
