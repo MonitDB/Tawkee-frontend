@@ -5,6 +5,7 @@ import NavbarBreadcrumbs from './NavbarBreadcrumbs';
 import ColorModeIconDropdown from './shared-theme/ColorModeIconDropdown';
 import CreditsBadge from './CreditsBadge';
 import { Box } from '@mui/material';
+import WorkspaceBadge from './WorkspaceBadge';
 
 export default function Header({
   overrideLatestSegment,
@@ -33,6 +34,7 @@ export default function Header({
           gap: 1,
         }}
       >
+        <WorkspaceBadge />
         <CreditsBadge />
         {/* <MenuButton showBadge aria-label="Open notifications">
           <NotificationsRoundedIcon />

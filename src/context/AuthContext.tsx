@@ -24,6 +24,7 @@ interface AuthContextType {
   resetPassword: (input: PasswordResetInput) => Promise<Result>;
   updatePassword: (input: PasswordUpdateInput) => Promise<Result>;
   updateName: (formData: FormData) => Promise<Result>;
+  updateWorkspaceName: (newName: string) => Promise<Result>;
 
   can: (action: string, resource: string) => boolean;
   handleTokenExpirationError: (errorMessage: string) => void;
@@ -59,6 +60,7 @@ interface PasswordResetInput {
 export interface User {
   id: string;
   workspaceId: string;
+  workspaceName: string;
   workspaceIsActive: boolean;
 
   name: string;
@@ -676,6 +678,71 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const updateWorkspaceName = async (newName: string): Promise<Result> => {
+    if (!newName.trim()) {
+      notify('Workspace name cannot be empty.', 'error');
+      return {
+        success: false,
+        error: 'Workspace name cannot be empty.',
+      };
+    }
+
+    if (!user) {
+      notify('User is not authenticated.', 'error');
+      return {
+        success: false,
+        error: 'User is not authenticated.',
+      };
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await fetch(`${env.API_URL}/workspaces/${user.workspaceId}/name`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: newName }),
+      });
+
+      const data = await response.json();
+      console.log(data);
+
+      if (data.error) throw new Error(data.error);
+
+      // Atualiza o objeto do usuário com o novo nome da workspace
+      const updatedUser: User = {
+        ...user,
+        workspaceName: data.data.workspaceName
+      };
+
+      setUser(updatedUser);
+      localStorage.setItem('app:user', JSON.stringify(updatedUser));
+
+      notify('Workspace name updated successfully!', 'success');
+      return { success: true };
+    } catch (error: unknown) {
+      let errorMessage = 'An unexpected error occurred.';
+      if (error instanceof Error) {
+        errorMessage = error.message.includes('Failed to fetch')
+          ? 'Network error. Please check your internet connection.'
+          : error.message;
+      }
+
+      handleTokenExpirationError(errorMessage);
+      notify(errorMessage, 'error');
+
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const can = (action: string, resource: string): boolean => {
       if (!user) return false;
@@ -774,6 +841,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     resetPassword,
     updatePassword,
     updateName,
+    updateWorkspaceName,
 
     can,
     handleTokenExpirationError,

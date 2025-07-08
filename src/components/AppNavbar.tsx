@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useLocation } from 'react-router-dom';
 
 import { useTheme } from '@mui/material';
 import { styled } from '@mui/material/styles';
@@ -8,7 +7,6 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import MuiToolbar from '@mui/material/Toolbar';
 import { tabsClasses } from '@mui/material/Tabs';
-import Typography from '@mui/material/Typography';
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
 import SideMenuMobile from './SideMenuMobile';
 import MenuButton from './MenuButton';
@@ -25,6 +23,7 @@ import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
 import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 import CreditsBadge from './CreditsBadge';
+import WorkspaceBadge from './WorkspaceBadge';
 
 const ListItems = {
   Dashboard: <DashboardIcon color="inherit" sx={{ fontSize: '1rem' }} />,
@@ -55,19 +54,11 @@ const Toolbar = styled(MuiToolbar)({
 });
 
 export default function AppNavbar() {
-  const location = useLocation();
   const [open, setOpen] = useState(false);
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
   };
-
-  function formatRouteName(path: string): string {
-    if (path === '/' || path.trim() === '') return 'Dashboard';
-
-    const segment = path.replace(/^\/+/, '').split('/')[0]; // remove leading slashes and get first segment
-    return segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase();
-  }
 
   return (
     <AppBar
@@ -93,29 +84,7 @@ export default function AppNavbar() {
             gap: 1,
           }}
         >
-          <Stack
-            direction="row"
-            spacing={1}
-            sx={{
-              justifyContent: 'center',
-              mr: 'auto',
-              display: { xs: 'none', sm: 'flex' },
-            }}
-          >
-            <CustomIcon
-              location={
-                formatRouteName(location.pathname) as keyof typeof ListItems
-              }
-            />
-            <Typography
-              variant="h4"
-              component="h1"
-              sx={{ color: 'text.primary' }}
-            >
-              {formatRouteName(location.pathname)}
-            </Typography>
-          </Stack>
-
+          <WorkspaceBadge />
           <CreditsBadge />
 
           <ColorModeIconDropdown />
