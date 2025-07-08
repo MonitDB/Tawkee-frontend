@@ -22,6 +22,8 @@ interface AuthContextType {
   logout: () => void;
   isLoggingOutRef: RefObject<boolean>;
   resetPassword: (input: PasswordResetInput) => Promise<Result>;
+  updatePassword: (input: PasswordUpdateInput) => Promise<Result>;
+  updateName: (formData: FormData) => Promise<Result>;
 
   can: (action: string, resource: string) => boolean;
   handleTokenExpirationError: (errorMessage: string) => void;
@@ -135,6 +137,11 @@ export interface User {
 
 interface AuthProviderProps {
   children: ReactNode;
+}
+
+interface PasswordUpdateInput {
+  currentPassword: string;
+  newPassword: string;
 }
 
 // Create the Authentication Context with a default value
@@ -547,6 +554,129 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const updatePassword = async ({
+    currentPassword,
+    newPassword,
+  }: PasswordUpdateInput): Promise<Result> => {
+    if (!currentPassword || !newPassword) {
+      notify('Both current and new passwords are required.', 'error');
+      return {
+        success: false,
+        error: 'Both current and new passwords are required.',
+      };
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await fetch(`${env.API_URL}/auth/update-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        } as const,
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (!data.success) {
+        throw new Error(data.message || 'Password update failed');
+      }
+
+      notify('Password updated successfully!', 'success');
+      return { success: true };
+    } catch (error: unknown) {
+      let errorMessage = 'An unexpected error occurred.';
+
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage = 'Network error. Please check your internet connection.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
+      handleTokenExpirationError(errorMessage);
+      notify(errorMessage, 'error');
+
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateName = async (formData: FormData): Promise<Result> => {
+    const firstName = formData.get('firstName')?.toString().trim();
+    const lastName = formData.get('lastName')?.toString().trim();
+
+    if (!firstName || !lastName) {
+      notify('Both first name and last name are required.', 'error');
+      return {
+        success: false,
+        error: 'Both first name and last name are required.',
+      };
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await fetch(`${env.API_URL}/auth/update-name`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.error) throw new Error(data.error);
+      if (!data.success) throw new Error(data.message || 'Failed to update name');
+
+      // Assume updated avatar URL comes back as data.avatarUrl (optional)
+      const updatedUser = {
+        ...user,
+        firstName,
+        lastName,
+        name: `${firstName} ${lastName}`.trim(),
+        ...(data.avatar && { avatar: env.API_URL + data.avatar }),
+      };
+
+      setUser(updatedUser);
+      localStorage.setItem('app:user', JSON.stringify(updatedUser));
+
+      notify('Profile updated successfully!', 'success');
+      return { success: true };
+
+    } catch (error: unknown) {
+      let errorMessage = 'An unexpected error occurred.';
+      if (error instanceof Error) {
+        errorMessage = error.message.includes('Failed to fetch')
+          ? 'Network error. Please check your internet connection.'
+          : error.message;
+      }
+
+      handleTokenExpirationError(errorMessage);
+      notify(errorMessage, 'error');
+
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   const can = (action: string, resource: string): boolean => {
       if (!user) return false;
 
@@ -642,6 +772,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout,
     isLoggingOutRef,
     resetPassword,
+    updatePassword,
+    updateName,
 
     can,
     handleTokenExpirationError,

@@ -8,13 +8,14 @@ import Typography from '@mui/material/Typography';
 import Menu from '@mui/material/Menu'; // Adicionado Menu
 import MenuItem from '@mui/material/MenuItem'; // Adicionado MenuItem
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
-import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded';
-import MenuButton from './MenuButton'; // Presumindo que este é um componente personalizado
+// import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded';
+// import MenuButton from './MenuButton'; // Presumindo que este é um componente personalizado
 import MenuContent from './MenuContent'; // Presumindo que este é um componente personalizado
-import CardAlert from './CardAlert'; // Presumindo que este é um componente personalizado
+// import CardAlert from './CardAlert'; // Presumindo que este é um componente personalizado
 import { useAuth } from '../context/AuthContext';
 import { usePrivateEmailService } from '../hooks/usePrivateEmailService';
 import LoadingBackdrop from './LoadingBackdrop';
+import { useNavigate } from 'react-router-dom';
 
 interface SideMenuMobileProps {
   open: boolean | undefined;
@@ -22,6 +23,7 @@ interface SideMenuMobileProps {
 }
 
 interface User {
+  id?: string;
   name?: string;
   email?: string;
   emailVerified?: boolean;
@@ -31,6 +33,7 @@ export default function SideMenuMobile({
   open,
   toggleDrawer,
 }: SideMenuMobileProps) {
+  const navigate = useNavigate();
   const { user, token, logout } = useAuth() as {
     user: User | null;
     token: string;
@@ -203,16 +206,28 @@ export default function SideMenuMobile({
               {verificationBadge}
             </Stack>
           </Stack>
-          <MenuButton showBadge>
+          {/* <MenuButton showBadge>
             <NotificationsRoundedIcon />
-          </MenuButton>
+          </MenuButton> */}
         </Stack>
         <Divider />
         <Stack sx={{ flexGrow: 1 }}>
           <MenuContent />
           <Divider />
         </Stack>
-        <CardAlert />
+        {/* <CardAlert /> */}
+        <Stack sx={{ p: 2 }}>
+          <Button
+            variant="text"
+            fullWidth
+            onClick={() => navigate(`/${user?.id}`)}
+          >
+            My Account
+          </Button>
+        </Stack>
+
+        <Divider />
+
         <Stack sx={{ p: 2 }}>
           <Button
             variant="outlined"

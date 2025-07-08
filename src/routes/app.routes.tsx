@@ -17,6 +17,7 @@ import SubscriptionUpdated from '../pages/SubscriptionUpdated';
 import Workspaces from '../pages/Workspaces';
 import WorkspaceDetails from '../pages/WorkspaceDetails';
 import Plans from '../pages/Plans';
+import UserDetails from '../pages/UserDetails';
 
 export default function AppRoutes() {
   return (
@@ -103,13 +104,23 @@ export default function AppRoutes() {
 
         <Route
           key="8"
+          path="/:userId"
+          element={
+            <AppPageLayout segment='My Account'>
+              <UserDetails />
+            </AppPageLayout>
+          }
+        />
+
+        <Route
+          key="9"
           path="/auth/oauth-result"
           element={<OAuthCallbackPage />}
         />
 
-        <Route key="9" path="/verify-email" element={<VerifyAccount />} />
-        <Route key="10" path="/reset-password" element={<ResetPassword />} />
-        <Route key="11" path="/billing-success" element={<SubscriptionUpdated />} />
+        <Route key="10" path="/verify-email" element={<VerifyAccount />} />
+        <Route key="11" path="/reset-password" element={<ResetPassword />} />
+        <Route key="12" path="/billing-success" element={<SubscriptionUpdated />} />
 
         <Route
           key="*"

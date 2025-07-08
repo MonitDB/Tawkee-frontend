@@ -11,7 +11,7 @@ import Typography from '@mui/material/Typography';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import MenuContent from './MenuContent';
-import CardAlert from './CardAlert';
+// import CardAlert from './CardAlert';
 import OptionsMenu from './OptionsMenu';
 import TawkeeLogo from './TawkeeLogo';
 import { usePrivateEmailService } from '../hooks/usePrivateEmailService';
@@ -189,7 +189,7 @@ export default function SideMenu() {
         }}
       >
         <MenuContent />
-        <CardAlert />
+        {/* <CardAlert /> */}
       </Box>
       <Stack
         direction="row"

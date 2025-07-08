@@ -84,9 +84,9 @@ export default function ResetPassword(props: { disableCustomTheme?: boolean }) {
     const passwordValue = password.value;
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/;
 
-    if (!passwordValue || passwordValue.length < 6) {
+    if (!passwordValue || passwordValue.length < 8) {
       setPasswordError(true);
-      setPasswordErrorMessage('Password must be at least 6 characters long.');
+      setPasswordErrorMessage('Password must be at least 8 characters long.');
       isValid = false;
     } else if (!passwordRegex.test(passwordValue)) {
       setPasswordError(true);

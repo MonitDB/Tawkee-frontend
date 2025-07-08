@@ -1,7 +1,7 @@
 import Stack from '@mui/material/Stack';
-import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded';
+// import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded';
 import NavbarBreadcrumbs from './NavbarBreadcrumbs';
-import MenuButton from './MenuButton';
+// import MenuButton from './MenuButton';
 import ColorModeIconDropdown from './shared-theme/ColorModeIconDropdown';
 import CreditsBadge from './CreditsBadge';
 import { Box } from '@mui/material';
@@ -34,9 +34,9 @@ export default function Header({
         }}
       >
         <CreditsBadge />
-        <MenuButton showBadge aria-label="Open notifications">
+        {/* <MenuButton showBadge aria-label="Open notifications">
           <NotificationsRoundedIcon />
-        </MenuButton>
+        </MenuButton> */}
         <ColorModeIconDropdown />
       </Box>
     </Stack>
