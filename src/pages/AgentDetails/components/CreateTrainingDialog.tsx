@@ -326,7 +326,18 @@ export default function CreateTrainingDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      slotProps={{
+        paper: {
+          component: 'form',
+          sx: { backgroundImage: 'none' },
+        },
+      }}
+    >
       <DialogTitle>New Training Material</DialogTitle>
       <DialogContent sx={{ height: '55vh' }}>
         <Tabs

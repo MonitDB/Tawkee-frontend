@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -41,8 +41,7 @@ export function ElevenLabsApiKeyDialog({
   const { mode, systemMode } = useColorScheme();
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!apiKey.trim()) return;
 
     try {
@@ -68,9 +67,10 @@ export function ElevenLabsApiKeyDialog({
       onClose={handleClose}
       maxWidth="sm"
       fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 2,
+      slotProps={{
+        paper: {
+          component: 'form',
+          sx: { backgroundImage: 'none' },
         },
       }}
     >
@@ -99,7 +99,7 @@ export function ElevenLabsApiKeyDialog({
         </Box>
       </DialogTitle>
 
-      <form onSubmit={handleSubmit}>
+      <form>
         <DialogContent sx={{ py: 3 }}>
           <Box sx={{ mb: 3 }}>
             <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
@@ -143,10 +143,10 @@ export function ElevenLabsApiKeyDialog({
 
         <DialogActions sx={{ px: 3, pb: 3 }}>
           <Button
-            type="submit"
-            variant="contained"
+            variant="outlined"
             fullWidth
             disabled={!apiKey.trim() || elevenLabsLoading}
+            onClick={handleSubmit}
             sx={{
               '&.Mui-disabled': {
                 color:

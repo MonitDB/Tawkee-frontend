@@ -182,7 +182,18 @@ export default function EditPlanDialog({ plan, onClose }: EditPlanDialogProps) {
   };
 
   return (
-    <Dialog open={!!plan} onClose={onClose} fullWidth maxWidth="md">
+    <Dialog
+      open={!!plan}
+      onClose={onClose}
+      fullWidth
+      maxWidth="md"
+      slotProps={{
+        paper: {
+          component: 'form',
+          sx: { backgroundImage: 'none' },
+        },
+      }}
+    >
       <DialogTitle>Edit Plan: {form.name}</DialogTitle>
       <DialogContent dividers>
         <Grid container spacing={2}>

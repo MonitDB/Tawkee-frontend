@@ -142,7 +142,18 @@ export default function UserPermissionsDialog({
       : editablePermissions.filter((p) => p.resource === selectedResource);
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      slotProps={{
+        paper: {
+          component: 'form',
+          sx: { backgroundImage: 'none' },
+        },
+      }}
+    >
       <DialogTitle>User Permissions</DialogTitle>
       <DialogContent>
         <Grid container spacing={3}>
@@ -157,11 +168,20 @@ export default function UserPermissionsDialog({
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 2 }}>
             <Typography fontWeight="bold">Email Verified</Typography>
-            <TextField value={userData.emailVerified ? 'Yes' : 'No'} disabled fullWidth />
+            <TextField
+              value={userData.emailVerified ? 'Yes' : 'No'}
+              disabled
+              fullWidth
+            />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Typography fontWeight="bold">Created At</Typography>
-            <TextField value={formatDate(userData.createdAt as string)} disabled fullWidth multiline />
+            <TextField
+              value={formatDate(userData.createdAt as string)}
+              disabled
+              fullWidth
+              multiline
+            />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Typography fontWeight="bold">Role</Typography>
@@ -169,27 +189,47 @@ export default function UserPermissionsDialog({
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 6 }}>
             <Typography fontWeight="bold">Role Description</Typography>
-            <TextField value={userData.role.description} disabled fullWidth multiline />
+            <TextField
+              value={userData.role.description}
+              disabled
+              fullWidth
+              multiline
+            />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <Typography fontWeight="bold">Last Updated</Typography>
-            <TextField value={userData.updatedAt ? formatDate(userData.updatedAt) : '---'} disabled fullWidth multiline />
+            <TextField
+              value={
+                userData.updatedAt ? formatDate(userData.updatedAt) : '---'
+              }
+              disabled
+              fullWidth
+              multiline
+            />
           </Grid>
 
           {/* Permissions Filter */}
           <Grid size={{ xs: 12 }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography fontWeight="bold">{userData.role.name} PERMISSIONS</Typography>
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+              mb={2}
+            >
+              <Typography fontWeight="bold">
+                {userData.role.name} PERMISSIONS
+              </Typography>
               <Typography variant="subtitle1">
-                {
-                  (() => {
-                    const denied = userData.userPermissions.filter((perm) => !perm.allowed).length;
-                    if (denied === 0) return 'No permission denied';
-                    if (denied === 1) return '1 permission denied';
-                    if (denied === userData.rolePermissions.length) return 'All permissions denied';
-                    return `${denied} permissions denied`;
-                  })()
-                }
+                {(() => {
+                  const denied = userData.userPermissions.filter(
+                    (perm) => !perm.allowed
+                  ).length;
+                  if (denied === 0) return 'No permission denied';
+                  if (denied === 1) return '1 permission denied';
+                  if (denied === userData.rolePermissions.length)
+                    return 'All permissions denied';
+                  return `${denied} permissions denied`;
+                })()}
               </Typography>
             </Box>
 
@@ -200,7 +240,12 @@ export default function UserPermissionsDialog({
               allowScrollButtonsMobile
             >
               {resourceList.map((resource) => (
-                <Tab key={resource} label={resource} value={resource} sx={{ fontSize: { xs: 10, sm: 12, md: 14 } }} />
+                <Tab
+                  key={resource}
+                  label={resource}
+                  value={resource}
+                  sx={{ fontSize: { xs: 10, sm: 12, md: 14 } }}
+                />
               ))}
             </Tabs>
           </Grid>
@@ -229,9 +274,12 @@ export default function UserPermissionsDialog({
                 >
                   <Typography
                     fontWeight="bold"
-                    color={permission.allowed === false ? 'textSecondary' : 'info'}
+                    color={
+                      permission.allowed === false ? 'textSecondary' : 'info'
+                    }
                     sx={{
-                      textDecoration: permission.allowed === false ? 'line-through' : 'none',
+                      textDecoration:
+                        permission.allowed === false ? 'line-through' : 'none',
                     }}
                   >
                     {index + 1}
@@ -242,9 +290,16 @@ export default function UserPermissionsDialog({
                       <Divider orientation="vertical" flexItem />
                       <Typography
                         variant="caption"
-                        color={permission.allowed === false ? 'textSecondary' : 'textPrimary'}
+                        color={
+                          permission.allowed === false
+                            ? 'textSecondary'
+                            : 'textPrimary'
+                        }
                         sx={{
-                          textDecoration: permission.allowed === false ? 'line-through' : 'none',
+                          textDecoration:
+                            permission.allowed === false
+                              ? 'line-through'
+                              : 'none',
                         }}
                       >
                         {permission.resource}
@@ -255,10 +310,15 @@ export default function UserPermissionsDialog({
                   <Divider orientation="vertical" flexItem />
                   <Typography
                     variant="caption"
-                    color={permission.allowed === false ? 'textSecondary' : 'textPrimary'}
+                    color={
+                      permission.allowed === false
+                        ? 'textSecondary'
+                        : 'textPrimary'
+                    }
                     sx={{
                       flex: 1,
-                      textDecoration: permission.allowed === false ? 'line-through' : 'none',
+                      textDecoration:
+                        permission.allowed === false ? 'line-through' : 'none',
                     }}
                   >
                     {permission.description}
@@ -272,15 +332,18 @@ export default function UserPermissionsDialog({
                       </Typography>
                       <Switch
                         checked={!(permission.allowed === false)}
-                        onChange={(e) => handlePermissionChange(index, e.target.checked)}
+                        onChange={(e) =>
+                          handlePermissionChange(index, e.target.checked)
+                        }
                         sx={{
                           ml: 2,
                           '& .MuiSwitch-switchBase.Mui-checked': {
                             color: '#8a2be2',
                           },
-                          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                            backgroundColor: '#8a2be2',
-                          },
+                          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track':
+                            {
+                              backgroundColor: '#8a2be2',
+                            },
                           '& .MuiSwitch-switchBase': {
                             color:
                               resolvedMode === 'dark'

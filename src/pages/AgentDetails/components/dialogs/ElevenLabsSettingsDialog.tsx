@@ -284,10 +284,10 @@ export function ElevenLabsSettingsDialog({
       onClose={handleClose}
       maxWidth="md"
       fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 2,
-          maxHeight: '90vh',
+      slotProps={{
+        paper: {
+          component: 'form',
+          sx: { backgroundImage: 'none' },
         },
       }}
     >

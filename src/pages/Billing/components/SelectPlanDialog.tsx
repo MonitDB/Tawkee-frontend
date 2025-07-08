@@ -82,7 +82,18 @@ export default function SelectPlanDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      slotProps={{
+        paper: {
+          component: 'form',
+          sx: { backgroundImage: 'none' },
+        },
+      }}
+    >
       <DialogTitle sx={{ textAlign: 'center', fontWeight: 'bold' }}>
         Change Plan
         <Typography variant="body2" color="primary">

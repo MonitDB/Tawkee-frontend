@@ -111,7 +111,18 @@ export default function CreatePlanDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="md"
+      slotProps={{
+        paper: {
+          component: 'form',
+          sx: { backgroundImage: 'none' },
+        },
+      }}
+    >
       <DialogTitle>Create New Plan</DialogTitle>
       <DialogContent dividers>
         <Grid container spacing={2}>

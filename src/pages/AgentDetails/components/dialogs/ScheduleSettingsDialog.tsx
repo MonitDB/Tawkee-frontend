@@ -129,32 +129,71 @@ export default function ScheduleSettingsDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      slotProps={{
+        paper: {
+          component: 'form',
+          sx: { backgroundImage: 'none' },
+        },
+      }}
+    >
       <DialogTitle>
         <Typography variant="h6">Schedule settings</Typography>
       </DialogTitle>
       <DialogContent sx={{ py: 3 }}>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <Box
-                sx={{
-                  width: 20,
-                  height: 20,
-                  bgcolor: 'primary.main',
-                  borderRadius: '50%',
-                  mr: 1,
-                }}
-              />
-              <Typography variant="subtitle2">Always open</Typography>
-            </Box>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ mb: 1, display: 'block' }}
-            >
-              Allow appointments at any time
-            </Typography>
+            {scheduleSettings?.alwaysOpen ? (
+              <>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Box
+                    sx={{
+                      width: 20,
+                      height: 20,
+                      bgcolor: 'primary.main',
+                      borderRadius: '50%',
+                      mr: 1,
+                    }}
+                  />
+                  <Typography variant="subtitle2">Always open</Typography>
+                </Box>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ mb: 1, display: 'block' }}
+                >
+                  Allow appointments at any time
+                </Typography>
+              </>
+            ) : (
+              <>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Box
+                    sx={{
+                      width: 20,
+                      height: 20,
+                      bgcolor: 'secondary.main',
+                      borderRadius: '50%',
+                      mr: 1,
+                    }}
+                  />
+                  <Typography variant="subtitle2">
+                    Open in Business hours
+                  </Typography>
+                </Box>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ mb: 1, display: 'block' }}
+                >
+                  Allow appointments in the periods defined below
+                </Typography>
+              </>
+            )}
             <FormControlLabel
               control={
                 <Switch
@@ -193,6 +232,7 @@ export default function ScheduleSettingsDialog({
                       key={day.key}
                       label={day.short}
                       clickable
+                      variant="outlined"
                       onClick={() => {
                         if (isActive) {
                           // Remove the day by setting empty array

@@ -59,7 +59,18 @@ export default function GoogleCalendarConfigDialog({
   loading,
 }: GoogleCalendarConfigDialogProps) {
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      slotProps={{
+        paper: {
+          component: 'form',
+          sx: { backgroundImage: 'none' },
+        },
+      }}
+    >
       <DialogTitle>
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Box
