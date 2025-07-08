@@ -34,7 +34,7 @@ export default function MenuContent() {
   const canViewPlansPage = can('VIEW_AS_ADMIN', 'PLAN');
   const canViewWorkspacesPage = can('VIEW_AS_ADMIN', 'WORKSPACE');
   const canViewAgentsPage = can('VIEW', 'AGENT');
-  const canViewChatsPage = can('VIEW_LIST', 'CHAT') || can('VIEW_MESSAGES', 'CHAT');
+  const canViewChatsPage = can('VIEW_LIST', 'CHAT');
 
   const mainListItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, permission: canViewDashboardPage },
