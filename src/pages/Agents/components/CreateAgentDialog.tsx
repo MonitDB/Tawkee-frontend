@@ -23,13 +23,10 @@ import {
   DialogActions,
   IconButton,
   TextField,
-  Grid,
   Typography,
   Stepper,
   Step,
   StepLabel,
-  FormControlLabel,
-  Switch,
   Fade,
   useTheme,
   useColorScheme,
@@ -43,38 +40,7 @@ import {
 } from '@mui/icons-material';
 import { newAgent } from '../../../assets';
 
-const steps = ['Name', 'Type', 'Role', 'Description', 'Settings', 'Complete'];
-
-const settingsOptions = [
-  {
-    key: 'enabledHumanTransfer',
-    label: 'Enable Human Transfer',
-    description:
-      'Allows the AI to transfer the conversation to a human agent when needed or requested by the client.',
-  },
-  {
-    key: 'enabledEmoji',
-    label: 'Enable Emoji',
-    description: 'Allows the use of emojis in the conversation.',
-  },
-  {
-    key: 'enabledReminder',
-    label: 'Enable Reminder',
-    description:
-      'Sends automated reminder messages after a period of user inactivity.',
-  },
-  {
-    key: 'splitMessages',
-    label: 'Split Messages',
-    description:
-      'Breaks long messages into smaller parts to improve readability.',
-  },
-  {
-    key: 'limitSubjects',
-    label: 'Limit Subjects',
-    description: 'Restricts user input to a predefined set of topics.',
-  },
-];
+const steps = ['Name', 'Type', 'Role', 'Description', 'Complete'];
 
 interface CreateAgentDialogProps {
   open: boolean;
@@ -146,7 +112,7 @@ export default function CreateAgentDialog({
       await createChannel(agentId as string, 'Whatsapp', 'WHATSAPP');
     }
 
-    setActiveStep(5);
+    setActiveStep(4);
   };
 
   const handleCloseModal = () => {
@@ -448,34 +414,6 @@ export default function CreateAgentDialog({
               )}
 
               {activeStep === 4 && (
-                <Box>
-                  <Typography variant="h6" gutterBottom textAlign="center">
-                    Agent Settings
-                  </Typography>
-                  <Grid container spacing={2}>
-                    {settingsOptions.map(({ key, label, description }) => (
-                      <Grid key={key} size={{ xs: 12 }}>
-                        <FormControlLabel
-                          control={<Switch />}
-                          label={
-                            <Box>
-                              <Typography variant="body1">{label}</Typography>
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                              >
-                                {description}
-                              </Typography>
-                            </Box>
-                          }
-                        />
-                      </Grid>
-                    ))}
-                  </Grid>
-                </Box>
-              )}
-
-              {activeStep === 5 && (
                 <Box sx={{ textAlign: 'center' }}>
                   <Typography
                     variant="h6"
@@ -554,7 +492,7 @@ export default function CreateAgentDialog({
           <Button
             variant="contained"
             onClick={
-              activeStep === 4 ? () => handleSave(selectedAgent) : handleNext
+              activeStep === 3 ? () => handleSave(selectedAgent) : handleNext
             }
             disabled={!canProceed()}
             sx={{
@@ -566,7 +504,7 @@ export default function CreateAgentDialog({
               },
             }}
           >
-            {activeStep === 4 ? 'Create Agent' : 'Continue'}
+            {activeStep === 3 ? 'Create Agent' : 'Continue'}
           </Button>
         )}
       </DialogActions>
