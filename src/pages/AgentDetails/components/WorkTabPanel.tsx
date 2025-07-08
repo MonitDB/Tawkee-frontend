@@ -39,7 +39,7 @@ export default function WorkTabPanel({
   const { updateAgent } = useAgents();
 
   const { user, can } = useAuth();
-  
+
   const userBelongsToWorkspace = user?.workspaceId === agentData?.workspaceId;
   const canEditWork = can('EDIT_WORK', 'AGENT');
   const canEditWorkAsAdmin = can('EDIT_WORK_AS_ADMIN', 'AGENT');
@@ -192,23 +192,23 @@ export default function WorkTabPanel({
           Work Information
         </Typography>
 
-        { userBelongsToWorkspace
+        {userBelongsToWorkspace
           ? !canEditWork && (
-            <Tooltip
-              title="You cannot edit work information of agents on the workspace."
-              placement='right'
-            >
-              <InfoIcon color='warning' />
-            </Tooltip>
-          ) : !canEditWorkAsAdmin && (
-            <Tooltip
-              title="Your admin privileges to edit work information of agents of any workspace has been revoked."
-              placement='right'
-            >
-              <InfoIcon color='warning' />
-            </Tooltip>
-          )
-        }
+              <Tooltip
+                title="You cannot edit work information of agents on the workspace."
+                placement="right"
+              >
+                <InfoIcon color="warning" />
+              </Tooltip>
+            )
+          : !canEditWorkAsAdmin && (
+              <Tooltip
+                title="Your admin privileges to edit work information of agents of any workspace has been revoked."
+                placement="right"
+              >
+                <InfoIcon color="warning" />
+              </Tooltip>
+            )}
       </Box>
 
       <Grid
@@ -243,10 +243,9 @@ export default function WorkTabPanel({
               onChange={(event) =>
                 setAgentTypeValue(event.target.value as AgentType)
               }
-              disabled={userBelongsToWorkspace
-                ? !canEditWork
-                : !canEditWorkAsAdmin
-              }              
+              disabled={
+                userBelongsToWorkspace ? !canEditWork : !canEditWorkAsAdmin
+              }
             >
               {Object.values(AgentType).map((type) => (
                 <MenuItem key={type} value={type}>
@@ -299,10 +298,9 @@ export default function WorkTabPanel({
                   ? 'error'
                   : 'primary'
               }
-              disabled={userBelongsToWorkspace
-                ? !canEditWork
-                : !canEditWorkAsAdmin
-              }                 
+              disabled={
+                userBelongsToWorkspace ? !canEditWork : !canEditWorkAsAdmin
+              }
             />
           </FormControl>
         </Grid>
@@ -344,10 +342,9 @@ export default function WorkTabPanel({
                   ? 'error'
                   : 'primary'
               }
-              disabled={userBelongsToWorkspace
-                ? !canEditWork
-                : !canEditWorkAsAdmin
-              }                 
+              disabled={
+                userBelongsToWorkspace ? !canEditWork : !canEditWorkAsAdmin
+              }
             />
           </FormControl>
         </Grid>
@@ -385,10 +382,9 @@ export default function WorkTabPanel({
                 setAgentJobDescriptionValue(event.target.value)
               }
               color={agentJobDescriptionValueError ? 'error' : 'primary'}
-              disabled={userBelongsToWorkspace
-                ? !canEditWork
-                : !canEditWorkAsAdmin
-              }                 
+              disabled={
+                userBelongsToWorkspace ? !canEditWork : !canEditWorkAsAdmin
+              }
             />
           </FormControl>
         </Grid>
@@ -399,21 +395,22 @@ export default function WorkTabPanel({
             fullWidth
             variant={loading ? 'outlined' : 'contained'}
             onClick={validateInputs}
-            disabled={loading
-              ? true
-              : userBelongsToWorkspace
-                ? !canEditWork
-                : !canEditWorkAsAdmin
-            }           
+            disabled={
+              loading
+                ? true
+                : userBelongsToWorkspace
+                  ? !canEditWork
+                  : !canEditWorkAsAdmin
+            }
             sx={{
               height: '100%',
               '&.Mui-disabled': {
-                  color:
+                color:
                   resolvedMode == 'dark'
-                      ? theme.palette.grey[400]
-                      : theme.palette.grey[500],
+                    ? theme.palette.grey[400]
+                    : theme.palette.grey[500],
               },
-            }}            
+            }}
           >
             Save
           </Button>

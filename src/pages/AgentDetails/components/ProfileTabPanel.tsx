@@ -41,7 +41,7 @@ export default function ProfileTabPanel({
 
   const { updateAgent } = useAgents();
   const { user, can } = useAuth();
-  
+
   const userBelongsToWorkspace = user?.workspaceId === agentData?.workspaceId;
   const canEditProfile = can('EDIT_PROFILE', 'AGENT');
   const canEditProfileAsAdmin = can('EDIT_PROFILE_AS_ADMIN', 'AGENT');
@@ -113,23 +113,23 @@ export default function ProfileTabPanel({
           Personal Information
         </Typography>
 
-        { userBelongsToWorkspace
+        {userBelongsToWorkspace
           ? !canEditProfile && (
-            <Tooltip
-              title="You cannot edit personal information of agents on the workspace."
-              placement='right'
-            >
-              <InfoIcon color='warning' />
-            </Tooltip>
-          ) : !canEditProfileAsAdmin && (
-            <Tooltip
-              title="Your admin privileges to edit personal information of agents of any workspace has been revoked."
-              placement='right'
-            >
-              <InfoIcon color='warning' />
-            </Tooltip>
-          )
-        }
+              <Tooltip
+                title="You cannot edit personal information of agents on the workspace."
+                placement="right"
+              >
+                <InfoIcon color="warning" />
+              </Tooltip>
+            )
+          : !canEditProfileAsAdmin && (
+              <Tooltip
+                title="Your admin privileges to edit personal information of agents of any workspace has been revoked."
+                placement="right"
+              >
+                <InfoIcon color="warning" />
+              </Tooltip>
+            )}
       </Box>
 
       <Grid
@@ -173,9 +173,10 @@ export default function ProfileTabPanel({
                   setAgentNameErrorMessage('');
                 }
               }}
-              disabled={userBelongsToWorkspace
-                ? !canEditProfile
-                : !canEditProfileAsAdmin
+              disabled={
+                userBelongsToWorkspace
+                  ? !canEditProfile
+                  : !canEditProfileAsAdmin
               }
             />
           </FormControl>
@@ -202,9 +203,10 @@ export default function ProfileTabPanel({
               required
               fullWidth
               variant="outlined"
-              disabled={userBelongsToWorkspace
-                ? !canEditProfile
-                : !canEditProfileAsAdmin
+              disabled={
+                userBelongsToWorkspace
+                  ? !canEditProfile
+                  : !canEditProfileAsAdmin
               }
             >
               {Object.values(AgentCommunicationType).map(
@@ -254,10 +256,11 @@ export default function ProfileTabPanel({
                 }
               }}
               color={agentBehaviorError ? 'error' : 'primary'}
-              disabled={userBelongsToWorkspace
-                ? !canEditProfile
-                : !canEditProfileAsAdmin
-              }              
+              disabled={
+                userBelongsToWorkspace
+                  ? !canEditProfile
+                  : !canEditProfileAsAdmin
+              }
             />
           </FormControl>
         </Grid>
@@ -268,19 +271,20 @@ export default function ProfileTabPanel({
             fullWidth
             variant={loading ? 'outlined' : 'contained'}
             onClick={validateInputs}
-            disabled={loading
-              ? true
-              : userBelongsToWorkspace
-                ? !canEditProfile
-                : !canEditProfileAsAdmin
+            disabled={
+              loading
+                ? true
+                : userBelongsToWorkspace
+                  ? !canEditProfile
+                  : !canEditProfileAsAdmin
             }
             sx={{
               height: '100%',
               '&.Mui-disabled': {
-                  color:
+                color:
                   resolvedMode == 'dark'
-                      ? theme.palette.grey[400]
-                      : theme.palette.grey[500],
+                    ? theme.palette.grey[400]
+                    : theme.palette.grey[500],
               },
             }}
           >

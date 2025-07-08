@@ -2,7 +2,10 @@ import { useState, useCallback, useMemo } from 'react';
 import { useHttpResponse } from '../context/ResponseNotifier';
 
 import { env } from '../config/env';
-import { DailyCreditBalanceItem, DashboardService } from '../services/dashboardService';
+import {
+  DailyCreditBalanceItem,
+  DashboardService,
+} from '../services/dashboardService';
 import { Workspace } from '../pages/Workspaces';
 import { useAuth } from '../context/AuthContext';
 
@@ -90,7 +93,7 @@ export const useDashboardService = (token: string) => {
 
   const fetchWorkspaceList = useCallback(
     async ({
-      page = 1
+      page = 1,
     }: {
       page: number;
     }): Promise<{
@@ -116,37 +119,36 @@ export const useDashboardService = (token: string) => {
     [service, notify, handleTokenExpirationError]
   );
 
-  const fetchAllWorkspacesBasicInfo = useCallback(
-    async (): Promise<{ id: string; name: string; isActive: boolean, email: string | null }[]> => {
-      try {
-        setLoading(true);
-        const data = await service.listAllWorkspacesBasicInfo();
-        return data;
-      } catch (error: unknown) {
-        let errorMessage = 'A unexpected error occurred.';
+  const fetchAllWorkspacesBasicInfo = useCallback(async (): Promise<
+    { id: string; name: string; isActive: boolean; email: string | null }[]
+  > => {
+    try {
+      setLoading(true);
+      const data = await service.listAllWorkspacesBasicInfo();
+      return data;
+    } catch (error: unknown) {
+      let errorMessage = 'A unexpected error occurred.';
 
-        // Check if error is an instance of Error to safely access the message
-        if (error instanceof Error) {
-          // Handling network failures or fetch-specific errors
-          if (error.message.includes('Failed to fetch')) {
-            errorMessage =
-              'Network error. Please check your internet connection.';
-          } else {
-            errorMessage = `Error: ${error.message}`;
-          }
+      // Check if error is an instance of Error to safely access the message
+      if (error instanceof Error) {
+        // Handling network failures or fetch-specific errors
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
-          errorMessage = 'An unknown error occurred.';
+          errorMessage = `Error: ${error.message}`;
         }
-
-        handleTokenExpirationError(errorMessage); // Handle token expiration error
-        notify(errorMessage, 'error');
-        throw error;
-      } finally {
-        setLoading(false);
+      } else {
+        errorMessage = 'An unknown error occurred.';
       }
-    },
-    [service, notify, handleTokenExpirationError]
-  );
+
+      handleTokenExpirationError(errorMessage); // Handle token expiration error
+      notify(errorMessage, 'error');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [service, notify, handleTokenExpirationError]);
 
   const fetchDailyCreditBalance = useCallback(
     async (
@@ -156,7 +158,11 @@ export const useDashboardService = (token: string) => {
     ): Promise<DailyCreditBalanceItem[]> => {
       try {
         setLoading(true);
-        const response = await service.getDailyCreditBalance(workspaceId, startDate, endDate);
+        const response = await service.getDailyCreditBalance(
+          workspaceId,
+          startDate,
+          endDate
+        );
         return response;
       } catch (error: unknown) {
         let errorMessage = 'A unexpected error occurred.';
@@ -222,7 +228,7 @@ export const useDashboardService = (token: string) => {
         } else {
           errorMessage = 'An unknown error occurred.';
         }
-        
+
         handleTokenExpirationError(errorMessage); // Handle token expiration error
         notify(errorMessage || 'Error updating user permissions', 'error');
         return { success: false };

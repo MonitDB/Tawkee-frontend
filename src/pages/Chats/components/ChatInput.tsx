@@ -158,10 +158,10 @@ export function MediaUploadDialog({
         {mediaType === 'image'
           ? 'Image'
           : mediaType === 'audio'
-          ? 'Audio'
-          : mediaType === 'document'
-          ? 'Document'
-          : 'Video'}
+            ? 'Audio'
+            : mediaType === 'document'
+              ? 'Document'
+              : 'Video'}
       </DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>

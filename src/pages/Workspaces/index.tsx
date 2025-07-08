@@ -24,7 +24,14 @@ import { Subscription } from '../WorkspaceDetails/components/SubscriptionTab';
 import { useNavigate } from 'react-router-dom';
 import { useDashboardService } from '../../hooks/useDashboardService';
 
-export type SubscriptionStatus = 'TRIAL' | 'ACTIVE' | 'PAST_DUE' | 'CANCELED' | 'INCOMPLETE' | 'INCOMPLETE_EXPIRED' | 'UNPAID';
+export type SubscriptionStatus =
+  | 'TRIAL'
+  | 'ACTIVE'
+  | 'PAST_DUE'
+  | 'CANCELED'
+  | 'INCOMPLETE'
+  | 'INCOMPLETE_EXPIRED'
+  | 'UNPAID';
 
 export interface Workspace {
   email: any;
@@ -32,8 +39,8 @@ export interface Workspace {
   name: string;
   createdAt: string;
   isActive: boolean;
-  workspacePlanCredits: number | 'UNLIMITED',
-  workspaceExtraCredits: number,
+  workspacePlanCredits: number | 'UNLIMITED';
+  workspaceExtraCredits: number;
   subscription: Partial<Subscription>;
   agents?: Partial<Agent>[];
   users?: User[];
@@ -55,7 +62,10 @@ const statusColors = new Map<boolean, 'success' | 'error'>([
   [false, 'error'],
 ]);
 
-export const subscriptionColors: Record<SubscriptionStatus, 'success' | 'warning' | 'default' | 'error'> = {
+export const subscriptionColors: Record<
+  SubscriptionStatus,
+  'success' | 'warning' | 'default' | 'error'
+> = {
   TRIAL: 'default',
   ACTIVE: 'success',
   PAST_DUE: 'error',
@@ -95,14 +105,14 @@ export default function Workspaces() {
     workspaceId: string,
     isActive: boolean
   ) => {
-      event.stopPropagation();
+    event.stopPropagation();
 
-      if (isActive) {
-        await deactivateWorkspace(workspaceId);
-      } else {
-        await activateWorkspace(workspaceId);
-      }
-  }
+    if (isActive) {
+      await deactivateWorkspace(workspaceId);
+    } else {
+      await activateWorkspace(workspaceId);
+    }
+  };
 
   useEffect(() => {
     const fetchWorkspaces = async () => {
@@ -115,18 +125,29 @@ export default function Workspaces() {
     fetchWorkspaces();
   }, [page, fetchWorkspaceList]);
 
-  const filteredWorkspaces = workspaces?.filter((workspace) => {
-    if (tab === 1) return workspace.isActive;
-    if (tab === 2) return !workspace.isActive;
-    return true;
-  }) || [];
+  const filteredWorkspaces =
+    workspaces?.filter((workspace) => {
+      if (tab === 1) return workspace.isActive;
+      if (tab === 2) return !workspace.isActive;
+      return true;
+    }) || [];
 
   return (
     <Card variant="outlined" sx={{ margin: '0 auto', width: '100%' }}>
       <CardContent>
         <Box sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-            <Typography variant="h4" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 4,
+            }}
+          >
+            <Typography
+              variant="h4"
+              sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+            >
               <Box
                 sx={{
                   width: '1.5rem',
@@ -161,19 +182,37 @@ export default function Workspaces() {
 
           <List>
             {filteredWorkspaces.map((workspace) => (
-              <Tooltip key={workspace.id} title={workspace.id} arrow placement="top">
+              <Tooltip
+                key={workspace.id}
+                title={workspace.id}
+                arrow
+                placement="top"
+              >
                 <Card
                   variant="outlined"
-                  sx={{ margin: `${theme.spacing(2)} 0`, '&:hover': { backgroundColor: 'action.hover' }, cursor: 'pointer' }}
+                  sx={{
+                    margin: `${theme.spacing(2)} 0`,
+                    '&:hover': { backgroundColor: 'action.hover' },
+                    cursor: 'pointer',
+                  }}
                   onClick={() => handleClickWorkspace(workspace.id)}
                 >
-                  <CardContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: theme.spacing(1) }}>
+                  <CardContent
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: theme.spacing(1),
+                    }}
+                  >
                     <ListItem>
                       <Avatar>{workspace.name[0]}</Avatar>
                       <ListItemText
                         sx={{ ml: 2 }}
                         primary={` ${workspace.name}${workspace?.email ? ' - ' + workspace?.email : ''}`}
-                        secondary={`Created: ${new Date(workspace.createdAt).toLocaleString('en-US', {
+                        secondary={`Created: ${new Date(
+                          workspace.createdAt
+                        ).toLocaleString('en-US', {
                           dateStyle: 'long',
                           timeStyle: 'short',
                         })}`}
@@ -181,21 +220,40 @@ export default function Workspaces() {
                     </ListItem>
 
                     {workspace?.subscription?.plan && (
-                      <Chip label={`${workspace.subscription.plan.name} Plan`} variant="outlined" />
+                      <Chip
+                        label={`${workspace.subscription.plan.name} Plan`}
+                        variant="outlined"
+                      />
                     )}
 
                     {workspace?.subscription?.status && (
                       <Chip
                         label={`SUBSCRIPTION ${workspace.subscription.status}`}
-                        color={subscriptionColors[workspace.subscription.status as SubscriptionStatus]}
+                        color={
+                          subscriptionColors[
+                            workspace.subscription.status as SubscriptionStatus
+                          ]
+                        }
                       />
                     )}
 
-                    <Tooltip title={workspace.isActive ? 'Deactivate workspace' : 'Reactivate workspace'}>
+                    <Tooltip
+                      title={
+                        workspace.isActive
+                          ? 'Deactivate workspace'
+                          : 'Reactivate workspace'
+                      }
+                    >
                       <Chip
                         label={workspace.isActive ? 'ACTIVE' : 'INACTIVE'}
                         color={statusColors.get(workspace.isActive)}
-                        onClick={(event) => handleActivateOrDeactivateWorkspace(event, workspace.id, workspace.isActive)}
+                        onClick={(event) =>
+                          handleActivateOrDeactivateWorkspace(
+                            event,
+                            workspace.id,
+                            workspace.isActive
+                          )
+                        }
                       />
                     </Tooltip>
                   </CardContent>
@@ -205,15 +263,30 @@ export default function Workspaces() {
           </List>
 
           {filteredWorkspaces.length === 0 ? (
-            <Typography variant="h6" sx={{ textAlign: 'center', color: 'text.secondary', mt: 4 }}>
+            <Typography
+              variant="h6"
+              sx={{ textAlign: 'center', color: 'text.secondary', mt: 4 }}
+            >
               No workspace found.
             </Typography>
           ) : (
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 4 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mt: 4,
+              }}
+            >
               <Typography sx={{ mr: 2 }}>
                 Page {page} of {totalPages} | Total: {totalItems} workspaces
               </Typography>
-              <Pagination count={totalPages} page={page} onChange={handlePageChange} color="primary" />
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={handlePageChange}
+                color="primary"
+              />
             </Box>
           )}
 

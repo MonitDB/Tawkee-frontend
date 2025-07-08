@@ -10,15 +10,19 @@ interface WorkspaceOverviewTabProps {
   workspace: Workspace;
 }
 
-export default function WorkspaceOverviewTab({ workspace }: WorkspaceOverviewTabProps) {
+export default function WorkspaceOverviewTab({
+  workspace,
+}: WorkspaceOverviewTabProps) {
   const agents = workspace?.agents;
   const users = workspace?.users;
 
   const activeConnectedAgents = agents?.filter(
-    (agent) => agent.isActive && agent.channels?.some((c: Channel) => c.connected)
+    (agent) =>
+      agent.isActive && agent.channels?.some((c: Channel) => c.connected)
   );
   const activeDisconnectedAgents = agents?.filter(
-    (agent) => agent.isActive && !agent.channels?.some((c: Channel) => c.connected)
+    (agent) =>
+      agent.isActive && !agent.channels?.some((c: Channel) => c.connected)
   );
   const inactiveAgents = agents?.filter((agent) => !agent.isActive);
 
@@ -33,7 +37,14 @@ export default function WorkspaceOverviewTab({ workspace }: WorkspaceOverviewTab
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <Card variant="outlined">
-            <CardContent sx={{ display: 'flex', alignItems: 'center', minHeight: 90, gap: 2 }}>
+            <CardContent
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                minHeight: 90,
+                gap: 2,
+              }}
+            >
               <PeopleAltIcon fontSize="large" />
               <Box>
                 <Typography variant="h5">{users?.length || 0}</Typography>
@@ -45,11 +56,25 @@ export default function WorkspaceOverviewTab({ workspace }: WorkspaceOverviewTab
 
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <Card variant="outlined">
-            <CardContent sx={{ display: 'flex', alignItems: 'center', minHeight: 90, gap: 2 }}>
+            <CardContent
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                minHeight: 90,
+                gap: 2,
+              }}
+            >
               <MonetizationOnIcon fontSize="large" color="primary" />
               <Box>
-                <Typography variant="h5">{planCredits.toLocaleString('en-US')}</Typography>
-                <Typography color="text.secondary">{planCredits.toLocaleString('en-US') === 'Unlimited' ? '': 'Remaining'} Plan Credits</Typography>
+                <Typography variant="h5">
+                  {planCredits.toLocaleString('en-US')}
+                </Typography>
+                <Typography color="text.secondary">
+                  {planCredits.toLocaleString('en-US') === 'Unlimited'
+                    ? ''
+                    : 'Remaining'}{' '}
+                  Plan Credits
+                </Typography>
               </Box>
             </CardContent>
           </Card>
@@ -57,11 +82,22 @@ export default function WorkspaceOverviewTab({ workspace }: WorkspaceOverviewTab
 
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <Card variant="outlined">
-            <CardContent sx={{ display: 'flex', alignItems: 'center', minHeight: 90, gap: 2 }}>
+            <CardContent
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                minHeight: 90,
+                gap: 2,
+              }}
+            >
               <MonetizationOnIcon fontSize="large" color="secondary" />
               <Box>
-                <Typography variant="h5">{extraCredits.toLocaleString('en-US')}</Typography>
-                <Typography color="text.secondary">Remaining Extra Credits</Typography>
+                <Typography variant="h5">
+                  {extraCredits.toLocaleString('en-US')}
+                </Typography>
+                <Typography color="text.secondary">
+                  Remaining Extra Credits
+                </Typography>
               </Box>
             </CardContent>
           </Card>
@@ -69,11 +105,22 @@ export default function WorkspaceOverviewTab({ workspace }: WorkspaceOverviewTab
 
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <Card variant="outlined">
-            <CardContent sx={{ display: 'flex', alignItems: 'center', minHeight: 90, gap: 2 }}>
+            <CardContent
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                minHeight: 90,
+                gap: 2,
+              }}
+            >
               <SmartToyIcon fontSize="large" color="success" />
               <Box>
-                <Typography variant="h5">{activeConnectedAgents?.length || 0}</Typography>
-                <Typography color="text.secondary">Active & Connected Agents</Typography>
+                <Typography variant="h5">
+                  {activeConnectedAgents?.length || 0}
+                </Typography>
+                <Typography color="text.secondary">
+                  Active & Connected Agents
+                </Typography>
               </Box>
             </CardContent>
           </Card>
@@ -81,11 +128,22 @@ export default function WorkspaceOverviewTab({ workspace }: WorkspaceOverviewTab
 
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <Card variant="outlined">
-            <CardContent sx={{ display: 'flex', alignItems: 'center', minHeight: 90, gap: 2 }}>
+            <CardContent
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                minHeight: 90,
+                gap: 2,
+              }}
+            >
               <SmartToyIcon fontSize="large" color="warning" />
               <Box>
-                <Typography variant="h5">{activeDisconnectedAgents?.length || 0}</Typography>
-                <Typography color="text.secondary">Active but Disconnected</Typography>
+                <Typography variant="h5">
+                  {activeDisconnectedAgents?.length || 0}
+                </Typography>
+                <Typography color="text.secondary">
+                  Active but Disconnected
+                </Typography>
               </Box>
             </CardContent>
           </Card>
@@ -93,10 +151,19 @@ export default function WorkspaceOverviewTab({ workspace }: WorkspaceOverviewTab
 
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <Card variant="outlined">
-            <CardContent sx={{ display: 'flex', alignItems: 'center', minHeight: 90, gap: 2 }}>
+            <CardContent
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                minHeight: 90,
+                gap: 2,
+              }}
+            >
               <HighlightOffIcon fontSize="large" color="error" />
               <Box>
-                <Typography variant="h5">{inactiveAgents?.length || 0}</Typography>
+                <Typography variant="h5">
+                  {inactiveAgents?.length || 0}
+                </Typography>
                 <Typography color="text.secondary">Inactive Agents</Typography>
               </Box>
             </CardContent>

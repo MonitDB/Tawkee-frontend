@@ -156,7 +156,7 @@ export default function CreditsPerDayChart({
   mode,
 }: CreditsPerDayChartProps) {
   const theme = useTheme();
-  
+
   // Auto-detect mode if not provided
   const detectedMode = useMemo(() => {
     if (mode) return mode;
@@ -166,9 +166,17 @@ export default function CreditsPerDayChart({
 
   const adjustedData = useMemo(() => {
     if (detectedMode === 'agent') {
-      return fillMissingDatesAgent(data as AgentCreditEntry[], startDate, endDate);
+      return fillMissingDatesAgent(
+        data as AgentCreditEntry[],
+        startDate,
+        endDate
+      );
     } else {
-      return fillMissingDatesWorkspace(data as WorkspaceCreditEntry[], startDate, endDate);
+      return fillMissingDatesWorkspace(
+        data as WorkspaceCreditEntry[],
+        startDate,
+        endDate
+      );
     }
   }, [data, startDate, endDate, detectedMode]);
 
@@ -179,10 +187,10 @@ export default function CreditsPerDayChart({
   const { allEntityIds, series } = useMemo(() => {
     if (detectedMode === 'agent') {
       const agentData = adjustedData as AgentCreditEntry[];
-      
+
       const allAgentIds = Array.from(
         new Set(
-          agentData.flatMap((entry) => 
+          agentData.flatMap((entry) =>
             entry.creditsByAgent.map((agent) => agent.agentId)
           )
         )
@@ -200,7 +208,8 @@ export default function CreditsPerDayChart({
       const agentSeries = allAgentIds.map((agentId) => {
         const agentSeriesData = agentData.map(
           (entry) =>
-            entry.creditsByAgent.find((c) => c.agentId === agentId)?.credits ?? 0
+            entry.creditsByAgent.find((c) => c.agentId === agentId)?.credits ??
+            0
         );
 
         const agentName = agentIdToNameMap.get(agentId) || 'Unknown';
@@ -223,10 +232,10 @@ export default function CreditsPerDayChart({
       };
     } else {
       const workspaceData = adjustedData as WorkspaceCreditEntry[];
-      
+
       const allWorkspaceIds = Array.from(
         new Set(
-          workspaceData.flatMap((entry) => 
+          workspaceData.flatMap((entry) =>
             entry.creditsByWorkspace.map((workspace) => workspace.workspaceId)
           )
         )
@@ -244,10 +253,12 @@ export default function CreditsPerDayChart({
       const workspaceSeries = allWorkspaceIds.map((workspaceId) => {
         const workspaceSeriesData = workspaceData.map(
           (entry) =>
-            entry.creditsByWorkspace.find((c) => c.workspaceId === workspaceId)?.credits ?? 0
+            entry.creditsByWorkspace.find((c) => c.workspaceId === workspaceId)
+              ?.credits ?? 0
         );
 
-        const workspaceName = workspaceIdToNameMap.get(workspaceId) || 'Unknown';
+        const workspaceName =
+          workspaceIdToNameMap.get(workspaceId) || 'Unknown';
 
         return {
           id: workspaceId,
@@ -281,10 +292,14 @@ export default function CreditsPerDayChart({
     .flatMap((s) => s.data)
     .reduce((acc, val) => acc + val, 0);
 
-  const chartTitle = detectedMode === 'agent' ? 'Daily Credit Usage' : 'Daily Credit Usage by Workspace';
-  const chartSubtitle = detectedMode === 'agent' 
-    ? `Credits stacked by agent per day (${totalSum})`
-    : `Credits stacked by workspace per day (${totalSum})`;
+  const chartTitle =
+    detectedMode === 'agent'
+      ? 'Daily Credit Usage'
+      : 'Daily Credit Usage by Workspace';
+  const chartSubtitle =
+    detectedMode === 'agent'
+      ? `Credits stacked by agent per day (${totalSum})`
+      : `Credits stacked by workspace per day (${totalSum})`;
 
   return (
     <Card

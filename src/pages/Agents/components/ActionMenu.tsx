@@ -109,36 +109,42 @@ export default function ActionMenu({
           horizontal: 'right',
         }}
       >
-        { !agent.isDeleted && (
+        {!agent.isDeleted && (
           <>
-            <MenuItem onClick={(event) => handleActivateOrDeactivate(event, agent.isActive, agent.id)}>
+            <MenuItem
+              onClick={(event) =>
+                handleActivateOrDeactivate(event, agent.isActive, agent.id)
+              }
+            >
               <ListItemIcon>
-                { agent.isActive ? (
+                {agent.isActive ? (
                   <StopCircle fontSize="small" />
                 ) : (
                   <PowerSettingsNew fontSize="small" />
                 )}
               </ListItemIcon>
-              <ListItemText>{ agent.isActive ? 'Deactivate' : 'Activate' }</ListItemText>
-              { userBelongsToWorkspace
+              <ListItemText>
+                {agent.isActive ? 'Deactivate' : 'Activate'}
+              </ListItemText>
+              {userBelongsToWorkspace
                 ? !canActivate && (
-                  <Tooltip
-                    title="You cannot activate/deactivate agents of the workspace."
-                    placement='right'
-                    sx={{ ml: 1 }}
-                  >
-                    <InfoIcon color='warning' />
-                  </Tooltip>
-                ) : !canActivateAsAdmin && (
-                  <Tooltip
-                    title="Your admin privileges to activate/deactivate agents of any workspace has been revoked."
-                    placement='right'
-                    sx={{ ml: 1 }}
-                  >
-                    <InfoIcon color='warning' />
-                  </Tooltip>
-                )
-              }          
+                    <Tooltip
+                      title="You cannot activate/deactivate agents of the workspace."
+                      placement="right"
+                      sx={{ ml: 1 }}
+                    >
+                      <InfoIcon color="warning" />
+                    </Tooltip>
+                  )
+                : !canActivateAsAdmin && (
+                    <Tooltip
+                      title="Your admin privileges to activate/deactivate agents of any workspace has been revoked."
+                      placement="right"
+                      sx={{ ml: 1 }}
+                    >
+                      <InfoIcon color="warning" />
+                    </Tooltip>
+                  )}
             </MenuItem>
             <Divider />
           </>
@@ -172,7 +178,7 @@ export default function ActionMenu({
           <ListItemText>Channels</ListItemText>
         </MenuItem>
         <Divider />
-        { agent.isDeleted && (
+        {agent.isDeleted && (
           <MenuItem
             onClick={(event) =>
               handleMenuItemClick(event, () => handleRestore(agent.id))
@@ -185,12 +191,12 @@ export default function ActionMenu({
               />
             </ListItemIcon>
             <ListItemText>Restore</ListItemText>
-            { userBelongsToWorkspace && !canDeleteAsAdmin && (
+            {userBelongsToWorkspace && !canDeleteAsAdmin && (
               <Tooltip
                 title="Your admin privileges to restore agents of any workspace has been revoked."
-                placement='right'
+                placement="right"
               >
-                <InfoIcon color='warning' />
+                <InfoIcon color="warning" />
               </Tooltip>
             )}
           </MenuItem>
@@ -201,7 +207,7 @@ export default function ActionMenu({
           }
         >
           <ListItemIcon>
-            { agent.isDeleted ? (
+            {agent.isDeleted ? (
               <DeleteForeverIcon
                 sx={{ color: theme.palette.error.main }}
                 fontSize="small"
@@ -213,24 +219,26 @@ export default function ActionMenu({
               />
             )}
           </ListItemIcon>
-          <ListItemText>Delete { agent.isDeleted ? 'Permanently' : '' }</ListItemText>
-          { userBelongsToWorkspace
+          <ListItemText>
+            Delete {agent.isDeleted ? 'Permanently' : ''}
+          </ListItemText>
+          {userBelongsToWorkspace
             ? !canDelete && (
-              <Tooltip
-                title="You cannot delete agents of the workspace."
-                placement='right'
-              >
-                <InfoIcon color='warning' />
-              </Tooltip>
-            ) : !canDeleteAsAdmin && (
-              <Tooltip
-                title="Your admin privileges to delete agents of any workspace has been revoked."
-                placement='right'
-              >
-                <InfoIcon color='warning' />
-              </Tooltip>
-            )
-          }
+                <Tooltip
+                  title="You cannot delete agents of the workspace."
+                  placement="right"
+                >
+                  <InfoIcon color="warning" />
+                </Tooltip>
+              )
+            : !canDeleteAsAdmin && (
+                <Tooltip
+                  title="Your admin privileges to delete agents of any workspace has been revoked."
+                  placement="right"
+                >
+                  <InfoIcon color="warning" />
+                </Tooltip>
+              )}
         </MenuItem>
       </Menu>
     </>

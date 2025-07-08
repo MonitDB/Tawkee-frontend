@@ -25,13 +25,18 @@ interface CreatePlanDialogProps {
   onClose: () => void;
 }
 
-export default function CreatePlanDialog({ open, onClose }: CreatePlanDialogProps) {
+export default function CreatePlanDialog({
+  open,
+  onClose,
+}: CreatePlanDialogProps) {
   const { mode, systemMode } = useColorScheme();
   const theme = useTheme();
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
 
   const { token } = useAuth();
-  const { createPlanFromForm, stripeLoading } = useStripeService(token as string);
+  const { createPlanFromForm, stripeLoading } = useStripeService(
+    token as string
+  );
 
   const [form, setForm] = useState({
     name: '',
@@ -49,9 +54,11 @@ export default function CreatePlanDialog({ open, onClose }: CreatePlanDialogProp
     features: [] as string[],
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setForm(prev => ({
+    setForm((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -59,7 +66,7 @@ export default function CreatePlanDialog({ open, onClose }: CreatePlanDialogProp
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm(prev => ({
+    setForm((prev) => ({
       ...prev,
       [name]: value === '' ? null : parseInt(value, 10),
     }));
@@ -67,7 +74,7 @@ export default function CreatePlanDialog({ open, onClose }: CreatePlanDialogProp
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
-    setForm(prev => ({
+    setForm((prev) => ({
       ...prev,
       [name]: checked,
     }));
@@ -76,14 +83,14 @@ export default function CreatePlanDialog({ open, onClose }: CreatePlanDialogProp
   const handleFeatureChange = (index: number, value: string) => {
     const updatedFeatures = [...form.features];
     updatedFeatures[index] = value;
-    setForm(prev => ({
+    setForm((prev) => ({
       ...prev,
       features: updatedFeatures,
     }));
   };
 
   const handleAddFeature = () => {
-    setForm(prev => ({
+    setForm((prev) => ({
       ...prev,
       features: [...prev.features, ''],
     }));
@@ -92,7 +99,7 @@ export default function CreatePlanDialog({ open, onClose }: CreatePlanDialogProp
   const handleRemoveFeature = (index: number) => {
     const updatedFeatures = [...form.features];
     updatedFeatures.splice(index, 1);
-    setForm(prev => ({
+    setForm((prev) => ({
       ...prev,
       features: updatedFeatures,
     }));
@@ -132,7 +139,7 @@ export default function CreatePlanDialog({ open, onClose }: CreatePlanDialogProp
                   setForm({ ...form, price: Math.round(dollars * 100) });
                 }
               }}
-              slotProps={{ input: { inputProps: { step: 0.1, min: 0 }}}}
+              slotProps={{ input: { inputProps: { step: 0.1, min: 0 } } }}
             />
           </Grid>
 
@@ -156,7 +163,7 @@ export default function CreatePlanDialog({ open, onClose }: CreatePlanDialogProp
               type="number"
               value={form.agentsLimit ?? ''}
               onChange={handleNumberChange}
-              slotProps={{ input: { inputProps: { min: 0 }}}}
+              slotProps={{ input: { inputProps: { min: 0 } } }}
             />
           </Grid>
 
@@ -168,7 +175,7 @@ export default function CreatePlanDialog({ open, onClose }: CreatePlanDialogProp
               type="number"
               value={form.creditsLimit ?? ''}
               onChange={handleNumberChange}
-              slotProps={{ input: { inputProps: { min: 0 }}}}
+              slotProps={{ input: { inputProps: { min: 0 } } }}
             />
           </Grid>
 
@@ -180,7 +187,7 @@ export default function CreatePlanDialog({ open, onClose }: CreatePlanDialogProp
               type="number"
               value={form.trialDays ?? ''}
               onChange={handleNumberChange}
-              slotProps={{ input: { inputProps: { min: 0 }}}}
+              slotProps={{ input: { inputProps: { min: 0 } } }}
             />
           </Grid>
 
@@ -193,7 +200,7 @@ export default function CreatePlanDialog({ open, onClose }: CreatePlanDialogProp
               placeholder="Unlimited"
               value={form.trainingTextLimit ?? ''}
               onChange={handleNumberChange}
-              slotProps={{ input: { inputProps: { min: 0 }}}}
+              slotProps={{ input: { inputProps: { min: 0 } } }}
             />
           </Grid>
 
@@ -205,7 +212,7 @@ export default function CreatePlanDialog({ open, onClose }: CreatePlanDialogProp
               type="number"
               value={form.trainingDocumentLimit ?? ''}
               onChange={handleNumberChange}
-              slotProps={{ input: { inputProps: { min: 0 }}}}
+              slotProps={{ input: { inputProps: { min: 0 } } }}
             />
           </Grid>
 
@@ -217,7 +224,7 @@ export default function CreatePlanDialog({ open, onClose }: CreatePlanDialogProp
               type="number"
               value={form.trainingVideoLimit ?? ''}
               onChange={handleNumberChange}
-              slotProps={{ input: { inputProps: { min: 0 }}}}
+              slotProps={{ input: { inputProps: { min: 0 } } }}
             />
           </Grid>
 
@@ -229,7 +236,7 @@ export default function CreatePlanDialog({ open, onClose }: CreatePlanDialogProp
               type="number"
               value={form.trainingWebsiteLimit ?? ''}
               onChange={handleNumberChange}
-              slotProps={{ input: { inputProps: { min: 0 }}}}
+              slotProps={{ input: { inputProps: { min: 0 } } }}
             />
           </Grid>
 
@@ -257,14 +264,29 @@ export default function CreatePlanDialog({ open, onClose }: CreatePlanDialogProp
           </Grid>
 
           <Grid size={{ xs: 12 }}>
-            <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="space-between"
+              mb={1}
+            >
               <Typography variant="subtitle1">Features</Typography>
-              <Button startIcon={<AddIcon />} size="small" onClick={handleAddFeature}>
+              <Button
+                startIcon={<AddIcon />}
+                size="small"
+                onClick={handleAddFeature}
+              >
                 Add Feature
               </Button>
             </Box>
             {form.features.map((feature, index) => (
-              <Box key={index} display="flex" alignItems="center" gap={1} mb={1}>
+              <Box
+                key={index}
+                display="flex"
+                alignItems="center"
+                gap={1}
+                mb={1}
+              >
                 <TextField
                   fullWidth
                   size="small"

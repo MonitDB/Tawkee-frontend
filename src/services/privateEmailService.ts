@@ -15,28 +15,24 @@ export class PrivateEmailService {
   }
 
   async resendVerification(): Promise<EmailResponse> {
-    try {
-      const response = await fetch(`${this.apiUrl}/auth/resend-verification`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.token}`,
-          'Content-Type': 'application/json',
-        } as const,
-      });
+    const response = await fetch(`${this.apiUrl}/auth/resend-verification`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        'Content-Type': 'application/json',
+      } as const,
+    });
 
-      const data: EmailResponse = await response.json();
+    const data: EmailResponse = await response.json();
 
-      if (!response.ok) {
-        return {
-          success: false,
-          message:
-            data.message || `Request failed with status ${response.status}`,
-        };
-      }
-
-      return data;
-    } catch (error: unknown) {
-      throw error;
+    if (!response.ok) {
+      return {
+        success: false,
+        message:
+          data.message || `Request failed with status ${response.status}`,
+      };
     }
+
+    return data;
   }
 }

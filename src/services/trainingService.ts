@@ -82,40 +82,36 @@ export class TrainingService {
     agentId: string,
     paginationDto: PaginationDto
   ): Promise<PaginatedTrainingsResponseDto> {
-    try {
-      const queryParams = new URLSearchParams({
-        page: paginationDto.page.toString(),
-        pageSize: paginationDto.pageSize.toString(),
-      });
+    const queryParams = new URLSearchParams({
+      page: paginationDto.page.toString(),
+      pageSize: paginationDto.pageSize.toString(),
+    });
 
-      const response = await fetch(
-        `${this.apiUrl}/agent/${agentId}/trainings?${queryParams}`,
-        {
-          method: 'GET',
-          headers: { Authorization: `Bearer ${this.token}` } as const,
-        }
-      );
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        const errorMessage =
-          data.error || `HTTP error! status: ${response.status}`;
-        throw new Error(errorMessage);
+    const response = await fetch(
+      `${this.apiUrl}/agent/${agentId}/trainings?${queryParams}`,
+      {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${this.token}` } as const,
       }
+    );
 
-      const data = await response.json();
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      const errorMessage =
+        data.error || `HTTP error! status: ${response.status}`;
+      throw new Error(errorMessage);
+    }
 
-      if (data.error) throw new Error(data.error);
+    const data = await response.json();
 
-      // Validate response structure
-      if (data && Array.isArray(data.data) && data.meta) {
-        return data as PaginatedTrainingsResponseDto;
-      } else {
-        console.error('Invalid response structure for findAll:', data);
-        return defaultPaginatedResponse;
-      }
-    } catch (error: unknown) {
-      throw error;
+    if (data.error) throw new Error(data.error);
+
+    // Validate response structure
+    if (data && Array.isArray(data.data) && data.meta) {
+      return data as PaginatedTrainingsResponseDto;
+    } else {
+      console.error('Invalid response structure for findAll:', data);
+      return defaultPaginatedResponse;
     }
   }
 
@@ -123,57 +119,46 @@ export class TrainingService {
     agentId: string,
     createTrainingDto: CreateTrainingDto
   ): Promise<TrainingDto> {
-    try {
-      const response = await fetch(
-        `${this.apiUrl}/agent/${agentId}/trainings`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${this.token}`,
-            'Content-Type': 'application/json',
-          } as const,
-          body: JSON.stringify(createTrainingDto),
-        }
-      );
+    const response = await fetch(`${this.apiUrl}/agent/${agentId}/trainings`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        'Content-Type': 'application/json',
+      } as const,
+      body: JSON.stringify(createTrainingDto),
+    });
 
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        const errorMessage =
-          data.error || `HTTP error! status: ${response.status}`;
-        throw new Error(errorMessage);
-      }
-
-      const data = await response.json();
-
-      if (data.error) throw new Error(data.error);
-
-      return data.data;
-    } catch (error: unknown) {
-      throw error;
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      const errorMessage =
+        data.error || `HTTP error! status: ${response.status}`;
+      throw new Error(errorMessage);
     }
+
+    const data = await response.json();
+
+    if (data.error) throw new Error(data.error);
+
+    return data.data;
   }
 
   async remove(trainingId: string): Promise<boolean> {
-    try {
-      const response = await fetch(`${this.apiUrl}/training/${trainingId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${this.token}` } as const,
-      });
+    const response = await fetch(`${this.apiUrl}/training/${trainingId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${this.token}` } as const,
+    });
 
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        const errorMessage =
-          data.error || `HTTP error! status: ${response.status}`;
-        throw new Error(errorMessage);
-      }
-
-      const data = await response.json();
-
-      if (data.error) throw new Error(data.error);
-
-      return data.success === true;
-    } catch (error: unknown) {
-      throw error;
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      const errorMessage =
+        data.error || `HTTP error! status: ${response.status}`;
+      throw new Error(errorMessage);
     }
+
+    const data = await response.json();
+
+    if (data.error) throw new Error(data.error);
+
+    return data.success === true;
   }
 }

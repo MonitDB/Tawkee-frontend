@@ -106,7 +106,7 @@ export default function AppRoutes() {
           key="8"
           path="/:userId"
           element={
-            <AppPageLayout segment='My Account'>
+            <AppPageLayout segment="My Account">
               <UserDetails />
             </AppPageLayout>
           }
@@ -120,7 +120,11 @@ export default function AppRoutes() {
 
         <Route key="10" path="/verify-email" element={<VerifyAccount />} />
         <Route key="11" path="/reset-password" element={<ResetPassword />} />
-        <Route key="12" path="/billing-success" element={<SubscriptionUpdated />} />
+        <Route
+          key="12"
+          path="/billing-success"
+          element={<SubscriptionUpdated />}
+        />
 
         <Route
           key="*"

@@ -58,7 +58,9 @@ export default function TopModelsBarChart({ data }: TopModelsBarChartProps) {
             ]}
             grid={{ horizontal: true }}
             height={180}
-            margin={{ bottom: modelNames.some(name => name.length > 10) ? 80 : 50 }}
+            margin={{
+              bottom: modelNames.some((name) => name.length > 10) ? 80 : 50,
+            }}
           />
         </Box>
       </CardContent>

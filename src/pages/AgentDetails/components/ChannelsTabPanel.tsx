@@ -17,7 +17,7 @@ import {
   Divider,
   useTheme,
   useColorScheme,
-  Button
+  Button,
 } from '@mui/material';
 import { LinkOff, DeleteForever } from '@mui/icons-material';
 import QrCode2Icon from '@mui/icons-material/QrCode2';
@@ -56,7 +56,7 @@ export default function ChannelsTabPanel({
     () => agentData.channels?.find((channel: Channel) => !channel.connected),
     [agentData.channels]
   );
- 
+
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom>
@@ -84,7 +84,7 @@ export default function ChannelsTabPanel({
             level={'H'}
             marginSize={4}
           />
-          
+
           <Typography variant="caption">
             Scan this QR code with the corresponding application.
           </Typography>
@@ -159,71 +159,76 @@ export default function ChannelsTabPanel({
                 </Typography>
               </CardContent>
               <CardActions>
-                { userBelongsToWorkspace ?
-                  !canConnectToChannel && (
-                  <Tooltip
-                    title={channel.connected
-                      ? "You cannot disconnect agents of the workspace from channels."
-                      : "You cannot connect agents of the workspace to channels."
-                    }
-                    placement='right'
-                  >
-                    <InfoIcon color='warning' />
-                  </Tooltip>
-                ) : !canConnectToChannelAsAdmin && (
-                  <Tooltip
-                    title={channel.connected
-                      ? "Your admin privileges to disconnect agents of any workspace from channels has been revoked."
-                      : "Your admin privileges to connect agents of any workspace to channels has been revoked."
-                    }
-                    placement='right'
-                  >
-                    <InfoIcon color='warning' />
-                  </Tooltip>
-                )}
+                {userBelongsToWorkspace
+                  ? !canConnectToChannel && (
+                      <Tooltip
+                        title={
+                          channel.connected
+                            ? 'You cannot disconnect agents of the workspace from channels.'
+                            : 'You cannot connect agents of the workspace to channels.'
+                        }
+                        placement="right"
+                      >
+                        <InfoIcon color="warning" />
+                      </Tooltip>
+                    )
+                  : !canConnectToChannelAsAdmin && (
+                      <Tooltip
+                        title={
+                          channel.connected
+                            ? 'Your admin privileges to disconnect agents of any workspace from channels has been revoked.'
+                            : 'Your admin privileges to connect agents of any workspace to channels has been revoked.'
+                        }
+                        placement="right"
+                      >
+                        <InfoIcon color="warning" />
+                      </Tooltip>
+                    )}
                 {channel.connected ? (
                   <IconButton
                     onClick={() => {
                       disconnectChannel(agentData.id, channel.id);
                     }}
                     color="primary"
-                    disabled={channelQRCodeLoading
-                      ? true
-                      : userBelongsToWorkspace
-                        ? !canConnectToChannel
-                        : !canConnectToChannelAsAdmin
+                    disabled={
+                      channelQRCodeLoading
+                        ? true
+                        : userBelongsToWorkspace
+                          ? !canConnectToChannel
+                          : !canConnectToChannelAsAdmin
                     }
                     sx={{
                       '&.Mui-disabled': {
-                          color:
+                        color:
                           resolvedMode == 'dark'
-                              ? theme.palette.grey[400]
-                              : theme.palette.grey[500],
-                      },  
-                    }}                      
+                            ? theme.palette.grey[400]
+                            : theme.palette.grey[500],
+                      },
+                    }}
                   >
                     <Tooltip title="Disconnect">
                       <LinkOff />
                     </Tooltip>
                   </IconButton>
-                ) : (                 
+                ) : (
                   <IconButton
                     onClick={() => handleRefreshQrCode(channel.id)}
                     color="primary"
-                    disabled={channelQRCodeLoading
-                      ? true
-                      : userBelongsToWorkspace
-                        ? !canConnectToChannel
-                        : !canConnectToChannelAsAdmin
+                    disabled={
+                      channelQRCodeLoading
+                        ? true
+                        : userBelongsToWorkspace
+                          ? !canConnectToChannel
+                          : !canConnectToChannelAsAdmin
                     }
                     sx={{
                       '&.Mui-disabled': {
-                          color:
+                        color:
                           resolvedMode == 'dark'
-                              ? theme.palette.grey[400]
-                              : theme.palette.grey[500],
-                      },  
-                    }}                    
+                            ? theme.palette.grey[400]
+                            : theme.palette.grey[500],
+                      },
+                    }}
                   >
                     <Tooltip title="Refresh QR Code To Connect">
                       <QrCode2Icon />

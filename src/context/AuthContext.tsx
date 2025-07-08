@@ -24,7 +24,10 @@ interface AuthContextType {
   resetPassword: (input: PasswordResetInput) => Promise<Result>;
   updatePassword: (input: PasswordUpdateInput) => Promise<Result>;
   updateName: (formData: FormData) => Promise<Result>;
-  updateWorkspaceName: (workspaceId: string, newName: string) => Promise<Result>;
+  updateWorkspaceName: (
+    workspaceId: string,
+    newName: string
+  ) => Promise<Result>;
   activateWorkspace: (workspaceId: string) => Promise<Result>;
   deactivateWorkspace: (workspaceId: string) => Promise<Result>;
 
@@ -33,8 +36,14 @@ interface AuthContextType {
 
   workspacePlanCredits: number;
   workspaceExtraCredits: number;
-  syncWorkspaceCreditsUpdate: (planCredits: number, extraCredits: number) => boolean;
-  syncWorkspaceSubscriptionUpdate: (subscription: User['subscription'], plan: User['plan']) => boolean;
+  syncWorkspaceCreditsUpdate: (
+    planCredits: number,
+    extraCredits: number
+  ) => boolean;
+  syncWorkspaceSubscriptionUpdate: (
+    subscription: User['subscription'],
+    plan: User['plan']
+  ) => boolean;
   syncWorkspaceSmartRechargeUpdate: (data: any) => boolean;
 }
 
@@ -69,14 +78,14 @@ export interface User {
   email: string;
   provider?: 'google' | 'facebook' | 'password';
   emailVerified?: boolean;
-  
+
   workspacePlanCredits: number;
   workspaceExtraCredits: number;
-  
+
   firstName?: string;
   lastName?: string;
   avatar?: string;
-  
+
   createdAt?: string;
   updatedAt?: string;
 
@@ -101,14 +110,32 @@ export interface User {
     trialEnd?: string;
     customStripePriceId?: string | null;
     featureOverrides?: string[] | null;
-    creditsLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
-    agentLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
-    trainingTextLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
-    trainingWebsiteLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
-    trainingVideoLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
-    trainingDocumentLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
-    cancelAtPeriodEnd: boolean | null,
-    canceledAt: string | null,
+    creditsLimitOverrides?: {
+      value: number | 'UNLIMITED';
+      explicitlySet: boolean;
+    } | null;
+    agentLimitOverrides?: {
+      value: number | 'UNLIMITED';
+      explicitlySet: boolean;
+    } | null;
+    trainingTextLimitOverrides?: {
+      value: number | 'UNLIMITED';
+      explicitlySet: boolean;
+    } | null;
+    trainingWebsiteLimitOverrides?: {
+      value: number | 'UNLIMITED';
+      explicitlySet: boolean;
+    } | null;
+    trainingVideoLimitOverrides?: {
+      value: number | 'UNLIMITED';
+      explicitlySet: boolean;
+    } | null;
+    trainingDocumentLimitOverrides?: {
+      value: number | 'UNLIMITED';
+      explicitlySet: boolean;
+    } | null;
+    cancelAtPeriodEnd: boolean | null;
+    canceledAt: string | null;
   };
 
   plan?: {
@@ -168,8 +195,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // State to track latest provider
   const [latestProvider, setLatestProvider] = useState<string | null>(null);
 
-  const [workspacePlanCredits, setWorkspacePlanCredits] = useState<number>(user?.workspacePlanCredits || 0);
-  const [workspaceExtraCredits, setWorkspaceExtraCredits] = useState<number>(user?.workspaceExtraCredits || 0);
+  const [workspacePlanCredits, setWorkspacePlanCredits] = useState<number>(
+    user?.workspacePlanCredits || 0
+  );
+  const [workspaceExtraCredits, setWorkspaceExtraCredits] = useState<number>(
+    user?.workspaceExtraCredits || 0
+  );
 
   // On component mount, check if token exists in localStorage
   useEffect(() => {
@@ -220,7 +251,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (creditsData.error) throw new Error(creditsData.error);
         if (subscriptionData.error) throw new Error(subscriptionData.error);
 
-        setWorkspacePlanCredits(creditsData.data.planCreditsRemaining ?? Infinity);
+        setWorkspacePlanCredits(
+          creditsData.data.planCreditsRemaining ?? Infinity
+        );
         setWorkspaceExtraCredits(creditsData.data.extraCreditsRemaining);
         syncWorkspaceSubscriptionUpdate(
           subscriptionData.data.subscription,
@@ -237,7 +270,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       fetchWorkspaceData(user.workspaceId);
     }
   }, [user?.workspaceId]);
-  
 
   const login = async (credentials: LoginCredentials): Promise<Result> => {
     try {
@@ -599,7 +631,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (error instanceof Error) {
         if (error.message.includes('Failed to fetch')) {
-          errorMessage = 'Network error. Please check your internet connection.';
+          errorMessage =
+            'Network error. Please check your internet connection.';
         } else {
           errorMessage = error.message;
         }
@@ -643,7 +676,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const data = await response.json();
 
       if (data.error) throw new Error(data.error);
-      if (!data.success) throw new Error(data.message || 'Failed to update name');
+      if (!data.success)
+        throw new Error(data.message || 'Failed to update name');
 
       // Assume updated avatar URL comes back as data.avatarUrl (optional)
       const updatedUser = {
@@ -659,7 +693,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       notify('Profile updated successfully!', 'success');
       return { success: true };
-
     } catch (error: unknown) {
       let errorMessage = 'An unexpected error occurred.';
       if (error instanceof Error) {
@@ -680,7 +713,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const updateWorkspaceName = async (workspaceId: string, newName: string): Promise<Result> => {
+  const updateWorkspaceName = async (
+    workspaceId: string,
+    newName: string
+  ): Promise<Result> => {
     if (!newName.trim()) {
       notify('Workspace name cannot be empty.', 'error');
       return {
@@ -692,14 +728,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setLoading(true);
 
-      const response = await fetch(`${env.API_URL}/workspaces/${workspaceId}/name`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ name: newName }),
-      });
+      const response = await fetch(
+        `${env.API_URL}/workspaces/${workspaceId}/name`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ name: newName }),
+        }
+      );
 
       const data = await response.json();
 
@@ -708,13 +747,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (workspaceId === user?.workspaceId) {
         // Atualiza o objeto do usuário com o novo nome da workspace, se o que estiver sendo atualizado é esse workspace
         const updatedUser: User = {
-          ...user as User,
-          workspaceName: data.data.workspaceName as string
+          ...(user as User),
+          workspaceName: data.data.workspaceName as string,
         };
-  
+
         setUser(updatedUser);
         localStorage.setItem('app:user', JSON.stringify(updatedUser));
-      } 
+      }
 
       notify('Workspace name updated successfully!', 'success');
       return { success: true };
@@ -742,20 +781,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setLoading(true);
 
-      const response = await fetch(`${env.API_URL}/workspaces/${workspaceId}/activate`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${env.API_URL}/workspaces/${workspaceId}/activate`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const data = await response.json();
 
       if (data.error) throw new Error(data.error);
 
       const updatedUser: User = {
-        ...user as User,
+        ...(user as User),
         workspaceIsActive: true,
       };
 
@@ -764,7 +806,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       notify('Workspace activated successfully!', 'success');
       return { success: true };
-
     } catch (error: unknown) {
       let errorMessage = 'An unexpected error occurred.';
       if (error instanceof Error) {
@@ -776,30 +817,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
       handleTokenExpirationError(errorMessage);
       notify(errorMessage, 'error');
       return { success: false, error: errorMessage };
-
     } finally {
       setLoading(false);
     }
-  };  
+  };
 
   const deactivateWorkspace = async (workspaceId: string): Promise<Result> => {
     try {
       setLoading(true);
 
-      const response = await fetch(`${env.API_URL}/workspaces/${workspaceId}/deactivate`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${env.API_URL}/workspaces/${workspaceId}/deactivate`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const data = await response.json();
 
       if (data.error) throw new Error(data.error);
 
       const updatedUser: User = {
-        ...user as User,
+        ...(user as User),
         workspaceIsActive: false,
       };
 
@@ -808,7 +851,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       notify('Workspace deactivated successfully!', 'success');
       return { success: true };
-
     } catch (error: unknown) {
       let errorMessage = 'An unexpected error occurred.';
       if (error instanceof Error) {
@@ -820,37 +862,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
       handleTokenExpirationError(errorMessage);
       notify(errorMessage, 'error');
       return { success: false, error: errorMessage };
-
     } finally {
       setLoading(false);
     }
   };
 
   const can = (action: string, resource: string): boolean => {
-      if (!user) return false;
+    if (!user) return false;
 
-      // Check userPermissions first (higher precedence)
-      const userPermission = user.userPermissions.find(
-          (permission) => permission.resource === resource && permission.action === action
-      );
-      if (userPermission) {
-          return userPermission.allowed;
-      }
+    // Check userPermissions first (higher precedence)
+    const userPermission = user.userPermissions.find(
+      (permission) =>
+        permission.resource === resource && permission.action === action
+    );
+    if (userPermission) {
+      return userPermission.allowed;
+    }
 
-      // Check rolePermissions if no userPermissions
-      const rolePermission = user.rolePermissions.find(
-          (permission) => permission.resource === resource && permission.action === action
-      );
-      if (rolePermission) {
-          return true;
-      }
+    // Check rolePermissions if no userPermissions
+    const rolePermission = user.rolePermissions.find(
+      (permission) =>
+        permission.resource === resource && permission.action === action
+    );
+    if (rolePermission) {
+      return true;
+    }
 
-      return false;
+    return false;
   };
 
   const handleTokenExpirationError = (errorMessage: string) => {
-    if (errorMessage.includes('Your session has been expired. Please log in again') || errorMessage.includes('jwt malformed')) {
-      
+    if (
+      errorMessage.includes(
+        'Your session has been expired. Please log in again'
+      ) ||
+      errorMessage.includes('jwt malformed')
+    ) {
       // Reset state
       localStorage.removeItem('app:user');
       localStorage.removeItem('app:auth-token');
@@ -863,7 +910,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const syncWorkspaceCreditsUpdate = (planCredits: number, extraCredits: number) => {
+  const syncWorkspaceCreditsUpdate = (
+    planCredits: number,
+    extraCredits: number
+  ) => {
     if (!user) return false;
 
     setWorkspacePlanCredits(planCredits);
@@ -899,8 +949,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       smartRecharge: {
         threshold: data?.threshold as number,
         rechargeAmount: data?.rechargeAmount as number,
-        active: data?.active as boolean
-      }
+        active: data?.active as boolean,
+      },
     };
 
     setUser(updatedUser);
@@ -935,7 +985,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     syncWorkspaceCreditsUpdate,
 
     syncWorkspaceSubscriptionUpdate,
-    syncWorkspaceSmartRechargeUpdate
+    syncWorkspaceSmartRechargeUpdate,
   };
 
   return (

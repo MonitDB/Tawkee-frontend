@@ -81,7 +81,7 @@ const agentActivityDescriptions: Record<number, string> = {
   0: 'The agent is shutdown and will not respond to messages even when connected to channels.',
   1: 'The agent is ready to connect to channels and respond to messages on your behalf.',
   2: 'The agent is connected to channels and ready to respond to messages.',
-  3: 'The agent is shutdown and has been deleted, but is still able to be restored.'
+  3: 'The agent is shutdown and has been deleted, but is still able to be restored.',
 };
 
 export default function Agents() {
@@ -105,14 +105,18 @@ export default function Agents() {
   const canActivateAsAdmin = can('ACTIVATE_AS_ADMIN', 'AGENT');
   const canDelete = can('DELETE', 'AGENT');
   const canDeleteAsAdmin = can('DELETE_AS_ADMIN', 'AGENT');
-  
+
   const userIsAdmin = user?.role.name === 'ADMIN';
-  const [workspaceId, setWorkspaceId] = useState<string | null>(user?.workspaceId ?? null);
-  const [workspaceIsActive, setWorkspaceIsActive] = useState<boolean>(user?.workspaceIsActive || false);
+  const [workspaceId, setWorkspaceId] = useState<string | null>(
+    user?.workspaceId ?? null
+  );
+  const [workspaceIsActive, setWorkspaceIsActive] = useState<boolean>(
+    user?.workspaceIsActive || false
+  );
   const [workspaceOptions, setWorkspaceOptions] = useState<
-  { id: string; name: string; isActive: boolean, email: string | null }[]
+    { id: string; name: string; isActive: boolean; email: string | null }[]
   >([]);
-  
+
   const userBelongsToSelectedWorkspace = user?.workspaceId === workspaceId;
 
   const [tab, setTab] = useState(0);
@@ -126,21 +130,24 @@ export default function Agents() {
 
     fetchAgentsOfOtherWorkspaces,
     deleteAgentsOfOtherWorkspaces,
-    restoreAgentsOfOtherWorkspaces
+    restoreAgentsOfOtherWorkspaces,
   } = useAgents();
 
-  const { fetchAllWorkspacesBasicInfo  } = useDashboardService(token as string);
+  const { fetchAllWorkspacesBasicInfo } = useDashboardService(token as string);
 
   const { agents, meta } = paginatedAgents;
 
   const [agentsState, setAgentsState] = useState<AgentWrapper[]>(agents);
-  const [metaState, setMetaState] = useState<PaginatedAgentWrapper['meta']>(meta);
+  const [metaState, setMetaState] =
+    useState<PaginatedAgentWrapper['meta']>(meta);
 
-  const [agentLimitState, setAgentLimitState] = useState<number | 'UNLIMITED' | undefined>(
+  const [agentLimitState, setAgentLimitState] = useState<
+    number | 'UNLIMITED' | undefined
+  >(
     user?.subscription?.agentLimitOverrides?.explicitlySet
       ? user?.subscription?.agentLimitOverrides?.value
       : user?.plan?.agentLimit
-  )
+  );
 
   const agentLimit = userBelongsToSelectedWorkspace
     ? user?.subscription?.agentLimitOverrides?.explicitlySet
@@ -152,28 +159,27 @@ export default function Agents() {
     setWorkspaceId(event.target.value);
     setWorkspaceIsActive(
       workspaceOptions && event.target.value
-        ? workspaceOptions.find(ws => ws.id === event.target.value)?.isActive ?? false
+        ? (workspaceOptions.find((ws) => ws.id === event.target.value)
+            ?.isActive ?? false)
         : false
     );
-  }; 
+  };
 
   const handleTabChange = (_: SyntheticEvent, newValue: number) => {
     setTab(newValue);
   };
 
-  const filteredAgents = userBelongsToSelectedWorkspace ? (
-    agents.filter((wrapper) => {
-      if (tab === 1) return wrapper.agent.isActive;
-      if (tab === 2) return !wrapper.agent.isActive;
-      return true;
-    })
-  ) : (
-    agentsState.filter((wrapper) => {
+  const filteredAgents = userBelongsToSelectedWorkspace
+    ? agents.filter((wrapper) => {
         if (tab === 1) return wrapper.agent.isActive;
         if (tab === 2) return !wrapper.agent.isActive;
         return true;
-      })    
-  );
+      })
+    : agentsState.filter((wrapper) => {
+        if (tab === 1) return wrapper.agent.isActive;
+        if (tab === 2) return !wrapper.agent.isActive;
+        return true;
+      });
 
   const handlePageChange = (_: ChangeEvent<unknown>, value: number) => {
     setPage(value);
@@ -190,11 +196,13 @@ export default function Agents() {
 
     if (!userBelongsToSelectedWorkspace) {
       const fetchAgentsData = async (workspaceId: string) => {
-        const response = await fetchAgentsOfOtherWorkspaces(workspaceId) as PaginatedAgentWrapper;
+        const response = (await fetchAgentsOfOtherWorkspaces(
+          workspaceId
+        )) as PaginatedAgentWrapper;
         setAgentsState(response.agents);
         setMetaState(response.meta);
-      }
-      
+      };
+
       fetchAgentsData(workspaceId as string);
     }
   };
@@ -206,7 +214,10 @@ export default function Agents() {
     }
 
     if (!userBelongsToSelectedWorkspace && !canDeleteAsAdmin) {
-      notify('Your admin privileges to delete agents of any workspace has been revoked!', 'warning');
+      notify(
+        'Your admin privileges to delete agents of any workspace has been revoked!',
+        'warning'
+      );
       return;
     }
 
@@ -216,69 +227,70 @@ export default function Agents() {
     }
 
     if (!userBelongsToSelectedWorkspace) {
-      try {
-        const deletedPermanently: boolean = await deleteAgentsOfOtherWorkspaces(id);
+      const deletedPermanently: boolean =
+        await deleteAgentsOfOtherWorkspaces(id);
 
-        if (deletedPermanently) {
-          setAgentsState(previousAgentsWrapper => previousAgentsWrapper.filter(wrapper => {
+      if (deletedPermanently) {
+        setAgentsState((previousAgentsWrapper) =>
+          previousAgentsWrapper.filter((wrapper) => {
             return wrapper.agent.id != id;
-          }));
+          })
+        );
+      } else {
+        setAgentsState((previousAgentsWrapper) =>
+          previousAgentsWrapper.map((wrapper) => {
+            if (wrapper.agent.id === id)
+              return {
+                ...wrapper,
+                agent: {
+                  ...wrapper.agent,
+                  isActive: false,
+                  isDeleted: true,
+                },
+              };
 
-        } else {
-          setAgentsState(previousAgentsWrapper => previousAgentsWrapper.map(wrapper => {
-            if (wrapper.agent.id === id) return {
-              ...wrapper,
-              agent: {
-                ...wrapper.agent,
-                isActive: false,
-                isDeleted: true
-              }
-            };
-    
             return wrapper;
-          }));
-          setMetaState({
-            ...metaState,
-            total: metaState.total - 1
-          })          
-        }
-
-      } catch {
-
+          })
+        );
+        setMetaState({
+          ...metaState,
+          total: metaState.total - 1,
+        });
       }
-    }   
+    }
   };
 
   const handleRestore = (id: string) => {
     if (!userBelongsToSelectedWorkspace && !canDeleteAsAdmin) {
-      notify('Your admin privileges to restore agents of any workspace has been revoked!', 'warning');
+      notify(
+        'Your admin privileges to restore agents of any workspace has been revoked!',
+        'warning'
+      );
       return;
     }
 
     if (!userBelongsToSelectedWorkspace) {
-      try {
-        restoreAgentsOfOtherWorkspaces(id);
+      restoreAgentsOfOtherWorkspaces(id);
 
-        setAgentsState(previousAgentsWrapper => previousAgentsWrapper.map(wrapper => {
-          if (wrapper.agent.id === id) return {
-            ...wrapper,
-            agent: {
-              ...wrapper.agent,
-              isDeleted: false
-            }
-          };
-  
+      setAgentsState((previousAgentsWrapper) =>
+        previousAgentsWrapper.map((wrapper) => {
+          if (wrapper.agent.id === id)
+            return {
+              ...wrapper,
+              agent: {
+                ...wrapper.agent,
+                isDeleted: false,
+              },
+            };
+
           return wrapper;
-        }));
-        setMetaState({
-          ...metaState,
-          total: metaState.total + 1
-        });
-
-      } catch {
-
-      }
-    }   
+        })
+      );
+      setMetaState({
+        ...metaState,
+        total: metaState.total + 1,
+      });
+    }
   };
 
   const handleActivateOrDeactivate = async (
@@ -288,51 +300,70 @@ export default function Agents() {
   ) => {
     event.stopPropagation();
     if (userBelongsToSelectedWorkspace && !canActivate) {
-      notify('You do not have permission to activate/deactivate agents of the workspace.', 'warning');
+      notify(
+        'You do not have permission to activate/deactivate agents of the workspace.',
+        'warning'
+      );
       return;
     }
 
     if (!userBelongsToSelectedWorkspace && !canActivateAsAdmin) {
-      notify('Your admin privileges to activate/deactivate agents of any workspace has been revoked.', 'warning');
+      notify(
+        'Your admin privileges to activate/deactivate agents of any workspace has been revoked.',
+        'warning'
+      );
       return;
     }
 
-    if (agentActivityStatus == false && userBelongsToSelectedWorkspace &&
-      (agentLimit != 'UNLIMITED' && agents.filter(wrapper => wrapper.agent.isActive).length >= (agentLimit as number))
+    if (
+      agentActivityStatus == false &&
+      userBelongsToSelectedWorkspace &&
+      agentLimit != 'UNLIMITED' &&
+      agents.filter((wrapper) => wrapper.agent.isActive).length >=
+        (agentLimit as number)
     ) {
-      notify(`You cannot have more than ${agentLimit} active agent(s) at once!`, 'warning');
+      notify(
+        `You cannot have more than ${agentLimit} active agent(s) at once!`,
+        'warning'
+      );
       return;
     }
 
-    if (agentActivityStatus == false && !userBelongsToSelectedWorkspace &&
-      (agentLimit != 'UNLIMITED' && agentsState.filter(wrapper => wrapper.agent.isActive).length >= (agentLimit as number))
+    if (
+      agentActivityStatus == false &&
+      !userBelongsToSelectedWorkspace &&
+      agentLimit != 'UNLIMITED' &&
+      agentsState.filter((wrapper) => wrapper.agent.isActive).length >=
+        (agentLimit as number)
     ) {
-      notify(`This workspace cannot have more than ${agentLimit} active agent(s) at once!`, 'warning');
+      notify(
+        `This workspace cannot have more than ${agentLimit} active agent(s) at once!`,
+        'warning'
+      );
       return;
     }
 
-    try {
-      agentActivityStatus
-        ? await deactivateAgent(agentId)
-        : await activateAgent(agentId);      
+    agentActivityStatus
+      ? await deactivateAgent(agentId)
+      : await activateAgent(agentId);
 
-      if (!userBelongsToSelectedWorkspace) {
-        setAgentsState(previousAgentsWrapper => previousAgentsWrapper.map(wrapper => {
-          if (wrapper.agent.id === agentId) return {
-            ...wrapper,
-            agent: {
-              ...wrapper.agent,
-              isActive: !agentActivityStatus
-            }
-          };
-  
+    if (!userBelongsToSelectedWorkspace) {
+      setAgentsState((previousAgentsWrapper) =>
+        previousAgentsWrapper.map((wrapper) => {
+          if (wrapper.agent.id === agentId)
+            return {
+              ...wrapper,
+              agent: {
+                ...wrapper.agent,
+                isActive: !agentActivityStatus,
+              },
+            };
+
           return wrapper;
-        }))
-      }
-    } catch {
-
+        })
+      );
     }
-  }
+  };
 
   const handleOpenSettings = (agentId: string) => {
     navigate(`/agents/${agentId}?tabName=settings`);
@@ -358,14 +389,16 @@ export default function Agents() {
   // Handle unauthorized access to the page
   useEffect(() => {
     if (!canView) {
-      notify('You do not have permission to view Agents of your workspace.', 'warning');
+      notify(
+        'You do not have permission to view Agents of your workspace.',
+        'warning'
+      );
       navigate('/');
     }
-  }, [canView]);  
+  }, [canView]);
 
   // Fetch list of workspaces
   useEffect(() => {
-
     if (!isLoggingOutRef.current && userIsAdmin) {
       // Fetch list of all workspaces
       const fetchOptions = async () => {
@@ -378,41 +411,54 @@ export default function Agents() {
       };
       fetchOptions();
     }
-
-  }, [canViewAsAdmin, fetchAllWorkspacesBasicInfo]);   
+  }, [canViewAsAdmin, fetchAllWorkspacesBasicInfo]);
 
   // Fetch agent data of selected workspace (if admin is viewing other workspaces data)
   useEffect(() => {
     const fetchAgentsData = async (workspaceId: string) => {
-      const response = await fetchAgentsOfOtherWorkspaces(workspaceId) as PaginatedAgentWrapper;
+      const response = (await fetchAgentsOfOtherWorkspaces(
+        workspaceId
+      )) as PaginatedAgentWrapper;
       setAgentsState(response.agents);
       setMetaState(response.meta);
       setAgentLimitState(response.subscriptionLimits?.agentLimit);
-    }
-    
+    };
+
     if (!userBelongsToSelectedWorkspace) {
       fetchAgentsData(workspaceId as string);
     }
-
   }, [userBelongsToSelectedWorkspace, workspaceId]);
 
   return (
     <Card variant="outlined" sx={{ margin: '0 auto', width: '100%' }}>
       <CardContent>
         <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          { userIsAdmin && (
-            <FormControl variant='standard' fullWidth error={!workspaceId} required>
+          {userIsAdmin && (
+            <FormControl
+              variant="standard"
+              fullWidth
+              error={!workspaceId}
+              required
+            >
               <InputLabel>
                 Select a Workspace
-                { !canViewAsAdmin && (
+                {!canViewAsAdmin && (
                   <Tooltip title="Your admin privileges to view Agents of other workspaces has been revoked.">
-                    <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
+                    <InfoIcon
+                      fontSize="small"
+                      sx={{ ml: 0.5 }}
+                      color="warning"
+                    />
                   </Tooltip>
                 )}
               </InputLabel>
               <Select
                 label="Select a Workspace"
-                value={workspaceOptions.some(w => w.id === workspaceId) ? workspaceId : ''}
+                value={
+                  workspaceOptions.some((w) => w.id === workspaceId)
+                    ? workspaceId
+                    : ''
+                }
                 onChange={handleWorkspaceChange}
                 sx={{ p: 1 }}
                 disabled={!canViewAsAdmin}
@@ -425,13 +471,13 @@ export default function Agents() {
               </Select>
             </FormControl>
           )}
-                    
+
           <Box
             sx={{
               display: 'flex',
               justifyContent: 'space-between',
               mb: 4,
-              gap: 3
+              gap: 3,
             }}
           >
             <Typography
@@ -465,88 +511,106 @@ export default function Agents() {
                 variant="contained"
                 startIcon={<AddIcon />}
                 onClick={() => handleOpenModal()}
-                disabled={workspaceIsActive
-                  ? userBelongsToSelectedWorkspace
-                    ? !canCreate
-                      ? true
-                      : (agentLimit != 'UNLIMITED' && meta.total >= (agentLimit as number))
-                    : true
-                      ? !workspaceIsActive
-                      : (agentLimit != 'UNLIMITED' && metaState.total >= (agentLimit as number))
-                  : true
+                disabled={
+                  !workspaceIsActive ||
+                  (userBelongsToSelectedWorkspace
+                    ? !canCreate ||
+                      (agentLimit !== 'UNLIMITED' &&
+                        meta.total >= (agentLimit as number))
+                    : !canCreateAsAdmin ||
+                      (agentLimit !== 'UNLIMITED' &&
+                        metaState.total >= (agentLimit as number)))
                 }
                 sx={{
                   height: '100%',
                   '&.Mui-disabled': {
-                      color:
+                    color:
                       resolvedMode == 'dark'
-                          ? theme.palette.grey[400]
-                          : theme.palette.grey[500],
+                        ? theme.palette.grey[400]
+                        : theme.palette.grey[500],
                   },
                 }}
               >
                 Create Agent
               </Button>
-              { !workspaceIsActive && userBelongsToSelectedWorkspace && (
-                <Tooltip title="Your workspace is not active." placement='left-start'>
-                  <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='error' />
+              {!workspaceIsActive && userBelongsToSelectedWorkspace && (
+                <Tooltip
+                  title="Your workspace is not active."
+                  placement="left-start"
+                >
+                  <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color="error" />
                 </Tooltip>
               )}
-              { !workspaceIsActive && !userBelongsToSelectedWorkspace && (
-                <Tooltip title="This workspace is not active." placement='left-start'>
-                  <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='error' />
+              {!workspaceIsActive && !userBelongsToSelectedWorkspace && (
+                <Tooltip
+                  title="This workspace is not active."
+                  placement="left-start"
+                >
+                  <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color="error" />
                 </Tooltip>
               )}
 
-              { workspaceIsActive && userBelongsToSelectedWorkspace
+              {workspaceIsActive && userBelongsToSelectedWorkspace
                 ? !canCreate && (
-                  <Tooltip title="You cannot create agents on the workspace.">
-                    <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
-                  </Tooltip>
-                ) : !canCreateAsAdmin && (
-                  <Tooltip title="Your admin privileges to create Agents of other workspaces has been revoked.">
-                    <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
-                  </Tooltip>
-                )
-              }
+                    <Tooltip title="You cannot create agents on the workspace.">
+                      <InfoIcon
+                        fontSize="small"
+                        sx={{ ml: 0.5 }}
+                        color="warning"
+                      />
+                    </Tooltip>
+                  )
+                : !canCreateAsAdmin && (
+                    <Tooltip title="Your admin privileges to create Agents of other workspaces has been revoked.">
+                      <InfoIcon
+                        fontSize="small"
+                        sx={{ ml: 0.5 }}
+                        color="warning"
+                      />
+                    </Tooltip>
+                  )}
             </Box>
-
           </Box>
 
-          <Box sx={{ 
-            display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 3
-          }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 3,
+            }}
+          >
             <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
               Create, train and manage your AI agents
             </Typography>
 
             <Stack>
-              <Typography variant="body1" color="text.secondary" textAlign="end">
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                textAlign="end"
+              >
                 {agentLimit === 'UNLIMITED' || agentLimit === null
                   ? 'Your subscription allows working with unlimited agents.'
                   : agentLimit === 0
                     ? 'Your subscription does not allow creating or activating agents.'
                     : agentLimit === 1
                       ? 'Your subscription allows working with up to one agent.'
-                      : `Your subscription allows working with up to ${agentLimit} agents.`
-                }
+                      : `Your subscription allows working with up to ${agentLimit} agents.`}
               </Typography>
-              <Typography 
+              <Typography
                 variant="body1"
                 color={
                   agentLimit === 'UNLIMITED' || agentLimit === null
-                    ? "text.primary"
+                    ? 'text.primary'
                     : userBelongsToSelectedWorkspace
                       ? meta.total > (agentLimit as number)
-                        ? "error"
-                        : "text.primary"
+                        ? 'error'
+                        : 'text.primary'
                       : metaState.total > (agentLimit as number)
-                        ? "error"
-                        : "text.primary"
+                        ? 'error'
+                        : 'text.primary'
                 }
                 fontWeight="bold"
                 textAlign="end"
@@ -555,22 +619,28 @@ export default function Agents() {
                   ? `${userBelongsToSelectedWorkspace ? meta.total : metaState.total} agents in use.`
                   : agentLimit === 0
                     ? ''
-                    : `${userBelongsToSelectedWorkspace ? meta.total || 'None' : metaState.total || 'None'} of ${agentLimit} in use.`
-                }
-                {
-                  (agentLimit !== 'UNLIMITED' && agentLimit !== null) && userBelongsToSelectedWorkspace
-                    ? meta.total > (agentLimit as number) && (
+                    : `${userBelongsToSelectedWorkspace ? meta.total || 'None' : metaState.total || 'None'} of ${agentLimit} in use.`}
+                {agentLimit !== 'UNLIMITED' &&
+                agentLimit !== null &&
+                userBelongsToSelectedWorkspace
+                  ? meta.total > (agentLimit as number) && (
                       <Tooltip title="You will not be able to keep all existing agents active at the same time.">
-                        <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='error' />
+                        <InfoIcon
+                          fontSize="small"
+                          sx={{ ml: 0.5 }}
+                          color="error"
+                        />
                       </Tooltip>
                     )
-                    : metaState.total > (agentLimit as number) && (
+                  : metaState.total > (agentLimit as number) && (
                       <Tooltip title="This workspace cannot keep all existing agents active at the same time.">
-                        <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='error' />
+                        <InfoIcon
+                          fontSize="small"
+                          sx={{ ml: 0.5 }}
+                          color="error"
+                        />
                       </Tooltip>
-                    )
-                }
-                
+                    )}
               </Typography>
             </Stack>
           </Box>
@@ -588,10 +658,14 @@ export default function Agents() {
                 variant="outlined"
                 sx={{
                   margin: `${theme.spacing(2)} 0`,
-                  color: agent.isDeleted ? theme.palette.text.secondary : 'textPrimary',
+                  color: agent.isDeleted
+                    ? theme.palette.text.secondary
+                    : 'textPrimary',
                   textDecoration: agent.isDeleted ? 'line-through' : 'none',
                   '&:hover': {
-                    backgroundColor: agent.isDeleted ? 'transparent' : 'action.hover',
+                    backgroundColor: agent.isDeleted
+                      ? 'transparent'
+                      : 'action.hover',
                   },
                   cursor: 'pointer',
                 }}
@@ -633,7 +707,13 @@ export default function Agents() {
                               : 0
                         ]
                       }
-                      onClick={(event) => handleActivateOrDeactivate(event, agent.isActive, agent.id)}                     
+                      onClick={(event) =>
+                        handleActivateOrDeactivate(
+                          event,
+                          agent.isActive,
+                          agent.id
+                        )
+                      }
                     >
                       <Chip
                         color={
@@ -726,8 +806,14 @@ export default function Agents() {
                 Total: {filteredAgents.length} agents
               </Typography>
               <Pagination
-                count={userBelongsToSelectedWorkspace ? meta.totalPages : metaState.totalPages}
-                page={userBelongsToSelectedWorkspace ? meta.page : metaState.page}
+                count={
+                  userBelongsToSelectedWorkspace
+                    ? meta.totalPages
+                    : metaState.totalPages
+                }
+                page={
+                  userBelongsToSelectedWorkspace ? meta.page : metaState.page
+                }
                 onChange={handlePageChange}
                 color="primary"
               />

@@ -1,4 +1,4 @@
-import { Workspace } from "../pages/Workspaces";
+import { Workspace } from '../pages/Workspaces';
 
 export interface TimeSeriesItemDto {
   date: string;
@@ -72,7 +72,7 @@ export interface DashboardMetricsDto {
   avgTimeTrend: number;
   creditsPerDay: CreditPerDayDto[];
   topAgents: AgentConsumptionDto[];
-  topWorkspaces: WorkspaceConsumptionDto[];  
+  topWorkspaces: WorkspaceConsumptionDto[];
   topModels: ModelConsumptionDto[];
 }
 
@@ -107,37 +107,27 @@ export class DashboardService {
   ): Promise<DashboardMetricsDto> {
     const { workspaceId, startDate, endDate } = params;
 
-    
     const url = `${this.apiUrl}/workspaces/${workspaceId ? workspaceId : 'all'}/dashboard-metrics?startDate=${startDate}&endDate=${endDate}`;
-    
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.token}`,
-        },
-      });
 
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => ({}));
-        const message =
-          errorPayload.error || 'Failed to fetch dashboard metrics';
-        throw new Error(message);
-      }
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.token}`,
+      },
+    });
 
-      const data = await response.json();
-      return data.data as DashboardMetricsDto;
-    } catch (error: unknown) {
-      throw error;
+    if (!response.ok) {
+      const errorPayload = await response.json().catch(() => ({}));
+      const message = errorPayload.error || 'Failed to fetch dashboard metrics';
+      throw new Error(message);
     }
+
+    const data = await response.json();
+    return data.data as DashboardMetricsDto;
   }
 
-  async listWorkspaces({
-    page = 1,
-  }: {
-    page?: number;
-  }): Promise<{
+  async listWorkspaces({ page = 1 }: { page?: number }): Promise<{
     data: Workspace[];
     total: number;
     page: number;
@@ -147,91 +137,81 @@ export class DashboardService {
     const url = new URL(`${this.apiUrl}/workspaces`);
     url.searchParams.append('page', String(page));
 
-    try {
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.token}`,
-        },
-      });
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.token}`,
+      },
+    });
 
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => ({}));
-        const message =
-          errorPayload.error || 'Failed to fetch workspace list';
-        throw new Error(message);
-      }
-
-      const data = await response.json();
-
-      return {
-        data: data.data as Workspace[],
-        total: data.meta.total,
-        page: data.meta.page,
-        pageSize: data.meta.pageSize,
-        totalPages: data.meta.totalPages,
-      };
-
-    } catch (error: unknown) {
-      throw error;
+    if (!response.ok) {
+      const errorPayload = await response.json().catch(() => ({}));
+      const message = errorPayload.error || 'Failed to fetch workspace list';
+      throw new Error(message);
     }
+
+    const data = await response.json();
+
+    return {
+      data: data.data as Workspace[],
+      total: data.meta.total,
+      page: data.meta.page,
+      pageSize: data.meta.pageSize,
+      totalPages: data.meta.totalPages,
+    };
   }
 
   async listAllWorkspacesBasicInfo(): Promise<
-    { id: string; name: string; isActive: boolean, email: string | null }[]
+    { id: string; name: string; isActive: boolean; email: string | null }[]
   > {
     const url = new URL(`${this.apiUrl}/workspaces/basic`);
 
-    try {
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.token}`,
-        },
-      });
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.token}`,
+      },
+    });
 
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => ({}));
-        const message =
-          errorPayload.error || 'Failed to fetch workspace basic info list';
-        throw new Error(message);
-      }
-
-      const data = await response.json();
-
-      return data.data as { id: string; name: string; isActive: boolean, email: string | null }[];
-
-    } catch (error: unknown) {
-      throw error;
+    if (!response.ok) {
+      const errorPayload = await response.json().catch(() => ({}));
+      const message =
+        errorPayload.error || 'Failed to fetch workspace basic info list';
+      throw new Error(message);
     }
+
+    const data = await response.json();
+
+    return data.data as {
+      id: string;
+      name: string;
+      isActive: boolean;
+      email: string | null;
+    }[];
   }
 
   async getDetailedWorkspace(workspaceId: string): Promise<Workspace> {
     const url = `${this.apiUrl}/workspaces/${workspaceId}/detailed`;
 
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.token}`,
-        },
-      });
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.token}`,
+      },
+    });
 
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => ({}));
-        const message =
-          errorPayload.error || 'Failed to fetch detailed workspace';
-        throw new Error(message);
-      }
-
-      const data = await response.json();
-      return data.data as Workspace;
-    } catch (error: unknown) {
-      throw error;
+    if (!response.ok) {
+      const errorPayload = await response.json().catch(() => ({}));
+      const message =
+        errorPayload.error || 'Failed to fetch detailed workspace';
+      throw new Error(message);
     }
+
+    const data = await response.json();
+    return data.data as Workspace;
   }
 
   async getDailyCreditBalance(
@@ -243,29 +223,25 @@ export class DashboardService {
     if (startDate) url.searchParams.append('startDate', startDate);
     if (endDate) url.searchParams.append('endDate', endDate);
 
-    try {
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.token}`,
-        },
-      });
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.token}`,
+      },
+    });
 
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => ({}));
-        const message =
-          errorPayload.error || 'Failed to fetch daily credit balance';
-        throw new Error(message);
-      }
-
-      const data = await response.json();
-      return data.data as DailyCreditBalanceItem[];
-    } catch (error: unknown) {
-      throw error;
+    if (!response.ok) {
+      const errorPayload = await response.json().catch(() => ({}));
+      const message =
+        errorPayload.error || 'Failed to fetch daily credit balance';
+      throw new Error(message);
     }
+
+    const data = await response.json();
+    return data.data as DailyCreditBalanceItem[];
   }
-  
+
   async updateUserPermissions({
     userId,
     userPermissions,
@@ -279,27 +255,22 @@ export class DashboardService {
   }): Promise<{ success: boolean }> {
     const url = `${this.apiUrl}/auth/${userId}/permissions`;
 
-    try {
-      const response = await fetch(url, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.token}`,
-        },
-        body: JSON.stringify({ permissions: userPermissions }),
-      });
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.token}`,
+      },
+      body: JSON.stringify({ permissions: userPermissions }),
+    });
 
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => ({}));
-        const message =
-          errorPayload.error || 'Failed to update user permissions';
-        throw new Error(message);
-      }
-
-      const data = await response.json();
-      return data.data as { success: boolean };
-    } catch (error: unknown) {
-      throw error;
+    if (!response.ok) {
+      const errorPayload = await response.json().catch(() => ({}));
+      const message = errorPayload.error || 'Failed to update user permissions';
+      throw new Error(message);
     }
-  }  
+
+    const data = await response.json();
+    return data.data as { success: boolean };
+  }
 }

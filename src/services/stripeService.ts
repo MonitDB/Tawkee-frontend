@@ -23,7 +23,7 @@ export interface BillingStatusResponse {
     active: boolean;
     threshold: number;
     rechargeAmount: number;
-  },
+  };
   planCreditsRemaining: number;
   extraCreditsRemaining: number;
 }
@@ -77,12 +77,30 @@ export interface SubscriptionOverrideUpdateDto {
   overrides: {
     featureOverrides?: string[];
     customStripePriceId?: string;
-    creditsLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
-    agentLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
-    trainingTextLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
-    trainingWebsiteLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
-    trainingVideoLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
-    trainingDocumentLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
+    creditsLimitOverrides?: {
+      value: number | 'UNLIMITED';
+      explicitlySet: boolean;
+    } | null;
+    agentLimitOverrides?: {
+      value: number | 'UNLIMITED';
+      explicitlySet: boolean;
+    } | null;
+    trainingTextLimitOverrides?: {
+      value: number | 'UNLIMITED';
+      explicitlySet: boolean;
+    } | null;
+    trainingWebsiteLimitOverrides?: {
+      value: number | 'UNLIMITED';
+      explicitlySet: boolean;
+    } | null;
+    trainingVideoLimitOverrides?: {
+      value: number | 'UNLIMITED';
+      explicitlySet: boolean;
+    } | null;
+    trainingDocumentLimitOverrides?: {
+      value: number | 'UNLIMITED';
+      explicitlySet: boolean;
+    } | null;
   };
 }
 
@@ -113,19 +131,19 @@ export class StripeService {
    * Cria uma sessão de checkout com assinatura recorrente ou faz upgrade/downgrade de plano existente
    */
   async changeOrSubscribePlan(
-        data: CreateCheckoutRequest
-    ): Promise<ChangeOrSubscribeResponse> {
-        const response = await fetch(
-        `${this.apiUrl}/stripe/billing/change-or-subscribe`,
-        {
-            method: 'POST',
-            headers: this.headers,
-            body: JSON.stringify(data),
-        }
-        );
+    data: CreateCheckoutRequest
+  ): Promise<ChangeOrSubscribeResponse> {
+    const response = await fetch(
+      `${this.apiUrl}/stripe/billing/change-or-subscribe`,
+      {
+        method: 'POST',
+        headers: this.headers,
+        body: JSON.stringify(data),
+      }
+    );
 
-        return this.handleJsonResponse<ChangeOrSubscribeResponse>(response);
-    }
+    return this.handleJsonResponse<ChangeOrSubscribeResponse>(response);
+  }
 
   /**
    * Cria uma sessão de checkout com assinatura recorrente
@@ -190,19 +208,15 @@ export class StripeService {
   async createCustomerPortal(
     workspaceId: string
   ): Promise<StripeCheckoutSessionResponse> {
-    try {
-        const response = await fetch(
-          `${this.apiUrl}/stripe/billing/customer-portal/${workspaceId}`,
-          {
-            method: 'POST',
-            headers: this.headers,
-          }
-        );
-    
-        return this.handleJsonResponse<StripeCheckoutSessionResponse>(response);
-    } catch (error) {
-        throw error;
-    }
+    const response = await fetch(
+      `${this.apiUrl}/stripe/billing/customer-portal/${workspaceId}`,
+      {
+        method: 'POST',
+        headers: this.headers,
+      }
+    );
+
+    return this.handleJsonResponse<StripeCheckoutSessionResponse>(response);
   }
 
   /**
@@ -228,15 +242,18 @@ export class StripeService {
    * Cria um novo plano (Stripe + banco local) com base no formulário de criação
    */
   async createPlanFromForm(
-    dto: UpdatePlanFromFormDto,
+    dto: UpdatePlanFromFormDto
   ): Promise<{ message: string }> {
-    const response = await fetch(`${this.apiUrl}/stripe/plans/create-from-form`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(dto),
-    });
+    const response = await fetch(
+      `${this.apiUrl}/stripe/plans/create-from-form`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dto),
+      }
+    );
 
     return this.handleJsonResponse<{ message: string }>(response);
   }
@@ -245,15 +262,18 @@ export class StripeService {
    * Atualiza um plano existente (Stripe + banco local) com base no formulário de edição
    */
   async updatePlanFromForm(
-    dto: UpdatePlanFromFormDto,
+    dto: UpdatePlanFromFormDto
   ): Promise<{ message: string }> {
-    const response = await fetch(`${this.apiUrl}/stripe/plans/update-from-form`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(dto),
-    });
+    const response = await fetch(
+      `${this.apiUrl}/stripe/plans/update-from-form`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dto),
+      }
+    );
 
     return this.handleJsonResponse<{ message: string }>(response);
   }
@@ -264,11 +284,14 @@ export class StripeService {
   async updateSubscriptionOverrides(
     data: SubscriptionOverrideUpdateDto
   ): Promise<{ success: boolean }> {
-    const response = await fetch(`${this.apiUrl}/stripe/subscription/update-overrides`, {
-      method: 'POST',
-      headers: this.headers,
-      body: JSON.stringify(data),
-    });
+    const response = await fetch(
+      `${this.apiUrl}/stripe/subscription/update-overrides`,
+      {
+        method: 'POST',
+        headers: this.headers,
+        body: JSON.stringify(data),
+      }
+    );
 
     return this.handleJsonResponse<{ success: boolean }>(response);
   }
@@ -285,35 +308,25 @@ export class StripeService {
     url.searchParams.append('startDate', startDate);
     url.searchParams.append('endDate', endDate);
 
-    try {
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: this.headers,
-      });
-  
-      return this.handleJsonResponse<WorkspacePaymentBalanceItem[]>(response);
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: this.headers,
+    });
 
-    } catch (error: unknown) {
-      throw error;
-    }
+    return this.handleJsonResponse<WorkspacePaymentBalanceItem[]>(response);
   }
-
 
   /**
    * Utilitário para tratar respostas JSON
    */
   private async handleJsonResponse<T>(response: Response): Promise<T> {
-    try {
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        const error = data.error || `HTTP error ${response.status}`;
-        throw new Error(error);
-      }
-
-      const data = await response.json();
-      return await data.data;
-    } catch (error: unknown) {
-      throw error;
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      const error = data.error || `HTTP error ${response.status}`;
+      throw new Error(error);
     }
-  } 
+
+    const data = await response.json();
+    return await data.data;
+  }
 }

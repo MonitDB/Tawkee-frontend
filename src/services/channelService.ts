@@ -33,107 +33,91 @@ export class ChannelService {
     name: string,
     type: string
   ): Promise<Channel | null> {
-    try {
-      const response = await fetch(
-        `${this.apiUrl}/agent/${agentId}/create-channel`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${this.token}`,
-            'Content-Type': 'application/json',
-          } as const,
-          body: JSON.stringify({ name, type }),
-        }
-      );
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        const errorMessage =
-          data.error || `HTTP error! status: ${response.status}`;
-        throw new Error(errorMessage);
+    const response = await fetch(
+      `${this.apiUrl}/agent/${agentId}/create-channel`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          'Content-Type': 'application/json',
+        } as const,
+        body: JSON.stringify({ name, type }),
       }
+    );
 
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
-
-      return data.data || null;
-    } catch (error: unknown) {
-      throw error;
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      const errorMessage =
+        data.error || `HTTP error! status: ${response.status}`;
+      throw new Error(errorMessage);
     }
+
+    const data = await response.json();
+    if (data.error) throw new Error(data.error);
+
+    return data.data || null;
   }
 
   async getQRCode(channelId: string): Promise<{ qrCode: string | null }> {
-    try {
-      const response = await fetch(
-        `${this.apiUrl}/channel/${channelId}/refresh-qr-code`,
-        {
-          method: 'PUT',
-          headers: { Authorization: `Bearer ${this.token}` } as const,
-        }
-      );
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        const errorMessage =
-          data.error || `HTTP error! status: ${response.status}`;
-        throw new Error(errorMessage);
+    const response = await fetch(
+      `${this.apiUrl}/channel/${channelId}/refresh-qr-code`,
+      {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${this.token}` } as const,
       }
+    );
 
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
-
-      return { qrCode: data.data.qrCode || null };
-    } catch (error: unknown) {
-      throw error;
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      const errorMessage =
+        data.error || `HTTP error! status: ${response.status}`;
+      throw new Error(errorMessage);
     }
+
+    const data = await response.json();
+    if (data.error) throw new Error(data.error);
+
+    return { qrCode: data.data.qrCode || null };
   }
 
   async disconnectChannel(channelId: string): Promise<boolean> {
-    try {
-      const response = await fetch(
-        `${this.apiUrl}/channel/${channelId}/disconnect`,
-        {
-          method: 'PUT',
-          headers: { Authorization: `Bearer ${this.token}` } as const,
-        }
-      );
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        const errorMessage =
-          data.error || `HTTP error! status: ${response.status}`;
-        throw new Error(errorMessage);
+    const response = await fetch(
+      `${this.apiUrl}/channel/${channelId}/disconnect`,
+      {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${this.token}` } as const,
       }
+    );
 
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
-
-      return data.success === true;
-    } catch (error: unknown) {
-      throw error;
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      const errorMessage =
+        data.error || `HTTP error! status: ${response.status}`;
+      throw new Error(errorMessage);
     }
+
+    const data = await response.json();
+    if (data.error) throw new Error(data.error);
+
+    return data.success === true;
   }
 
   async deleteChannel(channelId: string): Promise<boolean> {
-    try {
-      const response = await fetch(`${this.apiUrl}/channel/${channelId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${this.token}` } as const,
-      });
+    const response = await fetch(`${this.apiUrl}/channel/${channelId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${this.token}` } as const,
+    });
 
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        const errorMessage =
-          data.error || `HTTP error! status: ${response.status}`;
-        throw new Error(errorMessage);
-      }
-
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
-
-      return data.success === true;
-    } catch (error: unknown) {
-      throw error;
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      const errorMessage =
+        data.error || `HTTP error! status: ${response.status}`;
+      throw new Error(errorMessage);
     }
+
+    const data = await response.json();
+    if (data.error) throw new Error(data.error);
+
+    return data.success === true;
   }
 }

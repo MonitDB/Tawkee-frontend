@@ -1,5 +1,18 @@
 // UserSecurityTab.tsx
-import { Grid, TextField, Button, Typography, useTheme, useColorScheme, Divider, Box, Paper, Tooltip, InputAdornment, IconButton } from '@mui/material';
+import {
+  Grid,
+  TextField,
+  Button,
+  Typography,
+  useTheme,
+  useColorScheme,
+  Divider,
+  Box,
+  Paper,
+  Tooltip,
+  InputAdornment,
+  IconButton,
+} from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import InfoIcon from '@mui/icons-material/Info';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
@@ -11,7 +24,8 @@ export default function UserSecurityTab() {
   const { user, updatePassword, loading } = useAuth();
   const { mode, systemMode } = useColorScheme();
   const theme = useTheme();
-  const { sendForgotPasswordEmail, loading: publicEmailServiceloading } = usePublicEmailService();
+  const { sendForgotPasswordEmail, loading: publicEmailServiceloading } =
+    usePublicEmailService();
 
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
 
@@ -24,9 +38,12 @@ export default function UserSecurityTab() {
   const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState(false);
   const [confirmPasswordErrorMessage, setConfirmPasswordErrorMessage] =
-    useState('');  
+    useState('');
 
-  const onChangePassword = async (currentPassword: string, newPassword: string) => {
+  const onChangePassword = async (
+    currentPassword: string,
+    newPassword: string
+  ) => {
     const validateInputs = () => {
       let isValid = true;
 
@@ -62,17 +79,16 @@ export default function UserSecurityTab() {
     if (validateInputs()) {
       await updatePassword({ currentPassword, newPassword });
     }
-  }
-  
+  };
+
   const [countdown, setCountdown] = useState(60);
   const [requestSucceeded, setRequestSucceeded] = useState(false);
 
   const handleSubmitForgotPasswordRequest = async () => {
-    try {
-      const succeeded: boolean = await sendForgotPasswordEmail(user?.email as string);
-      setRequestSucceeded(succeeded);
-    } catch {
-    }
+    const succeeded: boolean = await sendForgotPasswordEmail(
+      user?.email as string
+    );
+    setRequestSucceeded(succeeded);
   };
 
   useEffect(() => {
@@ -94,11 +110,18 @@ export default function UserSecurityTab() {
   return (
     <Grid container spacing={2}>
       <Grid size={{ xs: 12 }}>
-        <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-          <Typography variant='subtitle1' fontWeight='bold'>Security</Typography>
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          mb={2}
+        >
+          <Typography variant="subtitle1" fontWeight="bold">
+            Security
+          </Typography>
         </Box>
       </Grid>
-      
+
       <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <TextField
           fullWidth
@@ -120,11 +143,11 @@ export default function UserSecurityTab() {
                   </IconButton>
                 </InputAdornment>
               ),
-            }
+            },
           }}
         />
       </Grid>
-      
+
       <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <TextField
           fullWidth
@@ -134,7 +157,7 @@ export default function UserSecurityTab() {
           onChange={(e) => setNewPassword(e.target.value)}
           disabled={!providerIsOurPlatform}
           error={passwordError}
-          helperText={passwordErrorMessage} 
+          helperText={passwordErrorMessage}
           slotProps={{
             input: {
               endAdornment: (
@@ -148,11 +171,11 @@ export default function UserSecurityTab() {
                   </IconButton>
                 </InputAdornment>
               ),
-            }
+            },
           }}
         />
       </Grid>
-      
+
       <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <TextField
           fullWidth
@@ -162,7 +185,7 @@ export default function UserSecurityTab() {
           onChange={(e) => setConfirmPassword(e.target.value)}
           disabled={!providerIsOurPlatform}
           error={confirmPasswordError}
-          helperText={confirmPasswordErrorMessage} 
+          helperText={confirmPasswordErrorMessage}
           slotProps={{
             input: {
               endAdornment: (
@@ -176,88 +199,110 @@ export default function UserSecurityTab() {
                   </IconButton>
                 </InputAdornment>
               ),
-            }
+            },
           }}
         />
       </Grid>
 
       <Grid size={{ xs: 12, sm: 6, md: 12, lg: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, height: '100%' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 1,
+            height: '100%',
+          }}
+        >
           <Button
             variant="contained"
             fullWidth
             onClick={() => onChangePassword(currentPassword, newPassword)}
-            sx={{ 
+            sx={{
               height: '100%',
               '&.Mui-disabled': {
-                  color:
+                color:
                   resolvedMode == 'dark'
-                      ? theme.palette.grey[400]
-                      : theme.palette.grey[500],
-              },               
+                    ? theme.palette.grey[400]
+                    : theme.palette.grey[500],
+              },
             }}
-            disabled={loading || currentPassword.length == 0
-              ? true
-              : !providerIsOurPlatform
-            }          
+            disabled={
+              loading || currentPassword.length == 0
+                ? true
+                : !providerIsOurPlatform
+            }
           >
             Update Password
           </Button>
-          { !providerIsOurPlatform && (
+          {!providerIsOurPlatform && (
             <Tooltip
               title="We do not hold your password on our servers, henceforth you cannot update it."
-              placement='top-end'
+              placement="top-end"
             >
-              <InfoIcon color='info' />
-            </Tooltip>        
+              <InfoIcon color="info" />
+            </Tooltip>
           )}
         </Box>
       </Grid>
 
-      <Grid size={{xs: 5.5 }} sx={{ mt: 1.2 }} >
-        <Divider />        
+      <Grid size={{ xs: 5.5 }} sx={{ mt: 1.2 }}>
+        <Divider />
       </Grid>
 
-      <Grid size={{xs: 0.5 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Typography>OR</Typography>       
+      <Grid size={{ xs: 0.5 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Typography>OR</Typography>
         </Box>
       </Grid>
 
-      <Grid size={{xs: 5.5 }} sx={{ mt: 1.2 }} >
-        <Divider />        
+      <Grid size={{ xs: 5.5 }} sx={{ mt: 1.2 }}>
+        <Divider />
       </Grid>
 
       <Grid size={{ xs: 12 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, height: '100%' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 1,
+            height: '100%',
+          }}
+        >
           <Button
             variant="outlined"
             fullWidth
             onClick={handleSubmitForgotPasswordRequest}
-            disabled={publicEmailServiceloading || requestSucceeded
-              ? true
-              : !providerIsOurPlatform
+            disabled={
+              publicEmailServiceloading || requestSucceeded
+                ? true
+                : !providerIsOurPlatform
             }
           >
-            {
-              publicEmailServiceloading
-                ? 'Sending Password Reset Link to your email...'
-                : requestSucceeded
-                  ? `You can try again in ${countdown} seconds...`
-                  : 'Send Password Reset Link to your email'
-            }         
+            {publicEmailServiceloading
+              ? 'Sending Password Reset Link to your email...'
+              : requestSucceeded
+                ? `You can try again in ${countdown} seconds...`
+                : 'Send Password Reset Link to your email'}
           </Button>
-          { !providerIsOurPlatform && (
+          {!providerIsOurPlatform && (
             <Tooltip
               title="We do not hold your password on our servers, henceforth we cannot send a link to reset it."
-              placement='top-end'
+              placement="top-end"
             >
-              <InfoIcon color='info' />
-            </Tooltip>        
+              <InfoIcon color="info" />
+            </Tooltip>
           )}
         </Box>
       </Grid>
-      
+
       <Grid size={{ xs: 12 }}>
         <Paper
           elevation={0}
@@ -266,11 +311,14 @@ export default function UserSecurityTab() {
             p: 2,
             border: '1px dashed',
             borderColor: theme.palette.info.main,
-            backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0, 150, 255, 0.05)' : 'rgba(0, 150, 255, 0.08)',
+            backgroundColor:
+              theme.palette.mode === 'dark'
+                ? 'rgba(0, 150, 255, 0.05)'
+                : 'rgba(0, 150, 255, 0.08)',
             display: 'flex',
             alignItems: 'center',
             gap: 1,
-            justifyContent: 'center'
+            justifyContent: 'center',
           }}
         >
           <LockIcon color="info" />

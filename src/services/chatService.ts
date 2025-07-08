@@ -129,51 +129,47 @@ export class ChatService {
    * Busca todos os chats para um workspace específico com filtros e paginação opcionais
    */
   async findAll(params: FindAllChatsParams): Promise<PaginatedResult<ChatDto>> {
-    try {
-      const { workspaceId, agentId, page = 1, pageSize = 10, query } = params;
+    const { workspaceId, agentId, page = 1, pageSize = 10, query } = params;
 
-      const searchParams = new URLSearchParams();
-      searchParams.append('page', page.toString());
-      searchParams.append('pageSize', pageSize.toString());
+    const searchParams = new URLSearchParams();
+    searchParams.append('page', page.toString());
+    searchParams.append('pageSize', pageSize.toString());
 
-      if (query) {
-        searchParams.append('query', query);
-      }
-
-      if (agentId) {
-        searchParams.append('agentId', agentId);
-      }
-
-      const url = `${this.apiUrl}/workspace/${workspaceId}/chats?${searchParams.toString()}`;
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.token}`,
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Workspace not found');
-        } else if (response.status >= 500) {
-          throw new Error('Internal server error. Please try again later.');
-        } else {
-          const data = await response.json().catch(() => ({}));
-          const errorMessage = data.error || 'A business rule error occurred.';
-          throw new Error(errorMessage);
-        }
-      }
-
-      const data: PaginatedResult<ChatDto> = await response.json().catch(() => {
-        throw new Error('Invalid response from server.');
-      });
-
-      return data;
-    } catch (error: unknown) {
-      throw error;
+    if (query) {
+      searchParams.append('query', query);
     }
+
+    if (agentId) {
+      searchParams.append('agentId', agentId);
+    }
+
+    const url = `${this.apiUrl}/workspace/${workspaceId}/chats?${searchParams.toString()}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error('Workspace not found');
+      } else if (response.status >= 500) {
+        throw new Error('Internal server error. Please try again later.');
+      } else {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || 'A business rule error occurred.';
+        throw new Error(errorMessage);
+      }
+    }
+
+    const data: PaginatedResult<ChatDto> = await response.json().catch(() => {
+      throw new Error('Invalid response from server.');
+    });
+
+    return data;
   }
 
   /**
@@ -182,238 +178,210 @@ export class ChatService {
   async findInteractionsWithMessages(
     params: FindInteractionsWithMessagesParams
   ): Promise<PaginatedInteractionsWithMessagesResponseDto> {
-    try {
-      const { chatId, page = 1, pageSize = 10 } = params;
+    const { chatId, page = 1, pageSize = 10 } = params;
 
-      if (!chatId) {
-        throw new Error('Chat ID is required.');
+    if (!chatId) {
+      throw new Error('Chat ID is required.');
+    }
+
+    const searchParams = new URLSearchParams();
+    searchParams.append('page', page.toString());
+    searchParams.append('pageSize', pageSize.toString());
+
+    const url = `${this.apiUrl}/chats/${chatId}/interactions?${searchParams.toString()}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        console.warn(
+          `No interactions found for chat ${chatId} or chat does not exist.`
+        );
+        return {
+          data: [],
+          meta: {
+            total: 0,
+            page,
+            pageSize,
+            totalPages: 0,
+          },
+        };
+      } else if (response.status >= 500) {
+        throw new Error('Internal server error. Please try again later.');
+      } else {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || 'A business rule error occurred.';
+        throw new Error(errorMessage);
       }
+    }
 
-      const searchParams = new URLSearchParams();
-      searchParams.append('page', page.toString());
-      searchParams.append('pageSize', pageSize.toString());
-
-      const url = `${this.apiUrl}/chats/${chatId}/interactions?${searchParams.toString()}`;
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.token}`,
-        },
+    const data: PaginatedInteractionsWithMessagesResponseDto = await response
+      .json()
+      .catch(() => {
+        throw new Error('Invalid response from server.');
       });
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          console.warn(
-            `No interactions found for chat ${chatId} or chat does not exist.`
-          );
-          return {
-            data: [],
-            meta: {
-              total: 0,
-              page,
-              pageSize,
-              totalPages: 0,
-            },
-          };
-        } else if (response.status >= 500) {
-          throw new Error('Internal server error. Please try again later.');
-        } else {
-          const data = await response.json().catch(() => ({}));
-          const errorMessage = data.error || 'A business rule error occurred.';
-          throw new Error(errorMessage);
-        }
-      }
-
-      const data: PaginatedInteractionsWithMessagesResponseDto = await response
-        .json()
-        .catch(() => {
-          throw new Error('Invalid response from server.');
-        });
-
-      return data;
-    } catch (error: unknown) {
-      throw error;
-    }
+    return data;
   }
 
   async finishChat(id: string): Promise<boolean> {
-    try {
-      const response = await fetch(
-        `${this.apiUrl}/chats/${id}/finish/${this.userId}`,
-        {
-          method: 'PUT',
-          headers: { Authorization: `Bearer ${this.token}` } as const,
-        }
-      );
-
-      if (!response.ok) {
-        if (response.status >= 500) {
-          throw new Error('Internal server error. Please try again later.');
-        } else {
-          const data = await response.json().catch(() => ({}));
-          const errorMessage = data.error || 'A business rule error occurred.';
-          throw new Error(errorMessage);
-        }
+    const response = await fetch(
+      `${this.apiUrl}/chats/${id}/finish/${this.userId}`,
+      {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${this.token}` } as const,
       }
+    );
 
-      const data = await response.json().catch(() => ({}));
-      if (data.error) {
-        throw new Error(data.error);
+    if (!response.ok) {
+      if (response.status >= 500) {
+        throw new Error('Internal server error. Please try again later.');
+      } else {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || 'A business rule error occurred.';
+        throw new Error(errorMessage);
       }
-
-      return true;
-    } catch (error) {
-      throw error;
     }
+
+    const data = await response.json().catch(() => ({}));
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    return true;
   }
 
   async unfinishChat(id: string): Promise<boolean> {
-    try {
-      const response = await fetch(
-        `${this.apiUrl}/chats/${id}/unfinish/${this.userId}`,
-        {
-          method: 'PUT',
-          headers: { Authorization: `Bearer ${this.token}` } as const,
-        }
-      );
-
-      if (!response.ok) {
-        if (response.status >= 500) {
-          throw new Error('Internal server error. Please try again later.');
-        } else {
-          const data = await response.json().catch(() => ({}));
-          const errorMessage = data.error || 'A business rule error occurred.';
-          throw new Error(errorMessage);
-        }
+    const response = await fetch(
+      `${this.apiUrl}/chats/${id}/unfinish/${this.userId}`,
+      {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${this.token}` } as const,
       }
+    );
 
-      const data = await response.json().catch(() => ({}));
-      if (data.error) {
-        throw new Error(data.error);
+    if (!response.ok) {
+      if (response.status >= 500) {
+        throw new Error('Internal server error. Please try again later.');
+      } else {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || 'A business rule error occurred.';
+        throw new Error(errorMessage);
       }
-
-      return true;
-    } catch (error: unknown) {
-      throw error;
     }
+
+    const data = await response.json().catch(() => ({}));
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    return true;
   }
 
   async startHumanAttendanceChat(id: string): Promise<boolean> {
-    try {
-      const response = await fetch(
-        `${this.apiUrl}/chats/${id}/start-human/${this.userId}`,
-        {
-          method: 'PUT',
-          headers: { Authorization: `Bearer ${this.token}` } as const,
-        }
-      );
-
-      if (!response.ok) {
-        if (response.status >= 500) {
-          throw new Error('Internal server error. Please try again later.');
-        } else {
-          const data = await response.json().catch(() => ({}));
-          const errorMessage = data.error || 'A business rule error occurred.';
-          throw new Error(errorMessage);
-        }
+    const response = await fetch(
+      `${this.apiUrl}/chats/${id}/start-human/${this.userId}`,
+      {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${this.token}` } as const,
       }
+    );
 
-      const data = await response.json().catch(() => ({}));
-      if (data.error) {
-        throw new Error(data.error);
+    if (!response.ok) {
+      if (response.status >= 500) {
+        throw new Error('Internal server error. Please try again later.');
+      } else {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || 'A business rule error occurred.';
+        throw new Error(errorMessage);
       }
-
-      return true;
-    } catch (error: unknown) {
-      throw error;
     }
+
+    const data = await response.json().catch(() => ({}));
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    return true;
   }
 
   async stopHumanAttendanceChat(id: string): Promise<boolean> {
-    try {
-      const response = await fetch(
-        `${this.apiUrl}/chats/${id}/stop-human/${this.userId}`,
-        {
-          method: 'PUT',
-          headers: { Authorization: `Bearer ${this.token}` } as const,
-        }
-      );
-
-      if (!response.ok) {
-        if (response.status >= 500) {
-          throw new Error('Internal server error. Please try again later.');
-        } else {
-          const data = await response.json().catch(() => ({}));
-          const errorMessage = data.error || 'A business rule error occurred.';
-          throw new Error(errorMessage);
-        }
+    const response = await fetch(
+      `${this.apiUrl}/chats/${id}/stop-human/${this.userId}`,
+      {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${this.token}` } as const,
       }
+    );
 
-      const data = await response.json().catch(() => ({}));
-      if (data.error) {
-        throw new Error(data.error);
+    if (!response.ok) {
+      if (response.status >= 500) {
+        throw new Error('Internal server error. Please try again later.');
+      } else {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || 'A business rule error occurred.';
+        throw new Error(errorMessage);
       }
-
-      return true;
-    } catch (error: unknown) {
-      throw error;
     }
+
+    const data = await response.json().catch(() => ({}));
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    return true;
   }
 
   async readChat(id: string): Promise<boolean> {
-    try {
-      const response = await fetch(`${this.apiUrl}/chats/${id}/read`, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${this.token}` } as const,
-      });
+    const response = await fetch(`${this.apiUrl}/chats/${id}/read`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${this.token}` } as const,
+    });
 
-      if (!response.ok) {
-        if (response.status >= 500) {
-          throw new Error('Internal server error. Please try again later.');
-        } else {
-          const data = await response.json().catch(() => ({}));
-          const errorMessage = data.error || 'A business rule error occurred.';
-          throw new Error(errorMessage);
-        }
+    if (!response.ok) {
+      if (response.status >= 500) {
+        throw new Error('Internal server error. Please try again later.');
+      } else {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || 'A business rule error occurred.';
+        throw new Error(errorMessage);
       }
-
-      const data = await response.json().catch(() => ({}));
-      if (data.error) {
-        throw new Error(data.error);
-      }
-      return true;
-    } catch (error: unknown) {
-      throw error;
     }
+
+    const data = await response.json().catch(() => ({}));
+    if (data.error) {
+      throw new Error(data.error);
+    }
+    return true;
   }
 
   async deleteChat(id: string): Promise<boolean> {
-    try {
-      const response = await fetch(`${this.apiUrl}/chats/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${this.token}` } as const,
-      });
+    const response = await fetch(`${this.apiUrl}/chats/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${this.token}` } as const,
+    });
 
-      if (!response.ok) {
-        if (response.status >= 500) {
-          throw new Error('Internal server error. Please try again later.');
-        } else {
-          const data = await response.json().catch(() => ({}));
-          const errorMessage = data.error || 'A business rule error occurred.';
-          throw new Error(errorMessage);
-        }
+    if (!response.ok) {
+      if (response.status >= 500) {
+        throw new Error('Internal server error. Please try again later.');
+      } else {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || 'A business rule error occurred.';
+        throw new Error(errorMessage);
       }
-
-      const data = await response.json().catch(() => ({}));
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      return true;
-    } catch (error: unknown) {
-      throw error;
     }
+
+    const data = await response.json().catch(() => ({}));
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    return true;
   }
 }

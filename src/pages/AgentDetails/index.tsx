@@ -3,7 +3,13 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 // Keep necessary imports from original file
 import { useAuth } from '../../context/AuthContext';
-import { Agent, AgentSettings, AgentWrapper, PaginatedAgentWrapper, useAgents } from '../../context/AgentsContext';
+import {
+  Agent,
+  AgentSettings,
+  AgentWrapper,
+  PaginatedAgentWrapper,
+  useAgents,
+} from '../../context/AgentsContext';
 import { useChannelService } from '../../hooks/useChannelService';
 import { Channel } from '../../services/channelService';
 import LoadingBackdrop from '../../components/LoadingBackdrop';
@@ -83,21 +89,21 @@ export default function AgentDetails() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { 
+  const {
     paginatedAgents,
     activateAgent,
     deactivateAgent,
 
-    fetchAgentOfOtherWorkspaces,    
-    loading
-  } =
-  useAgents();
+    fetchAgentOfOtherWorkspaces,
+    loading,
+  } = useAgents();
   const { agents } = paginatedAgents;
   const { token, user } = useAuth();
 
-  const userBelongsToWorkspace: boolean = user?.workspaceId === agents.find(
-    (wrapper) => wrapper.agent.id === params.agentId
-  )?.agent?.workspaceId;
+  const userBelongsToWorkspace: boolean =
+    user?.workspaceId ===
+    agents.find((wrapper) => wrapper.agent.id === params.agentId)?.agent
+      ?.workspaceId;
 
   const {
     getQRCode,
@@ -109,7 +115,8 @@ export default function AgentDetails() {
   const [agentData, setAgentData] = useState<Agent | null>(null);
   const [agentSettingsData, setAgentSettingsData] =
     useState<AgentSettings | null>(null);
-  const [agentSubscriptionLimits, setAgentSubscriptionLimits] = useState<Partial<PaginatedAgentWrapper['subscriptionLimits']> | null>(null);
+  const [agentSubscriptionLimits, setAgentSubscriptionLimits] =
+    useState<Partial<PaginatedAgentWrapper['subscriptionLimits']> | null>(null);
 
   const [QRCode, setQRCode] = useState<string | undefined>(undefined);
 
@@ -154,33 +161,38 @@ export default function AgentDetails() {
         const agentWrapper = agents.find(
           (wrapper) => wrapper.agent.id === params.agentId
         );
-   
+
         if (agentWrapper?.agent) {
           setAgentData(agentWrapper?.agent);
           setAgentSettingsData(agentWrapper?.settings);
           setAgentSubscriptionLimits({
-            trainingDocumentLimit: user?.subscription?.trainingDocumentLimitOverrides?.explicitlySet
+            trainingDocumentLimit: user?.subscription
+              ?.trainingDocumentLimitOverrides?.explicitlySet
               ? user?.subscription?.trainingDocumentLimitOverrides?.value
               : user?.plan?.trainingDocumentLimit,
-            trainingTextLimit: user?.subscription?.trainingTextLimitOverrides?.explicitlySet
+            trainingTextLimit: user?.subscription?.trainingTextLimitOverrides
+              ?.explicitlySet
               ? user?.subscription?.trainingTextLimitOverrides?.value
               : user?.plan?.trainingTextLimit,
-            trainingVideoLimit: user?.subscription?.trainingVideoLimitOverrides?.explicitlySet
+            trainingVideoLimit: user?.subscription?.trainingVideoLimitOverrides
+              ?.explicitlySet
               ? user?.subscription?.trainingVideoLimitOverrides?.value
               : user?.plan?.trainingVideoLimit,
-            trainingWebsiteLimit: user?.subscription?.trainingWebsiteLimitOverrides?.explicitlySet
+            trainingWebsiteLimit: user?.subscription
+              ?.trainingWebsiteLimitOverrides?.explicitlySet
               ? user?.subscription?.trainingWebsiteLimitOverrides?.value
               : user?.plan?.trainingWebsiteLimit,
           });
-          
+
           if (tabName) {
             setCurrentTab(tabIndexFromName[tabName as TabName]);
           }
         }
-
       } else {
         const fetchAgentsData = async (agentId: string) => {
-          const response = await fetchAgentOfOtherWorkspaces(agentId) as AgentWrapper;
+          const response = (await fetchAgentOfOtherWorkspaces(
+            agentId
+          )) as AgentWrapper;
           setAgentData(response.agent);
           setAgentSettingsData(response.settings);
           setAgentSubscriptionLimits(response.subscriptionLimits);
@@ -188,8 +200,8 @@ export default function AgentDetails() {
           if (tabName) {
             setCurrentTab(tabIndexFromName[tabName as TabName]);
           }
-        }
-        
+        };
+
         fetchAgentsData(params.agentId);
       }
     }
@@ -212,9 +224,9 @@ export default function AgentDetails() {
           <Grid container spacing={3}>
             <Grid size={{ xs: 12 }}>
               <Button
-                  variant="outlined"
-                  color="primary"
-                  onClick={() => navigate(-1)}
+                variant="outlined"
+                color="primary"
+                onClick={() => navigate(-1)}
               >
                 &larr; Go back to Agents
               </Button>
@@ -231,9 +243,12 @@ export default function AgentDetails() {
                   <Typography variant="h4">{agentData.name}</Typography>
                   <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
                     <Tooltip
-                      title={ agentData.isDeleted
-                        ? 'Restore me'
-                        : agentData.isActive ? 'Deactivate me' : 'Activate me'
+                      title={
+                        agentData.isDeleted
+                          ? 'Restore me'
+                          : agentData.isActive
+                            ? 'Deactivate me'
+                            : 'Activate me'
                       }
                     >
                       <Chip
@@ -322,7 +337,10 @@ export default function AgentDetails() {
                 <WorkTabPanel agentData={agentData} loading={loading} />
               </TabPanel>
               <TabPanel value={currentTab} index={2}>
-                <TrainingTabPanel agentData={agentData} agentSubscriptionLimits={agentSubscriptionLimits} />
+                <TrainingTabPanel
+                  agentData={agentData}
+                  agentSubscriptionLimits={agentSubscriptionLimits}
+                />
               </TabPanel>
               <TabPanel value={currentTab} index={3}>
                 <IntegrationsTabPanel agentData={agentData} />

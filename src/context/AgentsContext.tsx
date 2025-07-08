@@ -18,7 +18,7 @@ import {
   ChatDto,
   InteractionWithMessagesDto,
   PaginatedInteractionsWithMessagesResponseDto,
-  PaginatedResult
+  PaginatedResult,
 } from '../services/chatService';
 import { InteractionStatus } from '../services/chatService';
 import { ScheduleSettingsDto } from '../pages/AgentDetails/components/dialogs/GoogleCalendarConfigDialog';
@@ -100,8 +100,8 @@ export interface AgentWrapper {
   settings: AgentSettings;
   webhooks: AgentWebhooks;
   subscriptionLimits?: {
-    agentLimit: number | 'UNLIMITED',
-  }
+    agentLimit: number | 'UNLIMITED';
+  };
 }
 
 export interface PaginatedAgentWrapper {
@@ -113,12 +113,12 @@ export interface PaginatedAgentWrapper {
     totalPages: number;
   };
   subscriptionLimits?: {
-    agentLimit: number | 'UNLIMITED',
-    creditsLimit: number | 'UNLIMITED',
-    trainingTextLimit: number | 'UNLIMITED',
-    trainingWebsiteLimit: number | 'UNLIMITED',
-    trainingVideoLimit: number | 'UNLIMITED',
-    trainingDocumentLimit: number | 'UNLIMITED'    
+    agentLimit: number | 'UNLIMITED';
+    creditsLimit: number | 'UNLIMITED';
+    trainingTextLimit: number | 'UNLIMITED';
+    trainingWebsiteLimit: number | 'UNLIMITED';
+    trainingVideoLimit: number | 'UNLIMITED';
+    trainingDocumentLimit: number | 'UNLIMITED';
   };
 }
 
@@ -204,10 +204,15 @@ interface AgentsContextType {
   }) => void;
 
   createAgentOfOtherWorkspaces: (
-    input: AgentInput, workspaceId: string
-  ) => Promise<{ success: boolean; id?: string }>;  
-  fetchAgentOfOtherWorkspaces: (agentId: string) => Promise<AgentWrapper | void>;  
-  fetchAgentsOfOtherWorkspaces: (workspaceId: string) => Promise<PaginatedAgentWrapper | void>;  
+    input: AgentInput,
+    workspaceId: string
+  ) => Promise<{ success: boolean; id?: string }>;
+  fetchAgentOfOtherWorkspaces: (
+    agentId: string
+  ) => Promise<AgentWrapper | void>;
+  fetchAgentsOfOtherWorkspaces: (
+    workspaceId: string
+  ) => Promise<PaginatedAgentWrapper | void>;
   deleteAgentsOfOtherWorkspaces: (id: string) => Promise<boolean>;
   restoreAgentsOfOtherWorkspaces: (id: string) => Promise<boolean>;
 }
@@ -219,7 +224,12 @@ interface AgentsProviderProps {
 const AgentsContext = createContext<AgentsContextType | null>(null);
 
 export function AgentsProvider({ children }: AgentsProviderProps) {
-  const { user, token, loading: authLoading, handleTokenExpirationError } = useAuth();
+  const {
+    user,
+    token,
+    loading: authLoading,
+    handleTokenExpirationError,
+  } = useAuth();
   const { notify } = useHttpResponse();
 
   const authIsReady: boolean = !!user?.id && !!token && !authLoading;
@@ -240,7 +250,9 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
   const [pageSize, setPageSize] = useState(3);
   const [query, setQuery] = useState('');
 
-  const fetchAgents = async (workspaceId?: string): Promise<PaginatedAgentWrapper | void> => {
+  const fetchAgents = async (
+    workspaceId?: string
+  ): Promise<PaginatedAgentWrapper | void> => {
     try {
       setLoading(true);
       const queryParams = new URLSearchParams({
@@ -263,10 +275,11 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
       if (data.error) throw new Error(data.error);
 
-      if (workspaceId) return {
-        agents: data.data || [],
-        meta: data.meta
-      };
+      if (workspaceId)
+        return {
+          agents: data.data || [],
+          meta: data.meta,
+        };
 
       setPaginatedAgents({
         agents: data.data || [],
@@ -425,7 +438,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       if (data.error) throw new Error(data.error);
 
       // This will do nothing if the agent does not belong to the actual workspace, which might happen
-      // if an admin is activating agents of other workspaces. 
+      // if an admin is activating agents of other workspaces.
       setPaginatedAgents((prev) => ({
         ...prev,
         agents: prev.agents.map((wrapper) =>
@@ -443,7 +456,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
 
       notify('Agent activated!', 'success');
       return true;
-    } catch (error) {     
+    } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '';
       handleTokenExpirationError(errorMessage); // Handle token expiration error
       notify(errorMessage, 'error');
@@ -466,7 +479,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       notify('Agent deactivated!', 'success');
 
       // This will do nothing if the agent does not belong to the actual workspace, which might happen
-      // if an admin is deactivating agents of other workspaces.       
+      // if an admin is deactivating agents of other workspaces.
       setPaginatedAgents((prev) => ({
         ...prev,
         agents: prev.agents.map((wrapper) =>
@@ -1368,7 +1381,9 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     }
   };
 
-  const syncAgentMessageChatUpdate = (data: MessageChatUpdatePayload): boolean => {
+  const syncAgentMessageChatUpdate = (
+    data: MessageChatUpdatePayload
+  ): boolean => {
     try {
       setPaginatedAgents((prev) => {
         // Find the agent that needs to be updated
@@ -1386,9 +1401,10 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
         const currentAgent = currentAgentWrapper.agent;
 
         // Find the chat that needs to be updated within the agent's paginated chats
-        const chatIndex = currentAgent?.paginatedChats?.data?.findIndex(
-          (chat) => chat.id === data.chat.id
-        ) ?? -1;
+        const chatIndex =
+          currentAgent?.paginatedChats?.data?.findIndex(
+            (chat) => chat.id === data.chat.id
+          ) ?? -1;
 
         let updatedPaginatedChats;
 
@@ -1427,9 +1443,9 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
                 total: 1,
                 page: 1,
                 pageSize: 10,
-                totalPages: 1
-              }
-            }
+                totalPages: 1,
+              },
+            },
           };
 
           const currentPaginatedChatsData = currentAgent?.paginatedChats?.data;
@@ -1439,50 +1455,56 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
               data: [newChat, ...currentPaginatedChatsData],
               meta: {
                 ...currentAgent.paginatedChats.meta,
-                total: currentAgent.paginatedChats.meta.total + 1
-              }
+                total: currentAgent.paginatedChats.meta.total + 1,
+              },
             };
-          }
-          else {
+          } else {
             updatedPaginatedChats = {
               data: [newChat],
               meta: {
                 total: 1,
                 page: 1,
                 pageSize: 10,
-                totalPages: 1
-              }
+                totalPages: 1,
+              },
             };
           }
         } else {
           // Chat exists, update it
           const currentChat = currentAgent.paginatedChats.data[chatIndex];
-          
+
           // Update the existing interaction or add new one
           let updatedInteractions;
           if (currentChat.paginatedInteractions) {
-            const interactionIndex = currentChat.paginatedInteractions.data.findIndex(
-              (interaction) => interaction.id === data.latestInteraction.id
-            );
+            const interactionIndex =
+              currentChat.paginatedInteractions.data.findIndex(
+                (interaction) => interaction.id === data.latestInteraction.id
+              );
 
             if (interactionIndex === -1) {
               // New interaction, add to beginning
               updatedInteractions = {
                 ...currentChat.paginatedInteractions,
-                data: [data.latestInteraction, ...currentChat.paginatedInteractions.data],
+                data: [
+                  data.latestInteraction,
+                  ...currentChat.paginatedInteractions.data,
+                ],
                 meta: {
                   ...currentChat.paginatedInteractions.meta,
-                  total: currentChat.paginatedInteractions.meta.total + 1
-                }
+                  total: currentChat.paginatedInteractions.meta.total + 1,
+                },
               };
             } else {
               // Update existing interaction
-              const updatedInteractionsList = [...currentChat.paginatedInteractions.data];
-              updatedInteractionsList[interactionIndex] = data.latestInteraction;
-              
+              const updatedInteractionsList = [
+                ...currentChat.paginatedInteractions.data,
+              ];
+              updatedInteractionsList[interactionIndex] =
+                data.latestInteraction;
+
               updatedInteractions = {
                 ...currentChat.paginatedInteractions,
-                data: updatedInteractionsList
+                data: updatedInteractionsList,
               };
             }
           } else {
@@ -1493,8 +1515,8 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
                 total: 1,
                 page: 1,
                 pageSize: 10,
-                totalPages: 1
-              }
+                totalPages: 1,
+              },
             };
           }
 
@@ -1514,31 +1536,33 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
             latestMessage: data.latestMessage,
             updatedAt: new Date().toISOString(),
             time: data.latestMessage.createdAt,
-            paginatedInteractions: updatedInteractions
+            paginatedInteractions: updatedInteractions,
           };
 
           // Move updated chat to the beginning of the list and update the array
           const updatedChatsData = [
             updatedChat,
-            ...currentAgent.paginatedChats.data.filter((_, index) => index !== chatIndex)
+            ...currentAgent.paginatedChats.data.filter(
+              (_, index) => index !== chatIndex
+            ),
           ];
 
           updatedPaginatedChats = {
             ...currentAgent.paginatedChats,
-            data: updatedChatsData
+            data: updatedChatsData,
           };
         }
 
         // Create updated agent with new paginated chats
         const updatedAgent: Agent = {
           ...currentAgent,
-          paginatedChats: updatedPaginatedChats
+          paginatedChats: updatedPaginatedChats,
         };
 
         // Create updated agent wrapper
         const updatedAgentWrapper: AgentWrapper = {
           ...currentAgentWrapper,
-          agent: updatedAgent
+          agent: updatedAgent,
         };
 
         // Create new agents array with updated agent wrapper
@@ -1548,7 +1572,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
         // Return updated paginated agents
         return {
           ...prev,
-          agents: updatedAgents
+          agents: updatedAgents,
         };
       });
 
@@ -1678,7 +1702,8 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
   };
 
   const createAgentOfOtherWorkspaces = async (
-    input: AgentInput, workspaceId: string
+    input: AgentInput,
+    workspaceId: string
   ): Promise<{ success: boolean; id?: string }> => {
     try {
       setLoading(true);
@@ -1708,26 +1733,24 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       setLoading(false);
     }
   };
-  
-  const fetchAgentOfOtherWorkspaces = async (agentId: string): Promise<AgentWrapper | void> => {
+
+  const fetchAgentOfOtherWorkspaces = async (
+    agentId: string
+  ): Promise<AgentWrapper | void> => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `${env.API_URL}/agent/${agentId}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          } as const,
-        }
-      );
+      const response = await fetch(`${env.API_URL}/agent/${agentId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        } as const,
+      });
       const data = await response.json();
 
       if (data.error) throw new Error(data.error);
 
       return data.data;
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '';
       handleTokenExpirationError(errorMessage); // Handle token expiration error
@@ -1737,7 +1760,9 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     }
   };
 
-  const fetchAgentsOfOtherWorkspaces = async (workspaceId: string): Promise<PaginatedAgentWrapper | void> => {
+  const fetchAgentsOfOtherWorkspaces = async (
+    workspaceId: string
+  ): Promise<PaginatedAgentWrapper | void> => {
     try {
       setLoading(true);
       const queryParams = new URLSearchParams({
@@ -1763,9 +1788,8 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
       return {
         agents: data.data || [],
         meta: data.meta,
-        subscriptionLimits: data.subscriptionLimits
+        subscriptionLimits: data.subscriptionLimits,
       };
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '';
       handleTokenExpirationError(errorMessage); // Handle token expiration error
@@ -1775,7 +1799,9 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     }
   };
 
-  const deleteAgentsOfOtherWorkspaces = async (id: string): Promise<boolean> => {
+  const deleteAgentsOfOtherWorkspaces = async (
+    id: string
+  ): Promise<boolean> => {
     try {
       setLoading(true);
       const response = await fetch(`${env.API_URL}/agent-as-admin/${id}`, {
@@ -1796,9 +1822,11 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     } finally {
       setLoading(false);
     }
-  };  
+  };
 
-  const restoreAgentsOfOtherWorkspaces = async (id: string): Promise<boolean> => {
+  const restoreAgentsOfOtherWorkspaces = async (
+    id: string
+  ): Promise<boolean> => {
     try {
       setLoading(true);
       const response = await fetch(`${env.API_URL}/agent/restore/${id}`, {
@@ -1819,7 +1847,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     } finally {
       setLoading(false);
     }
-  };    
+  };
 
   useEffect(() => {
     if (authIsReady) {
@@ -1869,7 +1897,7 @@ export function AgentsProvider({ children }: AgentsProviderProps) {
     fetchAgentOfOtherWorkspaces,
     fetchAgentsOfOtherWorkspaces,
     deleteAgentsOfOtherWorkspaces,
-    restoreAgentsOfOtherWorkspaces
+    restoreAgentsOfOtherWorkspaces,
   };
 
   return (

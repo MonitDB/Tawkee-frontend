@@ -25,7 +25,11 @@ export const useChannelService = (token: string) => {
     async (agentId: string, name: string, type: string) => {
       setLoading(true);
       try {
-        const newChannel = (await service.createChannel(agentId, name, type)) as Channel;
+        const newChannel = (await service.createChannel(
+          agentId,
+          name,
+          type
+        )) as Channel;
         syncAgentChannelCreation(agentId, newChannel);
         notify('Channel created successfully!', 'success');
         return newChannel;
@@ -123,7 +127,12 @@ export const useChannelService = (token: string) => {
         setLoading(false);
       }
     },
-    [service, syncAgentChannelConnectionUpdate, notify, handleTokenExpirationError]
+    [
+      service,
+      syncAgentChannelConnectionUpdate,
+      notify,
+      handleTokenExpirationError,
+    ]
   );
 
   const deleteChannel = useCallback(

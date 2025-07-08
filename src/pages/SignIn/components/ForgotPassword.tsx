@@ -39,12 +39,9 @@ export default function ForgotPassword({
       return;
     }
 
-    try {
-      const succeeded: boolean = await sendForgotPasswordEmail(email.value);
-      email.value = '';
-      setRequestSucceeded(succeeded);
-    } catch {
-    }
+    const succeeded: boolean = await sendForgotPasswordEmail(email.value);
+    email.value = '';
+    setRequestSucceeded(succeeded);
   };
 
   useEffect(() => {

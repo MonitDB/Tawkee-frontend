@@ -49,60 +49,57 @@ export default function Chats() {
 
     const pageToFetch = currentPage + 1;
 
-    try {
-      const response = await fetchInteractionsWithMessagesOfChat({
-        chatId: selectedChat.id,
-        page: pageToFetch,
-      });
+    const response = await fetchInteractionsWithMessagesOfChat({
+      chatId: selectedChat.id,
+      page: pageToFetch,
+    });
 
-      if (!response || !response.data || !response.meta) {
-        console.error(`Failed to fetch page ${pageToFetch}`);
-        return;
-      }
-
-      const newInteractionsData = response.data;
-      const newMeta = response.meta;
-      const existingInteractionsData =
-        selectedChat.paginatedInteractions?.data || [];
-
-      const newInteractionsMap = new Map(
-        newInteractionsData.map((i) => [i.id, i])
-      );
-      const existingIds = new Set(existingInteractionsData.map((i) => i.id));
-      const merged: InteractionWithMessagesDto[] = [];
-
-      // Add new interactions first (prepend)
-      newInteractionsData.forEach((i) => {
-        if (!existingIds.has(i.id)) {
-          merged.push(i);
-        }
-      });
-
-      // Add existing interactions, updating any from new data if needed
-      existingInteractionsData.forEach((i) => {
-        if (newInteractionsMap.has(i.id)) {
-          merged.push(newInteractionsMap.get(i.id)!);
-        } else {
-          merged.push(i);
-        }
-      });
-
-      // Sort chronologically by startAt (assumes ISO 8601 string or Date)
-      merged.sort(
-        (a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime()
-      );
-
-      const updatedChat: ChatDto = {
-        ...selectedChat,
-        paginatedInteractions: {
-          data: merged,
-          meta: newMeta,
-        },
-      };
-
-      setSelectedChatId(updatedChat.id);
-    } catch {
+    if (!response || !response.data || !response.meta) {
+      console.error(`Failed to fetch page ${pageToFetch}`);
+      return;
     }
+
+    const newInteractionsData = response.data;
+    const newMeta = response.meta;
+    const existingInteractionsData =
+      selectedChat.paginatedInteractions?.data || [];
+
+    const newInteractionsMap = new Map(
+      newInteractionsData.map((i) => [i.id, i])
+    );
+    const existingIds = new Set(existingInteractionsData.map((i) => i.id));
+    const merged: InteractionWithMessagesDto[] = [];
+
+    // Add new interactions first (prepend)
+    newInteractionsData.forEach((i) => {
+      if (!existingIds.has(i.id)) {
+        merged.push(i);
+      }
+    });
+
+    // Add existing interactions, updating any from new data if needed
+    existingInteractionsData.forEach((i) => {
+      if (newInteractionsMap.has(i.id)) {
+        merged.push(newInteractionsMap.get(i.id)!);
+      } else {
+        merged.push(i);
+      }
+    });
+
+    // Sort chronologically by startAt (assumes ISO 8601 string or Date)
+    merged.sort(
+      (a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime()
+    );
+
+    const updatedChat: ChatDto = {
+      ...selectedChat,
+      paginatedInteractions: {
+        data: merged,
+        meta: newMeta,
+      },
+    };
+
+    setSelectedChatId(updatedChat.id);
   };
 
   const fetchChatList = useCallback(async () => {

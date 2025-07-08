@@ -46,7 +46,7 @@ function formatRelative(dateStr: string): string {
 export default function DailyCreditBalanceChart({
   startDate,
   endDate,
-  workspaceId
+  workspaceId,
 }: DailyCreditBalanceChartProps) {
   const theme = useTheme();
   const { token } = useAuth();

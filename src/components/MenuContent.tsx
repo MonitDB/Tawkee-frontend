@@ -26,7 +26,7 @@ export default function MenuContent() {
   const { paginatedAgents } = useAgents();
   const { agents } = paginatedAgents;
 
-  const canViewDashboardPage = 
+  const canViewDashboardPage =
     can('VIEW_INTERACTIONS', 'DASHBOARD') ||
     can('VIEW_CREDIT_REMAINING', 'DASHBOARD') ||
     can('VIEW_CREDIT_USAGE', 'DASHBOARD');
@@ -37,10 +37,26 @@ export default function MenuContent() {
   const canViewChatsPage = can('VIEW_LIST', 'CHAT');
 
   const mainListItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, permission: canViewDashboardPage },
-    { text: 'Plans', icon: <SubscriptionsIcon />,   permission: canViewPlansPage },
-    { text: 'Workspaces', icon: <WorkspacesIcon />, permission: canViewWorkspacesPage },
-    { text: 'Agents', icon: <SupportAgentIcon />, permission: canViewAgentsPage },
+    {
+      text: 'Dashboard',
+      icon: <DashboardIcon />,
+      permission: canViewDashboardPage,
+    },
+    {
+      text: 'Plans',
+      icon: <SubscriptionsIcon />,
+      permission: canViewPlansPage,
+    },
+    {
+      text: 'Workspaces',
+      icon: <WorkspacesIcon />,
+      permission: canViewWorkspacesPage,
+    },
+    {
+      text: 'Agents',
+      icon: <SupportAgentIcon />,
+      permission: canViewAgentsPage,
+    },
     { text: 'Chats', icon: <ChatIcon />, permission: canViewChatsPage },
   ];
 
@@ -55,11 +71,11 @@ export default function MenuContent() {
     1: '/plans',
     2: '/workspaces',
     3: '/agents',
-    4: '/chats'
+    4: '/chats',
   };
 
   const routeSecondaryKeyMap: Record<number, string> = {
-    0: '/billing'
+    0: '/billing',
   };
 
   const totalUnreadCount = agents.reduce((total, wrapper) => {
@@ -81,7 +97,7 @@ export default function MenuContent() {
           if (!item.permission) {
             return null;
           }
-          
+
           return (
             <ListItem
               key={index}
@@ -89,7 +105,9 @@ export default function MenuContent() {
               sx={{ display: 'block' }}
               onClick={() => navigate(routePrimaryKeyMap[index])}
             >
-              <ListItemButton selected={routePrimaryKeyMap[index] == location.pathname}>
+              <ListItemButton
+                selected={routePrimaryKeyMap[index] == location.pathname}
+              >
                 {item.text == 'Chats' ? (
                   <>
                     <ListItemIcon>{item.icon}</ListItemIcon>
@@ -120,14 +138,17 @@ export default function MenuContent() {
           if (!item.permission) {
             return null;
           }
-          
+
           return (
             <ListItem
               key={index}
-              disablePadding sx={{ display: 'block' }}
+              disablePadding
+              sx={{ display: 'block' }}
               onClick={() => navigate(routeSecondaryKeyMap[index])}
             >
-              <ListItemButton selected={routeSecondaryKeyMap[index] == location.pathname}>
+              <ListItemButton
+                selected={routeSecondaryKeyMap[index] == location.pathname}
+              >
                 <ListItemIcon>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.text} />
               </ListItemButton>

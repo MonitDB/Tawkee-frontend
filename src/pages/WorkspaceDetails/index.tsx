@@ -18,7 +18,7 @@ import {
 import {
   Group as GroupIcon,
   Receipt as ReceiptIcon,
-  WorkspacePremium as WorkspacePremiumIcon
+  WorkspacePremium as WorkspacePremiumIcon,
 } from '@mui/icons-material';
 
 import LoadingBackdrop from '../../components/LoadingBackdrop';
@@ -28,7 +28,11 @@ import SubscriptionTab, { Subscription } from './components/SubscriptionTab';
 
 import { useDashboardService } from '../../hooks/useDashboardService';
 import { useAuth } from '../../context/AuthContext';
-import { subscriptionColors, SubscriptionStatus, Workspace } from '../Workspaces';
+import {
+  subscriptionColors,
+  SubscriptionStatus,
+  Workspace,
+} from '../Workspaces';
 import WorkspaceBadge from '../../components/WorkspaceBadge';
 
 function TabPanel({ children, value, index }: any) {
@@ -73,15 +77,17 @@ export default function WorkspaceDetails() {
           <Grid container spacing={3}>
             <Grid size={{ xs: 12 }}>
               <Button
-                  variant="outlined"
-                  color="primary"
-                  onClick={() => navigate(-1)}
+                variant="outlined"
+                color="primary"
+                onClick={() => navigate(-1)}
               >
                 &larr; Go back to Workspaces
               </Button>
             </Grid>
             <Grid size={{ xs: 12 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}
+              >
                 <Avatar sx={{ width: 100, height: 100 }}>
                   {workspace.name[0]}
                 </Avatar>
@@ -92,7 +98,8 @@ export default function WorkspaceDetails() {
                     workspaceIsActive={workspace.isActive}
                   />
                   <Typography color="text.secondary">
-                    Created at {new Date(workspace.createdAt).toLocaleDateString()}
+                    Created at{' '}
+                    {new Date(workspace.createdAt).toLocaleDateString()}
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
                     <Tooltip title={`Workspace ID: ${workspace.id}`}>
@@ -113,8 +120,17 @@ export default function WorkspaceDetails() {
                     {workspace.subscription?.status && (
                       <Tooltip title="Subscription status">
                         <Chip
-                          label={isXs ? workspace.subscription.status : `SUBSCRIPTION ${workspace.subscription.status}`}
-                          color={subscriptionColors[workspace.subscription.status as SubscriptionStatus]}
+                          label={
+                            isXs
+                              ? workspace.subscription.status
+                              : `SUBSCRIPTION ${workspace.subscription.status}`
+                          }
+                          color={
+                            subscriptionColors[
+                              workspace.subscription
+                                .status as SubscriptionStatus
+                            ]
+                          }
                           variant="outlined"
                         />
                       </Tooltip>
@@ -146,7 +162,9 @@ export default function WorkspaceDetails() {
                 <UsersTab users={workspace.users ?? []} />
               </TabPanel>
               <TabPanel value={currentTab} index={2}>
-                <SubscriptionTab subscription={workspace.subscription as Subscription} />
+                <SubscriptionTab
+                  subscription={workspace.subscription as Subscription}
+                />
               </TabPanel>
             </Grid>
           </Grid>

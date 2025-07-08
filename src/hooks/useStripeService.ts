@@ -1,11 +1,17 @@
 import { useState, useCallback, useMemo } from 'react';
-import { StripeService, SubscriptionOverrideUpdateDto, UpdatePlanFromFormDto, UpdateSmartRechargeSettingDto } from '../services/stripeService';
+import {
+  StripeService,
+  SubscriptionOverrideUpdateDto,
+  UpdatePlanFromFormDto,
+  UpdateSmartRechargeSettingDto,
+} from '../services/stripeService';
 import { env } from '../config/env';
 import { useHttpResponse } from '../context/ResponseNotifier';
 import { useAuth } from '../context/AuthContext';
 
 export const useStripeService = (token: string) => {
-  const { handleTokenExpirationError, syncWorkspaceSmartRechargeUpdate } = useAuth();
+  const { handleTokenExpirationError, syncWorkspaceSmartRechargeUpdate } =
+    useAuth();
   const { notify } = useHttpResponse(); // Destructure handleTokenExpirationError
 
   const [stripeLoading, setStripeLoading] = useState<boolean>(false);
@@ -23,10 +29,19 @@ export const useStripeService = (token: string) => {
    * Executa assinatura nova ou troca de plano
    */
   const subscribeOrChangePlan = useCallback(
-    async ({ workspaceId, priceId }: { workspaceId: string; priceId: string }) => {
+    async ({
+      workspaceId,
+      priceId,
+    }: {
+      workspaceId: string;
+      priceId: string;
+    }) => {
       try {
         setStripeLoading(true);
-        const result = await service.changeOrSubscribePlan({ workspaceId, priceId });
+        const result = await service.changeOrSubscribePlan({
+          workspaceId,
+          priceId,
+        });
 
         if (result.url) {
           notify('Redirecting to checkout...', 'info');
@@ -65,10 +80,19 @@ export const useStripeService = (token: string) => {
    * Inicia compra avulsa de créditos
    */
   const purchaseCredits = useCallback(
-    async ({ workspaceId, credits }: { workspaceId: string; credits: number }) => {
+    async ({
+      workspaceId,
+      credits,
+    }: {
+      workspaceId: string;
+      credits: number;
+    }) => {
       try {
         setStripeLoading(true);
-        const { url } = await service.createOneTimeCreditPurchaseSession({ workspaceId, credits });
+        const { url } = await service.createOneTimeCreditPurchaseSession({
+          workspaceId,
+          credits,
+        });
         notify('Redirecting to purchase of credits...', 'info');
         window.location.href = url;
       } catch (error: unknown) {
@@ -130,51 +154,58 @@ export const useStripeService = (token: string) => {
   /**
    * Obtém status atual de billing do workspace
    */
-  const getBillingStatus = useCallback(async (workspaceId: string) => {
-    try {
-      setStripeLoading(true);
-      const status = await service.getBillingStatus(workspaceId);
-      return status;
-    } catch (error: unknown) {
-      let errorMessage = 'A unexpected error occurred.';
+  const getBillingStatus = useCallback(
+    async (workspaceId: string) => {
+      try {
+        setStripeLoading(true);
+        const status = await service.getBillingStatus(workspaceId);
+        return status;
+      } catch (error: unknown) {
+        let errorMessage = 'A unexpected error occurred.';
 
-      // Check if error is an instance of Error to safely access the message
-      if (error instanceof Error) {
-        // Handling network failures or fetch-specific errors
-        if (error.message.includes('Failed to fetch')) {
-          errorMessage =
-            'Network error. Please check your internet connection.';
+        // Check if error is an instance of Error to safely access the message
+        if (error instanceof Error) {
+          // Handling network failures or fetch-specific errors
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage =
+              'Network error. Please check your internet connection.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
         } else {
-          errorMessage = `Error: ${error.message}`;
+          errorMessage = 'An unknown error occurred.';
         }
-      } else {
-        errorMessage = 'An unknown error occurred.';
-      }
 
-      handleTokenExpirationError(errorMessage); // Handle token expiration error
-      notify(errorMessage, 'error');
-    } finally {
-      setStripeLoading(false);
-    }
-  }, [service, notify, handleTokenExpirationError]);
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
+      } finally {
+        setStripeLoading(false);
+      }
+    },
+    [service, notify, handleTokenExpirationError]
+  );
 
   /**
    * Inicia sessão do portal do cliente (Stripe Customer Portal)
    */
-  const openCustomerPortal = useCallback(async (workspaceId: string) => {
-    try {
-      setStripeLoading(true);
-      notify('Opening billing management portal...', 'info');
-      const { url } = await service.createCustomerPortal(workspaceId);
-      window.location.href = url;
-    } catch (error: any) {
-      const errorMessage = error.message || 'Failed to open the customer portal';
-      handleTokenExpirationError(errorMessage); // Handle token expiration error
-      notify(errorMessage, 'error');
-    } finally {
-      setStripeLoading(false);
-    }
-  }, [service, notify, handleTokenExpirationError]);
+  const openCustomerPortal = useCallback(
+    async (workspaceId: string) => {
+      try {
+        setStripeLoading(true);
+        notify('Opening billing management portal...', 'info');
+        const { url } = await service.createCustomerPortal(workspaceId);
+        window.location.href = url;
+      } catch (error: any) {
+        const errorMessage =
+          error.message || 'Failed to open the customer portal';
+        handleTokenExpirationError(errorMessage); // Handle token expiration error
+        notify(errorMessage, 'error');
+      } finally {
+        setStripeLoading(false);
+      }
+    },
+    [service, notify, handleTokenExpirationError]
+  );
 
   /**
    * Atualiza a configuração de recarga automática do workspace
@@ -183,7 +214,10 @@ export const useStripeService = (token: string) => {
     async (workspaceId: string, data: UpdateSmartRechargeSettingDto) => {
       try {
         setStripeLoading(true);
-        const result = await service.updateSmartRechargeSetting(workspaceId, data);
+        const result = await service.updateSmartRechargeSetting(
+          workspaceId,
+          data
+        );
 
         syncWorkspaceSmartRechargeUpdate(result);
 
@@ -206,13 +240,21 @@ export const useStripeService = (token: string) => {
         }
 
         handleTokenExpirationError(errorMessage); // Handle token expiration error
-        notify(errorMessage || 'Failure to update smart recharge settings!', 'error');
+        notify(
+          errorMessage || 'Failure to update smart recharge settings!',
+          'error'
+        );
         return { success: false };
       } finally {
         setStripeLoading(false);
       }
     },
-    [service, notify, syncWorkspaceSmartRechargeUpdate, handleTokenExpirationError]
+    [
+      service,
+      notify,
+      syncWorkspaceSmartRechargeUpdate,
+      handleTokenExpirationError,
+    ]
   );
 
   /**
@@ -316,7 +358,11 @@ export const useStripeService = (token: string) => {
     async (workspaceId: string | null, startDate: string, endDate: string) => {
       try {
         setStripeLoading(true);
-        const result = await service.getWorkspacePaymentsInPeriod(workspaceId, startDate, endDate);
+        const result = await service.getWorkspacePaymentsInPeriod(
+          workspaceId,
+          startDate,
+          endDate
+        );
         return result;
       } catch (error: unknown) {
         let errorMessage = 'A unexpected error occurred.';
@@ -355,6 +401,6 @@ export const useStripeService = (token: string) => {
     createPlanFromForm,
     updatePlanFromForm,
     updateSubscriptionOverrides,
-    getWorkspacePaymentsInPeriod
+    getWorkspacePaymentsInPeriod,
   };
 };

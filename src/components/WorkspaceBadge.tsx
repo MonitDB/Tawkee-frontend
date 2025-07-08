@@ -5,22 +5,25 @@ import {
   TextField,
   IconButton,
   Tooltip,
-  Chip
+  Chip,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import { useEffect, useRef, useState } from 'react';
 
-
 export default function WorkspaceBadge({
-  workspaceId, workspaceName, workspaceIsActive
+  workspaceId,
+  workspaceName,
+  workspaceIsActive,
 }: {
-  workspaceId?: string,
-  workspaceName?: string,
-  workspaceIsActive: boolean
+  workspaceId?: string;
+  workspaceName?: string;
+  workspaceIsActive: boolean;
 }) {
   const { user, updateWorkspaceName, can } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(workspaceName ? workspaceName : user?.workspaceName);
+  const [name, setName] = useState(
+    workspaceName ? workspaceName : user?.workspaceName
+  );
   const [hover, setHover] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -41,12 +44,15 @@ export default function WorkspaceBadge({
 
   const handleConfirm = async () => {
     if (name?.trim()) {
-        await updateWorkspaceName(workspaceId ? workspaceId : user?.workspaceId as string, name);
+      await updateWorkspaceName(
+        workspaceId ? workspaceId : (user?.workspaceId as string),
+        name
+      );
     }
     setIsEditing(false);
   };
 
-  console.log({workspaceIsActive});
+  console.log({ workspaceIsActive });
 
   return (
     <Box
@@ -77,7 +83,7 @@ export default function WorkspaceBadge({
         />
       ) : (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant='h4' fontWeight="bold">
+          <Typography variant="h4" fontWeight="bold">
             {name}
           </Typography>
           {hover && canEdit && (
@@ -97,18 +103,25 @@ export default function WorkspaceBadge({
             </Tooltip>
           )}
           <Chip
-            variant='filled'
-            label={ workspaceIsActive != undefined
-              ? workspaceIsActive
-                ? 'Active' : 'Inactive'
-                : user?.workspaceIsActive ? 'Active' : 'Inactive'
-              }
-            color={ workspaceIsActive != undefined
-              ? workspaceIsActive
-                ? 'success' : 'error'
-              : user?.workspaceIsActive
-                ? 'success' : 'error'
-             }
+            variant="filled"
+            label={
+              workspaceIsActive != undefined
+                ? workspaceIsActive
+                  ? 'Active'
+                  : 'Inactive'
+                : user?.workspaceIsActive
+                  ? 'Active'
+                  : 'Inactive'
+            }
+            color={
+              workspaceIsActive != undefined
+                ? workspaceIsActive
+                  ? 'success'
+                  : 'error'
+                : user?.workspaceIsActive
+                  ? 'success'
+                  : 'error'
+            }
           />
         </Box>
       )}

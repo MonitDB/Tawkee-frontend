@@ -6,7 +6,7 @@ import {
   useTheme,
   Typography,
   Box,
-  Avatar
+  Avatar,
 } from '@mui/material';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
@@ -53,8 +53,15 @@ export default function UserProfileTab() {
   return (
     <Grid container spacing={2}>
       <Grid size={{ xs: 12 }}>
-        <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-          <Typography variant="subtitle1" fontWeight="bold">Profile</Typography>
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          mb={2}
+        >
+          <Typography variant="subtitle1" fontWeight="bold">
+            Profile
+          </Typography>
         </Box>
         <Typography variant="subtitle1">Change your name and avatar</Typography>
       </Grid>
@@ -85,7 +92,12 @@ export default function UserProfileTab() {
           />
           <Button component="label" variant="outlined">
             Upload Avatar
-            <input hidden accept="image/*" type="file" onChange={handleAvatarChange} />
+            <input
+              hidden
+              accept="image/*"
+              type="file"
+              onChange={handleAvatarChange}
+            />
           </Button>
         </Box>
       </Grid>

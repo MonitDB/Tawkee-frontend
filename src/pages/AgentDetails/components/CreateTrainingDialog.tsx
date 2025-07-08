@@ -45,11 +45,11 @@ interface NewTrainingDialogProps {
   onClose: () => void;
   onSubmit: (training: CreateTrainingDto) => void;
   allowedTrainings: {
-    textAmountReachedLimit: boolean,
-    documentAmountReachedLimit: boolean,
-    videoAmountReachedLimit: boolean,
-    websiteAmountReachedLimit: boolean
-  }
+    textAmountReachedLimit: boolean;
+    documentAmountReachedLimit: boolean;
+    videoAmountReachedLimit: boolean;
+    websiteAmountReachedLimit: boolean;
+  };
 }
 
 export default function CreateTrainingDialog({
@@ -60,8 +60,8 @@ export default function CreateTrainingDialog({
     textAmountReachedLimit,
     documentAmountReachedLimit,
     videoAmountReachedLimit,
-    websiteAmountReachedLimit
-  }
+    websiteAmountReachedLimit,
+  },
 }: NewTrainingDialogProps) {
   const { mode, systemMode } = useColorScheme();
   const theme = useTheme();
@@ -336,10 +336,34 @@ export default function CreateTrainingDialog({
           textColor="primary"
           variant="fullWidth"
         >
-          { !textAmountReachedLimit && <Tab label="Text" value={TrainingType.TEXT} disabled={textAmountReachedLimit} /> }
-          { !documentAmountReachedLimit && <Tab label="Document" value={TrainingType.DOCUMENT} disabled={documentAmountReachedLimit} /> }
-          { !websiteAmountReachedLimit && <Tab label="Website" value={TrainingType.WEBSITE} disabled={websiteAmountReachedLimit} /> }
-          { !videoAmountReachedLimit && <Tab label="Video" value={TrainingType.VIDEO} disabled={videoAmountReachedLimit} /> }
+          {!textAmountReachedLimit && (
+            <Tab
+              label="Text"
+              value={TrainingType.TEXT}
+              disabled={textAmountReachedLimit}
+            />
+          )}
+          {!documentAmountReachedLimit && (
+            <Tab
+              label="Document"
+              value={TrainingType.DOCUMENT}
+              disabled={documentAmountReachedLimit}
+            />
+          )}
+          {!websiteAmountReachedLimit && (
+            <Tab
+              label="Website"
+              value={TrainingType.WEBSITE}
+              disabled={websiteAmountReachedLimit}
+            />
+          )}
+          {!videoAmountReachedLimit && (
+            <Tab
+              label="Video"
+              value={TrainingType.VIDEO}
+              disabled={videoAmountReachedLimit}
+            />
+          )}
         </Tabs>
 
         <Box sx={{ mt: 3 }}>

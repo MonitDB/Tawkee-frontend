@@ -6,7 +6,17 @@ import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { Autocomplete, Button, ButtonGroup, Card, CardContent, Skeleton, TextField, useColorScheme, useTheme } from '@mui/material';
+import {
+  Autocomplete,
+  Button,
+  ButtonGroup,
+  Card,
+  CardContent,
+  Skeleton,
+  TextField,
+  useColorScheme,
+  useTheme,
+} from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 
@@ -33,18 +43,21 @@ export default function MainGrid() {
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
 
   const { token, user, isLoggingOutRef, can } = useAuth();
-  const { fetchDashboardMetrics, fetchAllWorkspacesBasicInfo, loading } = useDashboardService(
-    token as string
-  );
+  const { fetchDashboardMetrics, fetchAllWorkspacesBasicInfo, loading } =
+    useDashboardService(token as string);
 
   const canViewInteractions = can('VIEW_INTERACTIONS', 'DASHBOARD');
   const canViewCreditRemaining = can('VIEW_CREDIT_REMAINING', 'DASHBOARD');
   const canViewCreditUsage = can('VIEW_CREDIT_USAGE', 'DASHBOARD');
 
-  const canViewPartOfDashboard = canViewInteractions || canViewCreditRemaining || canViewCreditUsage;
-  const cannotViewDashboard = !canViewInteractions && !canViewCreditRemaining && !canViewCreditUsage;
+  const canViewPartOfDashboard =
+    canViewInteractions || canViewCreditRemaining || canViewCreditUsage;
+  const cannotViewDashboard =
+    !canViewInteractions && !canViewCreditRemaining && !canViewCreditUsage;
 
-  const [workspaceId, setWorkspaceId] = useState<string | null>(user?.workspaceId ?? null);
+  const [workspaceId, setWorkspaceId] = useState<string | null>(
+    user?.workspaceId ?? null
+  );
   const [workspaceOptions, setWorkspaceOptions] = useState<
     { id: string; name: string; email: string | null }[]
   >([]);
@@ -55,7 +68,11 @@ export default function MainGrid() {
   const [dashboardData, setDashboardData] =
     useState<DashboardMetricsDto | null>(null);
 
-  const fetchData = async (start: Dayjs, end: Dayjs, workspaceId: string | null) => {
+  const fetchData = async (
+    start: Dayjs,
+    end: Dayjs,
+    workspaceId: string | null
+  ) => {
     try {
       const data = await fetchDashboardMetrics(
         workspaceId,
@@ -82,7 +99,6 @@ export default function MainGrid() {
       };
       fetchOptions();
     }
-
   }, [user?.role.name, fetchAllWorkspacesBasicInfo]);
 
   // Initialize date range and fetch data on mount or when selectedRange changes
@@ -108,7 +124,7 @@ export default function MainGrid() {
         await fetchData(startDate, endDate, selected?.id ?? null);
       }
     }
-  };  
+  };
 
   const handleRangeChange = (days: number) => {
     setSelectedRange(days);
@@ -155,87 +171,96 @@ export default function MainGrid() {
 
   const data = dashboardData;
 
-  if (cannotViewDashboard) return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
-          <Typography
-            variant="h4"
-            sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
-          >
-            <Box
-              sx={{
-                width: '1.5rem',
-                height: '1.5rem',
-                bgcolor: 'black',
-                borderRadius: '999px',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                alignSelf: 'center',
-                backgroundImage: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.dark} 100%)`,
-                color: 'hsla(210, 100%, 95%, 0.9)',
-                border: '1px solid',
-                borderColor: 'hsl(210, 100%, 55%)',
-                boxShadow: 'inset 0 2px 5px rgba(255, 255, 255, 0.3)',
-              }}
+  if (cannotViewDashboard)
+    return (
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
+            <Typography
+              variant="h4"
+              sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
             >
-              <DashboardIcon color="inherit" sx={{ fontSize: '1rem' }} />
-            </Box>
-            Dashboard
-          </Typography>
-        </Box>
-
-        <Grid
-          container
-          spacing={2}
-          columns={12}
-          sx={{ mb: (theme) => theme.spacing(2) }}
-        >
-          <Grid size={{ xs: 12 }}>
-            <Typography fontSize={20} variant="body1" fontWeight="bold" >Interactions</Typography>
-          </Grid>
-            <Grid size={{ xs: 12 }}>
-              <Card
-                variant="outlined"
-                sx={{ width: '100%' }}
+              <Box
+                sx={{
+                  width: '1.5rem',
+                  height: '1.5rem',
+                  bgcolor: 'black',
+                  borderRadius: '999px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  alignSelf: 'center',
+                  backgroundImage: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.dark} 100%)`,
+                  color: 'hsla(210, 100%, 95%, 0.9)',
+                  border: '1px solid',
+                  borderColor: 'hsl(210, 100%, 55%)',
+                  boxShadow: 'inset 0 2px 5px rgba(255, 255, 255, 0.3)',
+                }}
               >
+                <DashboardIcon color="inherit" sx={{ fontSize: '1rem' }} />
+              </Box>
+              Dashboard
+            </Typography>
+          </Box>
+
+          <Grid
+            container
+            spacing={2}
+            columns={12}
+            sx={{ mb: (theme) => theme.spacing(2) }}
+          >
+            <Grid size={{ xs: 12 }}>
+              <Typography fontSize={20} variant="body1" fontWeight="bold">
+                Interactions
+              </Typography>
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <Card variant="outlined" sx={{ width: '100%' }}>
                 <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                   <Typography component="h2" variant="subtitle2" gutterBottom>
-                    {loading ? <Skeleton width="60%" /> : 'You do not have permission to view interactions data'}
+                    {loading ? (
+                      <Skeleton width="60%" />
+                    ) : (
+                      'You do not have permission to view interactions data'
+                    )}
                   </Typography>
                 </CardContent>
               </Card>
             </Grid>
-        </Grid>
-        
-        <Grid size={{ xs: 12 }}>
-          <Typography fontSize={20} variant="body1" fontWeight="bold" >Credits</Typography>
-        </Grid>
+          </Grid>
 
-        <Grid
-          container
-          spacing={2}
-          columns={12}
-          sx={{ mt: (theme) => theme.spacing(2), mb: (theme) => theme.spacing(2) }}
-        >
           <Grid size={{ xs: 12 }}>
-            <Card
-              variant="outlined"
-              sx={{ width: '100%' }}
-            >
-              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                <Typography component="h2" variant="subtitle2" gutterBottom>
-                  {loading ? <Skeleton width="60%" /> : 'You do not have permission to view daily credit usage.'}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>                  
-        </Grid>
-      </Box>
-    </LocalizationProvider>
-  )
+            <Typography fontSize={20} variant="body1" fontWeight="bold">
+              Credits
+            </Typography>
+          </Grid>
 
+          <Grid
+            container
+            spacing={2}
+            columns={12}
+            sx={{
+              mt: (theme) => theme.spacing(2),
+              mb: (theme) => theme.spacing(2),
+            }}
+          >
+            <Grid size={{ xs: 12 }}>
+              <Card variant="outlined" sx={{ width: '100%' }}>
+                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                  <Typography component="h2" variant="subtitle2" gutterBottom>
+                    {loading ? (
+                      <Skeleton width="60%" />
+                    ) : (
+                      'You do not have permission to view daily credit usage.'
+                    )}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </Box>
+      </LocalizationProvider>
+    );
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -277,19 +302,27 @@ export default function MainGrid() {
               spacing={2}
               sx={{ width: '100%', justifyContent: 'flex-end' }}
             >
-              { user?.role.name === 'ADMIN' && (
+              {user?.role.name === 'ADMIN' && (
                 <Autocomplete
                   fullWidth
                   options={workspaceOptions}
                   getOptionLabel={(option) =>
                     `${option.name}${option.email ? ` (${option.email})` : ` (${option.id})`}`
                   }
-                  value={workspaceOptions?.find((w) => w.id === workspaceId) ?? null}
+                  value={
+                    workspaceOptions?.find((w) => w.id === workspaceId) ?? null
+                  }
                   onChange={handleWorkspaceChange}
                   renderInput={(params) => (
-                    <TextField {...params} label="Workspace (Leave blank for ALL)" variant="outlined" />
+                    <TextField
+                      {...params}
+                      label="Workspace (Leave blank for ALL)"
+                      variant="outlined"
+                    />
                   )}
-                  isOptionEqualToValue={(option, value) => option.id === value.id}
+                  isOptionEqualToValue={(option, value) =>
+                    option.id === value.id
+                  }
                   disabled={!canViewPartOfDashboard}
                 />
               )}
@@ -312,7 +345,9 @@ export default function MainGrid() {
                 <DatePicker
                   label="End Date"
                   value={endDate}
-                  onChange={(newValue) => handleCustomDateChange(newValue, 'end')}
+                  onChange={(newValue) =>
+                    handleCustomDateChange(newValue, 'end')
+                  }
                   sx={{ width: { xs: '100%', md: 'fit-content' } }}
                   disabled={!canViewPartOfDashboard}
                 />
@@ -335,7 +370,7 @@ export default function MainGrid() {
                     variant={
                       selectedRange === range.days ? 'contained' : 'outlined'
                     }
-                    sx={{ 
+                    sx={{
                       minHeight: 50,
                       '&.Mui-disabled': {
                         color:
@@ -367,8 +402,8 @@ export default function MainGrid() {
           <PaymentsChart workspaceId={workspaceId} startDate={startDate} endDate={endDate} />
         </Grid> */}
 
-        {(data) ? (
-          <>          
+        {data ? (
+          <>
             <Grid
               container
               spacing={2}
@@ -376,9 +411,11 @@ export default function MainGrid() {
               sx={{ mb: (theme) => theme.spacing(2) }}
             >
               <Grid size={{ xs: 12 }}>
-                <Typography fontSize={20} variant="body1" fontWeight="bold" >Interactions</Typography>
+                <Typography fontSize={20} variant="body1" fontWeight="bold">
+                  Interactions
+                </Typography>
               </Grid>
-              { canViewInteractions ? (
+              {canViewInteractions ? (
                 <>
                   <Grid size={{ xs: 12, md: 3 }}>
                     <Stack
@@ -427,31 +464,41 @@ export default function MainGrid() {
                 </>
               ) : (
                 <Grid size={{ xs: 12 }}>
-                  <Card
-                    variant="outlined"
-                    sx={{ width: '100%' }}
-                  >
+                  <Card variant="outlined" sx={{ width: '100%' }}>
                     <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                      <Typography component="h2" variant="subtitle2" gutterBottom>
-                        {loading ? <Skeleton width="60%" /> : 'You do not have permission to view interactions data'}
+                      <Typography
+                        component="h2"
+                        variant="subtitle2"
+                        gutterBottom
+                      >
+                        {loading ? (
+                          <Skeleton width="60%" />
+                        ) : (
+                          'You do not have permission to view interactions data'
+                        )}
                       </Typography>
                     </CardContent>
                   </Card>
                 </Grid>
               )}
             </Grid>
-            
+
             <Grid size={{ xs: 12 }}>
-              <Typography fontSize={20} variant="body1" fontWeight="bold" >Credits</Typography>
+              <Typography fontSize={20} variant="body1" fontWeight="bold">
+                Credits
+              </Typography>
             </Grid>
 
             <Grid
               container
               spacing={2}
               columns={12}
-              sx={{ mt: (theme) => theme.spacing(2), mb: (theme) => theme.spacing(2) }}
+              sx={{
+                mt: (theme) => theme.spacing(2),
+                mb: (theme) => theme.spacing(2),
+              }}
             >
-              { (workspaceId) ? (
+              {workspaceId ? (
                 canViewCreditRemaining ? (
                   <Grid size={{ xs: 12 }}>
                     <DailyCreditBalanceChart
@@ -462,23 +509,27 @@ export default function MainGrid() {
                   </Grid>
                 ) : (
                   <Grid size={{ xs: 12 }}>
-                    <Card
-                      variant="outlined"
-                      sx={{ width: '100%' }}
-                    >
+                    <Card variant="outlined" sx={{ width: '100%' }}>
                       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                        <Typography component="h2" variant="subtitle2" gutterBottom>
-                          {loading ? <Skeleton width="60%" /> : 'You do not have permission to view daily credit balance.'}
+                        <Typography
+                          component="h2"
+                          variant="subtitle2"
+                          gutterBottom
+                        >
+                          {loading ? (
+                            <Skeleton width="60%" />
+                          ) : (
+                            'You do not have permission to view daily credit balance.'
+                          )}
                         </Typography>
                       </CardContent>
                     </Card>
-                  </Grid>  
+                  </Grid>
                 )
               ) : (
-                  <Grid size={{ xs: 12 }}>
-                  </Grid>            
-              )}             
-              { canViewCreditUsage ? (
+                <Grid size={{ xs: 12 }}></Grid>
+              )}
+              {canViewCreditUsage ? (
                 <>
                   <Grid size={{ xs: 12, md: 3 }}>
                     <Stack
@@ -490,12 +541,18 @@ export default function MainGrid() {
                         flex: 1,
                       }}
                     >
-                      { data.topAgents && (
-                        <TopConsumersBarChart data={data.topAgents} type={'agents'} />
+                      {data.topAgents && (
+                        <TopConsumersBarChart
+                          data={data.topAgents}
+                          type={'agents'}
+                        />
                       )}
 
-                      { data.topWorkspaces && (
-                        <TopConsumersBarChart data={data.topWorkspaces} type={'workspaces'} />
+                      {data.topWorkspaces && (
+                        <TopConsumersBarChart
+                          data={data.topWorkspaces}
+                          type={'workspaces'}
+                        />
                       )}
 
                       <TopModelsBarChart data={data.topModels} />
@@ -512,22 +569,27 @@ export default function MainGrid() {
                 </>
               ) : (
                 <Grid size={{ xs: 12 }}>
-                  <Card
-                    variant="outlined"
-                    sx={{ width: '100%' }}
-                  >
+                  <Card variant="outlined" sx={{ width: '100%' }}>
                     <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                      <Typography component="h2" variant="subtitle2" gutterBottom>
-                        {loading ? <Skeleton width="60%" /> : 'You do not have permission to view daily credit usage.'}
+                      <Typography
+                        component="h2"
+                        variant="subtitle2"
+                        gutterBottom
+                      >
+                        {loading ? (
+                          <Skeleton width="60%" />
+                        ) : (
+                          'You do not have permission to view daily credit usage.'
+                        )}
                       </Typography>
                     </CardContent>
                   </Card>
-                </Grid>                  
+                </Grid>
               )}
             </Grid>
           </>
         ) : (
-          <Skeleton sx={{ height: '300px'}} />
+          <Skeleton sx={{ height: '300px' }} />
         )}
       </Box>
     </LocalizationProvider>

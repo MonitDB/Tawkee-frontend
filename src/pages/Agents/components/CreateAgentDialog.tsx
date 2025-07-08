@@ -89,7 +89,7 @@ export default function CreateAgentDialog({
   onClose,
   agentTypeDescriptions,
   userBelongsToSelectedWorkspace,
-  workspaceId: workspaceIdOfClient
+  workspaceId: workspaceIdOfClient,
 }: CreateAgentDialogProps) {
   const theme = useTheme();
   const { mode, systemMode } = useColorScheme();
@@ -130,25 +130,23 @@ export default function CreateAgentDialog({
   };
 
   const handleSave = async (selectedAgent: Agent | AgentInput) => {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { id, workspaceId, isActive, ...agentInput } =
-        selectedAgent as Agent;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id, workspaceId, isActive, ...agentInput } = selectedAgent as Agent;
 
-      if (userBelongsToSelectedWorkspace) {
-        const { id: agentId } = await createAgent(agentInput as AgentInput);
-        setCreatedAgentId(agentId);
-        await createChannel(agentId as string, 'Whatsapp', 'WHATSAPP');
-      
-      } else {
-        const { id: agentId } = await createAgentOfOtherWorkspaces(agentInput as AgentInput, workspaceIdOfClient);
-        setCreatedAgentId(agentId);
-        await createChannel(agentId as string, 'Whatsapp', 'WHATSAPP');
-      }
-      
-      setActiveStep(5);
-    } catch {
+    if (userBelongsToSelectedWorkspace) {
+      const { id: agentId } = await createAgent(agentInput as AgentInput);
+      setCreatedAgentId(agentId);
+      await createChannel(agentId as string, 'Whatsapp', 'WHATSAPP');
+    } else {
+      const { id: agentId } = await createAgentOfOtherWorkspaces(
+        agentInput as AgentInput,
+        workspaceIdOfClient
+      );
+      setCreatedAgentId(agentId);
+      await createChannel(agentId as string, 'Whatsapp', 'WHATSAPP');
     }
+
+    setActiveStep(5);
   };
 
   const handleCloseModal = () => {
@@ -181,13 +179,13 @@ export default function CreateAgentDialog({
       onClose={handleCloseModal}
       fullWidth
       maxWidth="md"
-      slotProps={{ 
+      slotProps={{
         transition: { timeout: 500 },
         paper: {
           component: 'form',
           sx: { backgroundImage: 'none' },
-        },        
-      }}     
+        },
+      }}
     >
       <DialogTitle sx={{ textAlign: 'center', pb: 3 }}>
         Create Agent
@@ -239,11 +237,11 @@ export default function CreateAgentDialog({
                     src={newAgent}
                     style={{ width: '10.0rem', borderRadius: '8px' }}
                   />
-                  
+
                   <Typography variant="h6" gutterBottom>
                     What is your agent called?
                   </Typography>
-                  
+
                   <Typography>
                     Be creative — choose the name your agent will use to
                     introduce itself.

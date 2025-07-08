@@ -25,7 +25,10 @@ interface SelectPlanDialogProps {
   onClose: () => void;
 }
 
-export default function SelectPlanDialog({ open, onClose }: SelectPlanDialogProps) {
+export default function SelectPlanDialog({
+  open,
+  onClose,
+}: SelectPlanDialogProps) {
   const { token, user } = useAuth();
   const {
     getAvailableProducts,
@@ -40,32 +43,35 @@ export default function SelectPlanDialog({ open, onClose }: SelectPlanDialogProp
 
   useEffect(() => {
     async function fetchProductsAndPlan() {
-        try {
-          setLoading(true);
-          const [productData, billing] = await Promise.all([
-            getAvailableProducts(),
-            getBillingStatus(user?.workspaceId as string),
-          ]);
-          
-          if (productData) {
-            // Sort plans by price (ascending)
-            const sorted = productData.sort(
-              (a, b) => (a?.prices?.[0]?.unit_amount ?? 0) - (b?.prices?.[0]?.unit_amount ?? 0)
-            );
+      try {
+        setLoading(true);
+        const [productData, billing] = await Promise.all([
+          getAvailableProducts(),
+          getBillingStatus(user?.workspaceId as string),
+        ]);
 
-            // Filter plans: keep only active
-            const filteredProductData = sorted.filter(product => product.metadata?.isActive);
+        if (productData) {
+          // Sort plans by price (ascending)
+          const sorted = productData.sort(
+            (a, b) =>
+              (a?.prices?.[0]?.unit_amount ?? 0) -
+              (b?.prices?.[0]?.unit_amount ?? 0)
+          );
 
-            setProducts(filteredProductData);
-          }
-          
-          if (billing?.currentPlan) setCurrentPlan(billing.currentPlan);
-          setLoading(false); 
+          // Filter plans: keep only active
+          const filteredProductData = sorted.filter(
+            (product) => product.metadata?.isActive
+          );
 
-        } catch {
-          onClose();        
+          setProducts(filteredProductData);
         }
+
+        if (billing?.currentPlan) setCurrentPlan(billing.currentPlan);
+        setLoading(false);
+      } catch {
+        onClose();
       }
+    }
 
     if (open) fetchProductsAndPlan();
   }, [getAvailableProducts, getBillingStatus, open]);
@@ -119,7 +125,7 @@ export default function SelectPlanDialog({ open, onClose }: SelectPlanDialogProp
 
                         display: 'flex',
                         flexDirection: 'column',
-                        justifyContent: 'space-between'
+                        justifyContent: 'space-between',
                       }}
                     >
                       <CardContent>
@@ -127,17 +133,25 @@ export default function SelectPlanDialog({ open, onClose }: SelectPlanDialogProp
                           {product.name}
                         </Typography>
 
-                        <Typography variant="body1" fontWeight={600} gutterBottom>
+                        <Typography
+                          variant="body1"
+                          fontWeight={600}
+                          gutterBottom
+                        >
                           {formattedPrice}/month
                         </Typography>
 
-                        { product.description && (
-                          <Typography variant="body2" gutterBottom sx={{ mb: 2 }}>
+                        {product.description && (
+                          <Typography
+                            variant="body2"
+                            gutterBottom
+                            sx={{ mb: 2 }}
+                          >
                             {product.description}
                           </Typography>
                         )}
 
-                        <Stack spacing={.5}>
+                        <Stack spacing={0.5}>
                           {metadata?.features?.map((f: string) => (
                             <Box
                               key={f}
@@ -145,7 +159,10 @@ export default function SelectPlanDialog({ open, onClose }: SelectPlanDialogProp
                               alignItems="center"
                               sx={{ gap: 1 }}
                             >
-                              <CheckCircleIcon fontSize="small" sx={{ color: green[500] }} />
+                              <CheckCircleIcon
+                                fontSize="small"
+                                sx={{ color: green[500] }}
+                              />
                               <Typography variant="body2" color="white">
                                 {f}
                               </Typography>
@@ -153,7 +170,13 @@ export default function SelectPlanDialog({ open, onClose }: SelectPlanDialogProp
                           ))}
                         </Stack>
                       </CardContent>
-                      <DialogActions sx={{ alignItems: 'flex-end', justifyContent: 'center', pb: 2 }}>
+                      <DialogActions
+                        sx={{
+                          alignItems: 'flex-end',
+                          justifyContent: 'center',
+                          pb: 2,
+                        }}
+                      >
                         <Button
                           disabled={isCurrent}
                           variant="contained"

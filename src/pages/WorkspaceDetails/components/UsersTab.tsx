@@ -13,10 +13,10 @@ import {
   Divider,
   useMediaQuery,
   Theme,
-  useTheme
+  useTheme,
 } from '@mui/material';
 import { User } from '../../../context/AuthContext';
-import UserPermissionsDialog from './UserPermissionsDialog';  // Assuming this is the path to your dialog component
+import UserPermissionsDialog from './UserPermissionsDialog'; // Assuming this is the path to your dialog component
 
 function relativeTime(date: string | number) {
   const now = new Date();
@@ -28,14 +28,14 @@ function relativeTime(date: string | number) {
 
   // If the event happened more than a week ago, return an absolute date.
   if (days >= 7) {
-    return new Date(date).toLocaleString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric', 
-      hour: 'numeric', 
-      minute: 'numeric', 
-      second: 'numeric'
+    return new Date(date).toLocaleString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
     });
   }
 
@@ -58,20 +58,26 @@ export default function UsersTab({ users }: UsersTabProps) {
 
   // Dialog handling functions
   const handleOpenDialog = (user: User) => {
-    setSelectedUser(user);  // Set selected user
-    setOpenDialog(true);  // Open dialog
+    setSelectedUser(user); // Set selected user
+    setOpenDialog(true); // Open dialog
   };
 
   const handleCloseDialog = () => {
-    setOpenDialog(false);  // Close dialog
-    setSelectedUser(null);  // Reset selected user
+    setOpenDialog(false); // Close dialog
+    setSelectedUser(null); // Reset selected user
   };
 
   // Media query hooks
   const theme = useTheme();
-  const isSmallScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
-  const isMediumScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'));
-  const isLargeScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'));
+  const isSmallScreen = useMediaQuery((theme: Theme) =>
+    theme.breakpoints.down('sm')
+  );
+  const isMediumScreen = useMediaQuery((theme: Theme) =>
+    theme.breakpoints.down('md')
+  );
+  const isLargeScreen = useMediaQuery((theme: Theme) =>
+    theme.breakpoints.down('lg')
+  );
 
   return (
     <Box>
@@ -101,12 +107,21 @@ export default function UsersTab({ users }: UsersTabProps) {
                 onClick={() => handleOpenDialog(user)} // Open dialog when card is clicked
               >
                 <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 2 }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'flex-start',
+                      gap: 2,
+                    }}
+                  >
                     <Avatar src={user.avatar || undefined}>
                       {user.name?.[0] || '?'}
                     </Avatar>
 
-                    <Box sx={{ display: 'flex', flexDirection: 'column', ml: 2 }}>
+                    <Box
+                      sx={{ display: 'flex', flexDirection: 'column', ml: 2 }}
+                    >
                       <ListItemText
                         primary={user.name}
                         secondary={
@@ -127,29 +142,51 @@ export default function UsersTab({ users }: UsersTabProps) {
                       </Typography>
                     </Box>
 
-                    <Stack direction="row" spacing={2} sx={{ alignItems: 'center', mt: 1 }}>
-                      { !isMediumScreen ? (
-                        <Card sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                    <Stack
+                      direction="row"
+                      spacing={2}
+                      sx={{ alignItems: 'center', mt: 1 }}
+                    >
+                      {!isMediumScreen ? (
+                        <Card
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
                           <Typography>Role</Typography>
-                          
-                          <Chip variant="outlined" color="primary" label={user.role.name} />
 
-                          <Divider orientation='vertical' flexItem />
+                          <Chip
+                            variant="outlined"
+                            color="primary"
+                            label={user.role.name}
+                          />
 
-                          <Typography variant='caption'>
-                            {
-                              user.userPermissions.filter(perm => !perm.allowed).length === 0
-                                ? 'No permission denied'
-                                : user.userPermissions.filter(perm => !perm.allowed).length === 1
+                          <Divider orientation="vertical" flexItem />
+
+                          <Typography variant="caption">
+                            {user.userPermissions.filter(
+                              (perm) => !perm.allowed
+                            ).length === 0
+                              ? 'No permission denied'
+                              : user.userPermissions.filter(
+                                    (perm) => !perm.allowed
+                                  ).length === 1
                                 ? '1 permission denied'
-                                : user.userPermissions.filter(perm => !perm.allowed).length === user.rolePermissions.length
-                                ? 'All permissions denied'
-                                : `${user.userPermissions.filter(perm => !perm.allowed).length} permissions denied`
-                            }
+                                : user.userPermissions.filter(
+                                      (perm) => !perm.allowed
+                                    ).length === user.rolePermissions.length
+                                  ? 'All permissions denied'
+                                  : `${user.userPermissions.filter((perm) => !perm.allowed).length} permissions denied`}
                           </Typography>
                         </Card>
                       ) : (
-                          <Chip variant="outlined" color="primary" label={user.role.name} />
+                        <Chip
+                          variant="outlined"
+                          color="primary"
+                          label={user.role.name}
+                        />
                       )}
                     </Stack>
 
@@ -187,7 +224,7 @@ export default function UsersTab({ users }: UsersTabProps) {
         <UserPermissionsDialog
           open={openDialog}
           onClose={handleCloseDialog}
-          userData={selectedUser}  // Pass selected user to the dialog
+          userData={selectedUser} // Pass selected user to the dialog
         />
       )}
     </Box>

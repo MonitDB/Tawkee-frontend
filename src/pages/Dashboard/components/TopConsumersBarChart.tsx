@@ -5,24 +5,32 @@ import Stack from '@mui/material/Stack';
 import { BarChart } from '@mui/x-charts';
 import { useTheme } from '@mui/material/styles';
 import { Box } from '@mui/material';
-import { AgentConsumptionDto, WorkspaceConsumptionDto } from '../../../services/dashboardService';
+import {
+  AgentConsumptionDto,
+  WorkspaceConsumptionDto,
+} from '../../../services/dashboardService';
 
 type TopConsumersBarChartProps = {
   data: AgentConsumptionDto[] | WorkspaceConsumptionDto[];
   type: 'agents' | 'workspaces';
 };
 
-export default function TopConsumersBarChart({ data, type }: TopConsumersBarChartProps) {
+export default function TopConsumersBarChart({
+  data,
+  type,
+}: TopConsumersBarChartProps) {
   const theme = useTheme();
 
   const names = data.map((item) => item.name || 'Unknown');
   const credits = data.map((item) => item.totalCredits);
   const totalSum = credits.reduce((acc, val) => acc + val, 0);
 
-  const title = type === 'agents' ? 'Top Agents by Credits' : 'Top Workspaces by Credits';
-  const description = type === 'agents' 
-    ? 'Distributed among top agents'
-    : 'Distributed among top workspaces';
+  const title =
+    type === 'agents' ? 'Top Agents by Credits' : 'Top Workspaces by Credits';
+  const description =
+    type === 'agents'
+      ? 'Distributed among top agents'
+      : 'Distributed among top workspaces';
 
   return (
     <Card variant="outlined" sx={{ width: '100%', flex: 1 }}>
@@ -49,14 +57,18 @@ export default function TopConsumersBarChart({ data, type }: TopConsumersBarChar
         </Stack>
         <Box>
           <BarChart
-            xAxis={[{ 
-              data: names, 
-              scaleType: 'band',
-              tickLabelStyle: {
-                angle: names.some(name => name.length > 10) ? -45 : 0,
-                textAnchor: names.some(name => name.length > 10) ? 'end' : 'middle'
-              }
-            }]}
+            xAxis={[
+              {
+                data: names,
+                scaleType: 'band',
+                tickLabelStyle: {
+                  angle: names.some((name) => name.length > 10) ? -45 : 0,
+                  textAnchor: names.some((name) => name.length > 10)
+                    ? 'end'
+                    : 'middle',
+                },
+              },
+            ]}
             series={[
               {
                 id: 'credits',
@@ -67,7 +79,9 @@ export default function TopConsumersBarChart({ data, type }: TopConsumersBarChar
             ]}
             grid={{ horizontal: true }}
             height={180}
-            margin={{ bottom: names.some(name => name.length > 10) ? 80 : 50 }}
+            margin={{
+              bottom: names.some((name) => name.length > 10) ? 80 : 50,
+            }}
           />
         </Box>
       </CardContent>

@@ -35,7 +35,6 @@ import {
 import ChatInput from './ChatInput';
 import { useAgents } from '../../../context/AgentsContext';
 
-
 // Helper function for throttling
 function throttle<T extends (...args: any[]) => any>(
   func: T,
@@ -122,14 +121,17 @@ interface ChatDetailsProps {
   onScrollToTop?: () => void;
 }
 
-export const DocumentViewer = ({ 
-  documentUrl, fileName, mimetype, type
+export function DocumentViewer({
+  documentUrl,
+  fileName,
+  mimetype,
+  type,
 }: {
-  documentUrl?: string,
-  fileName?: string,
-  mimetype?: string,
+  documentUrl?: string;
+  fileName?: string;
+  mimetype?: string;
   type?: string;
-}) => {
+}) {
   if (!documentUrl && !(type === 'document' && fileName)) return null;
 
   const handleDownload = () => {
@@ -168,7 +170,10 @@ export const DocumentViewer = ({
       <DocumentCard onClick={handleDownload}>
         <DocumentIcon sx={{ color: 'text.secondary', fontSize: 32 }} />
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="body2" sx={{ fontWeight: 500, wordBreak: 'break-word' }}>
+          <Typography
+            variant="body2"
+            sx={{ fontWeight: 500, wordBreak: 'break-word' }}
+          >
             {fileName || 'Document'}
           </Typography>
           {mimetype && (
@@ -190,7 +195,7 @@ export const DocumentViewer = ({
       </DocumentCard>
     </MediaContainer>
   );
-};
+}
 
 export function ChatDetails({
   selectedChat,
@@ -209,48 +214,50 @@ export function ChatDetails({
   );
 
   // Audio player state
-  const [audioPlaying, setAudioPlaying] = useState<{ [key: string]: boolean }>({});
+  const [audioPlaying, setAudioPlaying] = useState<{ [key: string]: boolean }>(
+    {}
+  );
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
 
   const handleStartHumanAttendance = useCallback(
     async (chatId: string) => {
-      try {
-        await startChatHumanAttendance(chatId);
-      } catch {
-      }
+      await startChatHumanAttendance(chatId);
     },
     [startChatHumanAttendance]
   );
 
   // Audio control functions
-  const toggleAudio = useCallback((messageId: string, audioUrl: string) => {
-    const audio = audioRefs.current[messageId];
-    
-    if (audio) {
-      if (audioPlaying[messageId]) {
-        audio.pause();
+  const toggleAudio = useCallback(
+    (messageId: string, audioUrl: string) => {
+      const audio = audioRefs.current[messageId];
+
+      if (audio) {
+        if (audioPlaying[messageId]) {
+          audio.pause();
+        } else {
+          audio.play();
+        }
       } else {
-        audio.play();
+        const newAudio = new Audio(audioUrl);
+        audioRefs.current[messageId] = newAudio;
+
+        newAudio.addEventListener('ended', () => {
+          setAudioPlaying((prev) => ({ ...prev, [messageId]: false }));
+        });
+
+        newAudio.addEventListener('pause', () => {
+          setAudioPlaying((prev) => ({ ...prev, [messageId]: false }));
+        });
+
+        newAudio.addEventListener('play', () => {
+          setAudioPlaying((prev) => ({ ...prev, [messageId]: true }));
+        });
+
+        newAudio.play();
       }
-    } else {
-      const newAudio = new Audio(audioUrl);
-      audioRefs.current[messageId] = newAudio;
-      
-      newAudio.addEventListener('ended', () => {
-        setAudioPlaying(prev => ({ ...prev, [messageId]: false }));
-      });
-      
-      newAudio.addEventListener('pause', () => {
-        setAudioPlaying(prev => ({ ...prev, [messageId]: false }));
-      });
-      
-      newAudio.addEventListener('play', () => {
-        setAudioPlaying(prev => ({ ...prev, [messageId]: true }));
-      });
-      
-      newAudio.play();
-    }
-  }, [audioPlaying]);
+    },
+    [audioPlaying]
+  );
 
   // Format file size
   // const formatFileSize = useCallback((bytes?: number) => {
@@ -261,80 +268,88 @@ export function ChatDetails({
   // }, []);
 
   // Render media content based on message type
-  const renderMediaContent = useCallback((message: any) => {
-    const isUser = message.role === 'user';
+  const renderMediaContent = useCallback(
+    (message: any) => {
+      const isUser = message.role === 'user';
 
-    // Image content
-    if (message.imageUrl) {
-      const mimeType = message.mimetype || 'image/jpeg'; // fallback genérico
-      const base64Src = `data:${mimeType};base64,${message.imageUrl}`;
+      // Image content
+      if (message.imageUrl) {
+        const mimeType = message.mimetype || 'image/jpeg'; // fallback genérico
+        const base64Src = `data:${mimeType};base64,${message.imageUrl}`;
 
-      return (
-        <MediaContainer>
-          <img
-            src={base64Src}
-            alt="Image message"
-            style={{
-              maxWidth: '100%',
-              maxHeight: '300px',
-              width: message.width ? Math.min(message.width, 300) : 'auto',
-              height: message.height ? Math.min(message.height, 300) : 'auto',
-              objectFit: 'cover',
-              display: 'block',
-              borderRadius: 8,
-            }}
-            loading="lazy"
-          />
-        </MediaContainer>
-      );
-    }
-
-    // Audio content
-    if (message.audioUrl) {
-      const mimeType = message.mimetype || 'audio/ogg'; // Use o MIME certo do áudio (ex: audio/mpeg)
-      const dataUrl = `data:${mimeType};base64,${message.audioUrl}`;
-
-      return (
-        <MediaContainer>
-          <AudioPlayer>
-            <IconButton
-              size="small"
-              onClick={() => toggleAudio(message.id, dataUrl)}
-              sx={{ 
-                backgroundColor: isUser ? 'rgba(255,255,255,0.2)' : theme.palette.primary.main,
-                color: 'white',
-                '&:hover': {
-                  backgroundColor: isUser ? 'rgba(255,255,255,0.3)' : theme.palette.primary.dark,
-                }
+        return (
+          <MediaContainer>
+            <img
+              src={base64Src}
+              alt="Image message"
+              style={{
+                maxWidth: '100%',
+                maxHeight: '300px',
+                width: message.width ? Math.min(message.width, 300) : 'auto',
+                height: message.height ? Math.min(message.height, 300) : 'auto',
+                objectFit: 'cover',
+                display: 'block',
+                borderRadius: 8,
               }}
-            >
-              {audioPlaying[message.id] ? <PauseIcon /> : <PlayIcon />}
-            </IconButton>
-            <AudioIcon sx={{ color: 'text.secondary' }} />
-            <Typography variant="body2" color="text.secondary">
-              { message?.caption || message?.fileName || 'audio' }
-            </Typography>
-          </AudioPlayer>
-        </MediaContainer>
-      );
-    }
+              loading="lazy"
+            />
+          </MediaContainer>
+        );
+      }
 
+      // Audio content
+      if (message.audioUrl) {
+        const mimeType = message.mimetype || 'audio/ogg'; // Use o MIME certo do áudio (ex: audio/mpeg)
+        const dataUrl = `data:${mimeType};base64,${message.audioUrl}`;
 
-    // Document content
-    if (message.documentUrl || (message.type === 'document' && message.fileName)) {
-      return (
-        <DocumentViewer
-          documentUrl={message.documentUrl}
-          fileName={message.fileName}
-          mimetype={message.mimetype}
-          type={message.type}
-        />
-      );
-    }
+        return (
+          <MediaContainer>
+            <AudioPlayer>
+              <IconButton
+                size="small"
+                onClick={() => toggleAudio(message.id, dataUrl)}
+                sx={{
+                  backgroundColor: isUser
+                    ? 'rgba(255,255,255,0.2)'
+                    : theme.palette.primary.main,
+                  color: 'white',
+                  '&:hover': {
+                    backgroundColor: isUser
+                      ? 'rgba(255,255,255,0.3)'
+                      : theme.palette.primary.dark,
+                  },
+                }}
+              >
+                {audioPlaying[message.id] ? <PauseIcon /> : <PlayIcon />}
+              </IconButton>
+              <AudioIcon sx={{ color: 'text.secondary' }} />
+              <Typography variant="body2" color="text.secondary">
+                {message?.caption || message?.fileName || 'audio'}
+              </Typography>
+            </AudioPlayer>
+          </MediaContainer>
+        );
+      }
 
-    return null;
-  }, [audioPlaying, toggleAudio, theme]);
+      // Document content
+      if (
+        message.documentUrl ||
+        (message.type === 'document' && message.fileName)
+      ) {
+        return (
+          <DocumentViewer
+            documentUrl={message.documentUrl}
+            fileName={message.fileName}
+            mimetype={message.mimetype}
+            type={message.type}
+          />
+        );
+      }
 
+      return null;
+    },
+    [audioPlaying, toggleAudio, theme]
+  );
 
   // Separate scroll-related state to minimize re-renders
   const [scrollState, setScrollState] = useState({
@@ -578,7 +593,7 @@ export function ChatDetails({
   // Cleanup audio references on unmount
   useEffect(() => {
     return () => {
-      Object.values(audioRefs.current).forEach(audio => {
+      Object.values(audioRefs.current).forEach((audio) => {
         audio.pause();
         audio.src = '';
       });
@@ -875,7 +890,7 @@ export function ChatDetails({
                             >
                               {/* Render media content */}
                               {renderMediaContent(message)}
-                              
+
                               {/* Render text content if available */}
                               {message.text && (
                                 <Typography
@@ -890,7 +905,9 @@ export function ChatDetails({
                                         ? 'italic'
                                         : 'normal',
                                     fontWeight:
-                                      message.role === 'system' ? 500 : 'normal',
+                                      message.role === 'system'
+                                        ? 500
+                                        : 'normal',
                                   }}
                                 >
                                   {message.text}

@@ -30,9 +30,13 @@ export default function UserPermissionsTab({
   rolePermissions: Permission[];
   userPermissions: UserPermission[];
 }) {
-  const isSmallScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
+  const isSmallScreen = useMediaQuery((theme: Theme) =>
+    theme.breakpoints.down('sm')
+  );
 
-  const [editablePermissions, setEditablePermissions] = useState<UserPermission[]>([]);
+  const [editablePermissions, setEditablePermissions] = useState<
+    UserPermission[]
+  >([]);
   const [selectedResource, setSelectedResource] = useState<string>('ALL');
 
   useEffect(() => {
@@ -51,24 +55,39 @@ export default function UserPermissionsTab({
       };
     });
 
-    setEditablePermissions(mergedPermissions.filter(perm => perm.allowed == undefined || perm.allowed == true));
+    setEditablePermissions(
+      mergedPermissions.filter(
+        (perm) => perm.allowed == undefined || perm.allowed == true
+      )
+    );
   }, [rolePermissions, userPermissions]);
 
-  const resourceList = ['ALL', ...Array.from(new Set(editablePermissions.map(p => p.resource)))];
+  const resourceList = [
+    'ALL',
+    ...Array.from(new Set(editablePermissions.map((p) => p.resource))),
+  ];
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: string) => {
     setSelectedResource(newValue);
   };
 
-  const filteredPermissions = selectedResource === 'ALL'
-    ? editablePermissions
-    : editablePermissions.filter(p => p.resource === selectedResource);
+  const filteredPermissions =
+    selectedResource === 'ALL'
+      ? editablePermissions
+      : editablePermissions.filter((p) => p.resource === selectedResource);
 
   return (
     <Grid container spacing={2}>
       <Grid size={{ xs: 12 }}>
-        <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-          <Typography variant='subtitle1' fontWeight='bold'>Permissions</Typography>
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          mb={2}
+        >
+          <Typography variant="subtitle1" fontWeight="bold">
+            Permissions
+          </Typography>
         </Box>
 
         <Tabs
@@ -86,25 +105,44 @@ export default function UserPermissionsTab({
           // }}
         >
           {resourceList.map((resource) => (
-            <Tab key={resource} label={resource} value={resource} sx={{ fontSize: { xs: 10, sm: 12, md: 16 } }} />
+            <Tab
+              key={resource}
+              label={resource}
+              value={resource}
+              sx={{ fontSize: { xs: 10, sm: 12, md: 16 } }}
+            />
           ))}
         </Tabs>
       </Grid>
 
       <Grid size={{ xs: 12 }}>
         {filteredPermissions.map((permission, index) => (
-          <Card key={index} sx={{ display: 'flex', alignItems: 'center', mb: 2, padding: 2, width: '100%' }}>
-            <CardContent sx={{
+          <Card
+            key={index}
+            sx={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 2,
-              width: '100%'
-            }}>
+              mb: 2,
+              padding: 2,
+              width: '100%',
+            }}
+          >
+            <CardContent
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 2,
+                width: '100%',
+              }}
+            >
               <Typography
                 variant="body2"
                 fontWeight="bold"
-                sx={{ textDecoration: permission.allowed === false ? 'line-through' : 'none' }}
+                sx={{
+                  textDecoration:
+                    permission.allowed === false ? 'line-through' : 'none',
+                }}
                 color={permission.allowed === false ? 'textSecondary' : 'info'}
               >
                 {index + 1}
@@ -115,8 +153,15 @@ export default function UserPermissionsTab({
                   <Divider orientation="vertical" flexItem />
                   <Typography
                     variant="caption"
-                    sx={{ textDecoration: permission.allowed === false ? 'line-through' : 'none' }}
-                    color={permission.allowed === false ? 'textSecondary' : 'textPrimary'}
+                    sx={{
+                      textDecoration:
+                        permission.allowed === false ? 'line-through' : 'none',
+                    }}
+                    color={
+                      permission.allowed === false
+                        ? 'textSecondary'
+                        : 'textPrimary'
+                    }
                   >
                     {permission.resource}
                   </Typography>
@@ -129,14 +174,17 @@ export default function UserPermissionsTab({
                 variant="caption"
                 sx={{
                   width: '100%',
-                  textDecoration: permission.allowed === false ? 'line-through' : 'none',
+                  textDecoration:
+                    permission.allowed === false ? 'line-through' : 'none',
                 }}
-                color={permission.allowed === false ? 'textSecondary' : 'textPrimary'}
+                color={
+                  permission.allowed === false ? 'textSecondary' : 'textPrimary'
+                }
               >
                 {permission.description}
               </Typography>
 
-              { !isSmallScreen && (
+              {!isSmallScreen && (
                 <>
                   <Divider orientation="vertical" flexItem />
                   <Typography sx={{ width: 80 }}>

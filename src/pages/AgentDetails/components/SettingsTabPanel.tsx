@@ -54,15 +54,15 @@ const modelFriendlyNames: Record<AIModel, string> = {
 };
 
 const reminderIntervalOptionsMinutes = [
-  5, 10, 15, 20, 25, 30, 35, 40, 45, 60, 90, 120, 240, 360
-]
+  5, 10, 15, 20, 25, 30, 35, 40, 45, 60, 90, 120, 240, 360,
+];
 
 export enum ResponseDelayOptions {
   IMMEDIATELY = 'IMMEDIATELY',
   FIVE_SECONDS = 'FIVE_SECONDS',
   TEN_SECONDS = 'TEN_SECONDS',
   THIRTY_SECONDS = 'THIRTY_SECONDS',
-  ONE_MINUTE = 'ONE_MINUTE'
+  ONE_MINUTE = 'ONE_MINUTE',
 }
 
 const responseDelayOptionsToSecondsMap: Record<ResponseDelayOptions, string> = {
@@ -70,8 +70,8 @@ const responseDelayOptionsToSecondsMap: Record<ResponseDelayOptions, string> = {
   FIVE_SECONDS: '5 seconds',
   TEN_SECONDS: '10 seconds',
   THIRTY_SECONDS: '30 seconds',
-  ONE_MINUTE: '1 minute'
-}
+  ONE_MINUTE: '1 minute',
+};
 
 const timezones = [
   '(GMT-12:00) Baker Island',
@@ -102,10 +102,12 @@ const timezones = [
 ];
 
 const settingsOptions = [
-  { key: 'enabledHumanTransfer',
+  {
+    key: 'enabledHumanTransfer',
     label: 'Request Human Assistance',
-    description: 'Allows the AI to transfer the conversation to a human agent when needed or requested by the client.',
-    icon: <PersonAdd />
+    description:
+      'Allows the AI to transfer the conversation to a human agent when needed or requested by the client.',
+    icon: <PersonAdd />,
   },
   {
     key: 'enabledEmoji',
@@ -113,17 +115,19 @@ const settingsOptions = [
     description: 'Allows the use of emojis in the conversation.',
     icon: <EmojiEmotions />,
   },
-  { 
+  {
     key: 'enabledReminder',
     label: 'Allow Setting Reminders',
-    description: 'Sends automated reminder messages after a period of user inactivity.',
-    icon: <Memory />
+    description:
+      'Sends automated reminder messages after a period of user inactivity.',
+    icon: <Memory />,
   },
   {
     key: 'splitMessages',
     label: 'Split Response into Parts',
-    description: 'Breaks long messages into smaller parts to improve readability.',
-    icon: <SplitscreenOutlined />
+    description:
+      'Breaks long messages into smaller parts to improve readability.',
+    icon: <SplitscreenOutlined />,
   },
   {
     key: 'limitSubjects',
@@ -168,7 +172,9 @@ export default function SettingsTabPanel({
       splitMessages: actualSettings?.splitMessages ?? false,
       enabledReminder: actualSettings?.enabledReminder ?? false,
       reminderIntervalMinutes: actualSettings?.reminderIntervalMinutes ?? 10,
-      responseDelaySeconds: actualSettings?.responseDelaySeconds ?? ResponseDelayOptions.IMMEDIATELY,
+      responseDelaySeconds:
+        actualSettings?.responseDelaySeconds ??
+        ResponseDelayOptions.IMMEDIATELY,
       timezone: actualSettings?.timezone ?? '(GMT+00:00) London',
       preferredModel: actualSettings?.preferredModel ?? AIModel.GPT_4_1,
     };
@@ -207,23 +213,23 @@ export default function SettingsTabPanel({
           Agent Settings
         </Typography>
 
-        { userBelongsToWorkspace
+        {userBelongsToWorkspace
           ? !canManageSettings && (
-            <Tooltip
-              title="You cannot manage settings of agents on the workspace."
-              placement='right'
-            >
-              <InfoIcon color='warning' />
-            </Tooltip>
-          ) : !canManageSettingsAsAdmin && (
-            <Tooltip
-              title="Your admin privileges to manage settings of agents of any workspace has been revoked."
-              placement='right'
-            >
-              <InfoIcon color='warning' />
-            </Tooltip>
-          )
-        }
+              <Tooltip
+                title="You cannot manage settings of agents on the workspace."
+                placement="right"
+              >
+                <InfoIcon color="warning" />
+              </Tooltip>
+            )
+          : !canManageSettingsAsAdmin && (
+              <Tooltip
+                title="Your admin privileges to manage settings of agents of any workspace has been revoked."
+                placement="right"
+              >
+                <InfoIcon color="warning" />
+              </Tooltip>
+            )}
       </Box>
 
       <Grid
@@ -264,16 +270,13 @@ export default function SettingsTabPanel({
                     <Box sx={{ flex: 1 }}>
                       <Typography
                         variant="body1"
-                        color='secondary'
-                        fontWeight='bold'
+                        color="secondary"
+                        fontWeight="bold"
                         sx={{ mb: 0.5 }}
                       >
                         {option.label}
                       </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ lineHeight: 1.4 }}
-                      >
+                      <Typography variant="body2" sx={{ lineHeight: 1.4 }}>
                         {option.description}
                       </Typography>
                     </Box>
@@ -283,9 +286,10 @@ export default function SettingsTabPanel({
                       formState[option.key as keyof typeof formState] as boolean
                     }
                     onChange={handleToggleChange(option.key)}
-                    disabled={userBelongsToWorkspace
-                      ? !canManageSettings
-                      : !canManageSettingsAsAdmin
+                    disabled={
+                      userBelongsToWorkspace
+                        ? !canManageSettings
+                        : !canManageSettingsAsAdmin
                     }
                     sx={{
                       ml: 2,
@@ -304,40 +308,60 @@ export default function SettingsTabPanel({
                   />
                 </Box>
 
-                { option.key == 'enabledReminder' && formState[option.key as keyof typeof formState] && (
-                  <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 1 }}>
-                    <Typography>Send message after</Typography>
-                    <FormControl
-                      size="small"
+                {option.key == 'enabledReminder' &&
+                  formState[option.key as keyof typeof formState] && (
+                    <Box
                       sx={{
-                        minWidth: 80,
-                        '& .MuiOutlinedInput-root': {
-                          '& fieldset': { borderColor: theme.palette.grey[500] },
-                          '&:hover fieldset': { borderColor: theme.palette.secondary.main },
-                          '&.Mui-focused fieldset': { borderColor: theme.palette.secondary.main  },
-                        },
-                        '& .MuiSelect-icon': { color: theme.palette.grey[100] },
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                        gap: 1,
                       }}
-                      disabled={userBelongsToWorkspace
-                        ? !canManageSettings
-                        : !canManageSettingsAsAdmin
-                      }        
                     >
-                      <Select
-                        value={formState.reminderIntervalMinutes}
-                        onChange={handleSelectChange('reminderIntervalMinutes')}
-                        displayEmpty
+                      <Typography>Send message after</Typography>
+                      <FormControl
+                        size="small"
+                        sx={{
+                          minWidth: 80,
+                          '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                              borderColor: theme.palette.grey[500],
+                            },
+                            '&:hover fieldset': {
+                              borderColor: theme.palette.secondary.main,
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: theme.palette.secondary.main,
+                            },
+                          },
+                          '& .MuiSelect-icon': {
+                            color: theme.palette.grey[100],
+                          },
+                        }}
+                        disabled={
+                          userBelongsToWorkspace
+                            ? !canManageSettings
+                            : !canManageSettingsAsAdmin
+                        }
                       >
-                        {reminderIntervalOptionsMinutes.map((option) => (
-                          <MenuItem key={option} value={option}>
-                            <Typography>{option}</Typography>
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>                    
-                    <Typography>minutes</Typography>
-                  </Box>
-                )}
+                        <Select
+                          value={formState.reminderIntervalMinutes}
+                          onChange={handleSelectChange(
+                            'reminderIntervalMinutes'
+                          )}
+                          displayEmpty
+                        >
+                          {reminderIntervalOptionsMinutes.map((option) => (
+                            <MenuItem key={option} value={option}>
+                              <Typography>{option}</Typography>
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      <Typography>minutes</Typography>
+                    </Box>
+                  )}
 
                 {index < settingsOptions.length - 1 && (
                   <Divider sx={{ bgcolor: '#333', opacity: 0.3 }} />
@@ -355,10 +379,9 @@ export default function SettingsTabPanel({
               options={Object.keys(ResponseDelayOptions)}
               optionFriendlyNames={responseDelayOptionsToSecondsMap}
               onChange={handleSelectChange('responseDelaySeconds')}
-
               userBelongsToWorkspace={userBelongsToWorkspace}
               canManageSettings={canManageSettings}
-              canManageSettingsAsAdmin={canManageSettingsAsAdmin}              
+              canManageSettingsAsAdmin={canManageSettingsAsAdmin}
             />
 
             {/* Timezone Select */}
@@ -370,10 +393,9 @@ export default function SettingsTabPanel({
               value={formState.timezone}
               options={timezones}
               onChange={handleSelectChange('timezone')}
-
               userBelongsToWorkspace={userBelongsToWorkspace}
               canManageSettings={canManageSettings}
-              canManageSettingsAsAdmin={canManageSettingsAsAdmin}              
+              canManageSettingsAsAdmin={canManageSettingsAsAdmin}
             />
 
             {/* Preferred Model Select */}
@@ -387,7 +409,6 @@ export default function SettingsTabPanel({
               optionFriendlyNames={modelFriendlyNames}
               optionDescriptions={modelDescriptions}
               onChange={handleSelectChange('preferredModel')}
-
               userBelongsToWorkspace={userBelongsToWorkspace}
               canManageSettings={canManageSettings}
               canManageSettingsAsAdmin={canManageSettingsAsAdmin}
@@ -404,41 +425,42 @@ export default function SettingsTabPanel({
               fullWidth
               variant={loading ? 'outlined' : 'contained'}
               onClick={handleSave}
-              disabled={loading
-                ? true
-                : userBelongsToWorkspace
-                  ? !canManageSettings
-                  : !canManageSettingsAsAdmin
+              disabled={
+                loading
+                  ? true
+                  : userBelongsToWorkspace
+                    ? !canManageSettings
+                    : !canManageSettingsAsAdmin
               }
               sx={{
                 '&.Mui-disabled': {
-                    color:
+                  color:
                     resolvedMode == 'dark'
-                        ? theme.palette.grey[400]
-                        : theme.palette.grey[500],
-                },                
-              }}             
+                      ? theme.palette.grey[400]
+                      : theme.palette.grey[500],
+                },
+              }}
             >
               {loading ? 'Saving...' : 'Save'}
             </Button>
-            
-            { userBelongsToWorkspace
+
+            {userBelongsToWorkspace
               ? !canManageSettings && (
-                <Tooltip
-                  title="You cannot manage settings of agents on the workspace."
-                  placement='right'
-                >
-                  <InfoIcon color='warning' />
-                </Tooltip>
-              ) : !canManageSettingsAsAdmin && (
-                <Tooltip
-                  title="Your admin privileges to manage settings of agents of any workspace has been revoked."
-                  placement='right'
-                >
-                  <InfoIcon color='warning' />
-                </Tooltip>
-              )
-            }
+                  <Tooltip
+                    title="You cannot manage settings of agents on the workspace."
+                    placement="right"
+                  >
+                    <InfoIcon color="warning" />
+                  </Tooltip>
+                )
+              : !canManageSettingsAsAdmin && (
+                  <Tooltip
+                    title="Your admin privileges to manage settings of agents of any workspace has been revoked."
+                    placement="right"
+                  >
+                    <InfoIcon color="warning" />
+                  </Tooltip>
+                )}
           </Box>
         </Grid>
       </Grid>
@@ -471,7 +493,7 @@ function SelectField({
   onChange,
   userBelongsToWorkspace,
   canManageSettings,
-  canManageSettingsAsAdmin
+  canManageSettingsAsAdmin,
 }: SelectFieldProps) {
   const theme = useTheme();
 
@@ -501,15 +523,13 @@ function SelectField({
         <Box sx={{ flex: 1 }}>
           <Typography
             variant="body1"
-            color='secondary'
-            fontWeight='bold'            
+            color="secondary"
+            fontWeight="bold"
             sx={{ mb: 0.5 }}
           >
             {label}
           </Typography>
-          <Typography variant="body2">
-            {description}
-          </Typography>
+          <Typography variant="body2">{description}</Typography>
         </Box>
       </Box>
       <FormControl
@@ -520,20 +540,25 @@ function SelectField({
           '& .MuiOutlinedInput-root': {
             '& fieldset': { borderColor: theme.palette.grey[500] },
             '&:hover fieldset': { borderColor: theme.palette.secondary.main },
-            '&.Mui-focused fieldset': { borderColor: theme.palette.secondary.main  },
+            '&.Mui-focused fieldset': {
+              borderColor: theme.palette.secondary.main,
+            },
           },
           '& .MuiSelect-icon': { color: theme.palette.grey[100] },
         }}
-        disabled={userBelongsToWorkspace
-          ? !canManageSettings
-          : !canManageSettingsAsAdmin
-        }        
+        disabled={
+          userBelongsToWorkspace
+            ? !canManageSettings
+            : !canManageSettingsAsAdmin
+        }
       >
         <Select value={value} onChange={onChange} displayEmpty>
           {options.map((option) => (
             <MenuItem key={option} value={option}>
               <Tooltip title={optionDescriptions?.[option]}>
-                <Typography>{optionFriendlyNames?.[option] || option}</Typography>
+                <Typography>
+                  {optionFriendlyNames?.[option] || option}
+                </Typography>
               </Tooltip>
             </MenuItem>
           ))}

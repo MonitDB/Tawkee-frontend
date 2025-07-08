@@ -4,7 +4,10 @@ import env from '../config/env';
 
 import { useAuth, User } from './AuthContext';
 import { useAgents } from './AgentsContext';
-import { InteractionWithMessagesDto, MessageDto } from '../services/chatService';
+import {
+  InteractionWithMessagesDto,
+  MessageDto,
+} from '../services/chatService';
 import { useHttpResponse } from './ResponseNotifier';
 import { ScheduleSettingsDto } from '../pages/AgentDetails/components/dialogs/GoogleCalendarConfigDialog';
 
@@ -21,20 +24,20 @@ interface ChannelConnectionStatusUpdatePayload {
 
 export interface MessageChatUpdatePayload {
   chat: {
-    id: string,
-    agentId: string,
-    title: string,
-    name: string,
-    userName: string,
-    userPicture: string,
-    whatsappPhone: string,
-    humanTalk: boolean,
-    read: boolean,
-    finished: boolean,
-    unReadCount: number     
+    id: string;
+    agentId: string;
+    title: string;
+    name: string;
+    userName: string;
+    userPicture: string;
+    whatsappPhone: string;
+    humanTalk: boolean;
+    read: boolean;
+    finished: boolean;
+    unReadCount: number;
   };
   latestInteraction: InteractionWithMessagesDto;
-  latestMessage: MessageDto
+  latestMessage: MessageDto;
 }
 
 interface ErrorPayload {
@@ -56,12 +59,12 @@ export function SocketProvider({ children }: SocketProviderProps) {
   const socketRef = useRef<Socket | null>(null);
 
   const { notify } = useHttpResponse();
-  const { 
+  const {
     user,
     loading,
     handleTokenExpirationError,
     syncWorkspaceSubscriptionUpdate,
-    syncWorkspaceCreditsUpdate
+    syncWorkspaceCreditsUpdate,
   } = useAuth();
   const {
     syncAgentChannelConnectionUpdate,
@@ -114,14 +117,21 @@ export function SocketProvider({ children }: SocketProviderProps) {
       }
     };
 
-    const handleWorkspaceSubscriptionUpdate = (data: { subscription: User["subscription"], plan: User["plan"] }) => {
+    const handleWorkspaceSubscriptionUpdate = (data: {
+      subscription: User['subscription'];
+      plan: User['plan'];
+    }) => {
       syncWorkspaceSubscriptionUpdate(data.subscription, data.plan);
-    }
+    };
 
-    const handleWorkspaceCreditsUpdate = (data: { planCredits: number | 'UNLIMITED', extraCredits: number }) => {
-      const unlimitedPlanCredits = data.planCredits === 'UNLIMITED' || data.planCredits === null;
+    const handleWorkspaceCreditsUpdate = (data: {
+      planCredits: number | 'UNLIMITED';
+      extraCredits: number;
+    }) => {
+      const unlimitedPlanCredits =
+        data.planCredits === 'UNLIMITED' || data.planCredits === null;
       syncWorkspaceCreditsUpdate(
-        unlimitedPlanCredits ? Infinity : data.planCredits as number,
+        unlimitedPlanCredits ? Infinity : (data.planCredits as number),
         data.extraCredits
       );
     };
@@ -136,7 +146,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
     if (user) {
       socketRef.current = io(SOCKET_SERVER_URL, {
         auth: { workspaceId: user.workspaceId },
-        transports: ['websocket']
+        transports: ['websocket'],
       });
 
       socketRef.current.on('connect', handleSocketConnect);
@@ -158,7 +168,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
       socketRef.current.on(
         'subscriptionUpdated',
         handleWorkspaceSubscriptionUpdate
-      )
+      );
 
       socketRef.current.on(
         'workspaceCreditsUpdate',
@@ -191,7 +201,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
           socketRef.current.off(
             'subscriptionUpdated',
             handleWorkspaceSubscriptionUpdate
-          )
+          );
 
           socketRef.current.off(
             'workspaceCreditsUpdate',
@@ -205,7 +215,6 @@ export function SocketProvider({ children }: SocketProviderProps) {
         }
       };
     }
-
   }, [authIsReady]);
 
   const contextValue: SocketContextType = {};

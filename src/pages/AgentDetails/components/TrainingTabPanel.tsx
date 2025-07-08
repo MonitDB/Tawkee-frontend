@@ -57,17 +57,22 @@ import { useHttpResponse } from '../../../context/ResponseNotifier';
 
 interface TrainingTabPanelProps {
   agentData: Agent | null;
-  agentSubscriptionLimits: Partial<PaginatedAgentWrapper['subscriptionLimits']> | null;
+  agentSubscriptionLimits: Partial<
+    PaginatedAgentWrapper['subscriptionLimits']
+  > | null;
 }
 
-export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }: TrainingTabPanelProps) {
+export default function TrainingTabPanel({
+  agentData,
+  agentSubscriptionLimits,
+}: TrainingTabPanelProps) {
   const theme = useTheme();
   const { mode, systemMode } = useColorScheme();
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
 
   const { notify } = useHttpResponse();
   const { token, user, can } = useAuth();
- 
+
   const userBelongsToWorkspace = user?.workspaceId === agentData?.workspaceId;
   const canCreateTraining = can('TRAINING_CREATE', 'AGENT');
   const canCreateTrainingAsAdmin = can('TRAINING_CREATE_AS_ADMIN', 'AGENT');
@@ -111,7 +116,6 @@ export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }:
   };
 
   useEffect(() => {
-
     if (!agentData) return;
 
     const paginated = agentData.paginatedTrainings;
@@ -265,17 +269,25 @@ export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }:
     return matchesSearch && matchesTab;
   });
 
-  const textTrainingAmount = trainingData.data.filter((item) => item.type === 'TEXT').length;
-  const documentTrainingAmount = trainingData.data.filter((item) => item.type === 'DOCUMENT').length;
-  const videoTrainingAmount = trainingData.data.filter((item) => item.type === 'VIDEO').length;
-  const websiteTrainingAmount = trainingData.data.filter((item) => item.type === 'WEBSITE').length;
+  const textTrainingAmount = trainingData.data.filter(
+    (item) => item.type === 'TEXT'
+  ).length;
+  const documentTrainingAmount = trainingData.data.filter(
+    (item) => item.type === 'DOCUMENT'
+  ).length;
+  const videoTrainingAmount = trainingData.data.filter(
+    (item) => item.type === 'VIDEO'
+  ).length;
+  const websiteTrainingAmount = trainingData.data.filter(
+    (item) => item.type === 'WEBSITE'
+  ).length;
 
   const tabCounts = {
     all: trainingData.data.length,
     TEXT: textTrainingAmount,
     DOCUMENT: documentTrainingAmount,
     VIDEO: videoTrainingAmount,
-    WEBSITE: websiteTrainingAmount
+    WEBSITE: websiteTrainingAmount,
   };
 
   if (!agentData) return null;
@@ -284,41 +296,57 @@ export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }:
   const unlimitedTextLimit = textLimit === 'UNLIMITED' || textLimit === null;
   const noTextLimit = textLimit === 0;
   const singleTextLimit = textLimit === 1;
-  const textAmountReachedLimit = !unlimitedTextLimit && textTrainingAmount >= (textLimit as number);
+  const textAmountReachedLimit =
+    !unlimitedTextLimit && textTrainingAmount >= (textLimit as number);
 
   const documentLimit = agentSubscriptionLimits?.trainingDocumentLimit;
-  const unlimitedDocumentLimit = documentLimit === 'UNLIMITED' || documentLimit === null;
+  const unlimitedDocumentLimit =
+    documentLimit === 'UNLIMITED' || documentLimit === null;
   const noDocumentLimit = documentLimit === 0;
   const singleDocumentLimit = documentLimit === 1;
-  const documentAmountReachedLimit = !unlimitedDocumentLimit && documentTrainingAmount >= (documentLimit as number);
+  const documentAmountReachedLimit =
+    !unlimitedDocumentLimit &&
+    documentTrainingAmount >= (documentLimit as number);
 
   const videoLimit = agentSubscriptionLimits?.trainingVideoLimit;
   const unlimitedVideoLimit = videoLimit === 'UNLIMITED' || videoLimit === null;
   const noVideoLimit = videoLimit === 0;
   const singleVideoLimit = videoLimit === 1;
-  const videoAmountReachedLimit = !unlimitedVideoLimit && videoTrainingAmount >= (videoLimit as number);
+  const videoAmountReachedLimit =
+    !unlimitedVideoLimit && videoTrainingAmount >= (videoLimit as number);
 
   const websiteLimit = agentSubscriptionLimits?.trainingWebsiteLimit;
-  const unlimitedWebsiteLimit = websiteLimit === 'UNLIMITED' || websiteLimit === null;
+  const unlimitedWebsiteLimit =
+    websiteLimit === 'UNLIMITED' || websiteLimit === null;
   const noWebsiteLimit = websiteLimit === 0;
   const singleWebsiteLimit = websiteLimit === 1;
-  const websiteAmountReachedLimit = !unlimitedWebsiteLimit && websiteTrainingAmount >= (websiteLimit as number);
+  const websiteAmountReachedLimit =
+    !unlimitedWebsiteLimit && websiteTrainingAmount >= (websiteLimit as number);
 
-  const reachedAllLimits = textAmountReachedLimit && documentAmountReachedLimit && videoAmountReachedLimit && websiteAmountReachedLimit;
+  const reachedAllLimits =
+    textAmountReachedLimit &&
+    documentAmountReachedLimit &&
+    videoAmountReachedLimit &&
+    websiteAmountReachedLimit;
 
   return (
     <Box sx={{ p: 3 }}>
       <Grid container columns={12} margin={2} rowSpacing={2}>
         <Grid size={{ xs: 12 }}>
           <Typography variant="body1" color="text.primary" textAlign="center">
-            {userBelongsToWorkspace ? 'Your ' : 'This '} subscription allows the following training material limits:
+            {userBelongsToWorkspace ? 'Your ' : 'This '} subscription allows the
+            following training material limits:
           </Typography>
-          <Divider/>
+          <Divider />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6 }}>
           <Stack>
-            <Typography variant="body1" color="text.secondary" textAlign="start">
+            <Typography
+              variant="body1"
+              color="text.secondary"
+              textAlign="start"
+            >
               &#9679;{' '}
               {unlimitedTextLimit
                 ? 'unlimited texts'
@@ -326,17 +354,16 @@ export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }:
                   ? 'does not allow training with text.'
                   : singleTextLimit
                     ? 'up to one text material.'
-                    : `up to ${textLimit} texts`
-              }
+                    : `up to ${textLimit} texts`}
             </Typography>
-            <Typography 
+            <Typography
               variant="body1"
               color={
                 unlimitedTextLimit
-                  ? "text.primary"
+                  ? 'text.primary'
                   : textTrainingAmount > (textLimit as number)
-                      ? "error"
-                      : "text.primary"
+                    ? 'error'
+                    : 'text.primary'
               }
               fontWeight="bold"
               textAlign="start"
@@ -345,12 +372,11 @@ export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }:
                 ? `${textTrainingAmount == 0 ? 'No' : textTrainingAmount} text training materials in use.`
                 : noTextLimit
                   ? ''
-                  : `${textTrainingAmount == 0 ? 'None' : textTrainingAmount} of ${textLimit} in use.`
-              }         
+                  : `${textTrainingAmount == 0 ? 'None' : textTrainingAmount} of ${textLimit} in use.`}
             </Typography>
           </Stack>
         </Grid>
-               
+
         <Grid size={{ xs: 12, sm: 6 }}>
           <Stack>
             <Typography variant="body1" color="text.secondary" textAlign="end">
@@ -361,17 +387,16 @@ export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }:
                   ? 'does not allow training with document.'
                   : singleDocumentLimit
                     ? 'up to one document material.'
-                    : `up to ${documentLimit} documents.`
-              }
+                    : `up to ${documentLimit} documents.`}
             </Typography>
-            <Typography 
+            <Typography
               variant="body1"
               color={
                 unlimitedDocumentLimit
-                  ? "text.primary"
+                  ? 'text.primary'
                   : documentTrainingAmount > (documentLimit as number)
-                      ? "error"
-                      : "text.primary"
+                    ? 'error'
+                    : 'text.primary'
               }
               fontWeight="bold"
               textAlign="end"
@@ -380,15 +405,18 @@ export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }:
                 ? `${documentTrainingAmount == 0 ? 'No' : documentTrainingAmount} document training materials in use.`
                 : noDocumentLimit
                   ? ''
-                  : `${documentTrainingAmount == 0 ? 'None' : documentTrainingAmount} of ${documentLimit} in use.`
-              }         
+                  : `${documentTrainingAmount == 0 ? 'None' : documentTrainingAmount} of ${documentLimit} in use.`}
             </Typography>
           </Stack>
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6 }}>
           <Stack>
-            <Typography variant="body1" color="text.secondary" textAlign="start">
+            <Typography
+              variant="body1"
+              color="text.secondary"
+              textAlign="start"
+            >
               &#9679;{' '}
               {unlimitedWebsiteLimit
                 ? 'unlimited websites.'
@@ -396,17 +424,16 @@ export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }:
                   ? 'does not allow training with website.'
                   : singleWebsiteLimit
                     ? 'up to one website material.'
-                    : `up to ${websiteLimit} websites.`
-              }
+                    : `up to ${websiteLimit} websites.`}
             </Typography>
-            <Typography 
+            <Typography
               variant="body1"
               color={
                 unlimitedWebsiteLimit
-                  ? "text.primary"
+                  ? 'text.primary'
                   : websiteTrainingAmount > (websiteLimit as number)
-                      ? "error"
-                      : "text.primary"
+                    ? 'error'
+                    : 'text.primary'
               }
               fontWeight="bold"
               textAlign="start"
@@ -415,50 +442,47 @@ export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }:
                 ? `${websiteTrainingAmount == 0 ? 'No' : websiteTrainingAmount} website training materials in use.`
                 : noWebsiteLimit
                   ? ''
-                  : `${websiteTrainingAmount == 0 ? 'None' : websiteTrainingAmount} of ${websiteLimit} in use.`
-              }         
-            </Typography>          
+                  : `${websiteTrainingAmount == 0 ? 'None' : websiteTrainingAmount} of ${websiteLimit} in use.`}
+            </Typography>
           </Stack>
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6 }}>
           <Stack>
-          <Typography variant="body1" color="text.secondary" textAlign="end">
-            &#9679;{' '}
-            {unlimitedVideoLimit
-              ? 'unlimited videos.'
-              : noVideoLimit
-                ? 'does not allow training with video.'
-                : singleVideoLimit
-                  ? 'up to one video material.'
-                  : `up to ${videoLimit} videos.`
-            }
-          </Typography>
-          <Typography 
-            variant="body1"
-            color={
-              unlimitedVideoLimit
-                ? "text.primary"
-                : textTrainingAmount > (videoLimit as number)
-                    ? "error"
-                    : "text.primary"
-            }
-            fontWeight="bold"
-            textAlign="end"
-          >
-            {unlimitedVideoLimit
-              ? `${textTrainingAmount == 0 ? 'No' : textTrainingAmount} video training materials in use.`
-              : noVideoLimit
-                ? ''
-                : `${textTrainingAmount == 0 ? 'None' : textTrainingAmount} of ${videoLimit} in use.`
-            }         
-          </Typography>
+            <Typography variant="body1" color="text.secondary" textAlign="end">
+              &#9679;{' '}
+              {unlimitedVideoLimit
+                ? 'unlimited videos.'
+                : noVideoLimit
+                  ? 'does not allow training with video.'
+                  : singleVideoLimit
+                    ? 'up to one video material.'
+                    : `up to ${videoLimit} videos.`}
+            </Typography>
+            <Typography
+              variant="body1"
+              color={
+                unlimitedVideoLimit
+                  ? 'text.primary'
+                  : textTrainingAmount > (videoLimit as number)
+                    ? 'error'
+                    : 'text.primary'
+              }
+              fontWeight="bold"
+              textAlign="end"
+            >
+              {unlimitedVideoLimit
+                ? `${textTrainingAmount == 0 ? 'No' : textTrainingAmount} video training materials in use.`
+                : noVideoLimit
+                  ? ''
+                  : `${textTrainingAmount == 0 ? 'None' : textTrainingAmount} of ${videoLimit} in use.`}
+            </Typography>
           </Stack>
         </Grid>
 
         <Grid size={{ xs: 12 }}>
-          <Divider/>
-        </Grid>        
+          <Divider />
+        </Grid>
       </Grid>
 
       {/* Header */}
@@ -473,70 +497,69 @@ export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }:
           Training material
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => setDialogOpen(true)}
-            disabled={userBelongsToWorkspace
-              ? !canCreateTraining
-                ? true
-                : reachedAllLimits
-              : !canCreateTrainingAsAdmin
-                ? true
-                : reachedAllLimits
+            disabled={
+              userBelongsToWorkspace
+                ? !canCreateTraining
+                  ? true
+                  : reachedAllLimits
+                : !canCreateTrainingAsAdmin
+                  ? true
+                  : reachedAllLimits
             }
             sx={{
               textTransform: 'none',
               px: 3,
               height: '100%',
               '&.Mui-disabled': {
-                  color:
+                color:
                   resolvedMode == 'dark'
-                      ? theme.palette.grey[400]
-                      : theme.palette.grey[500],
+                    ? theme.palette.grey[400]
+                    : theme.palette.grey[500],
               },
-            }}                
+            }}
           >
             New Training
           </Button>
 
-          { userBelongsToWorkspace
-            ? !canCreateTraining ? (
-                <Tooltip
-                  title="You cannot create training materials of agents on the workspace."
-                  placement='top-start'
-                >
-                  <InfoIcon color='warning' />
-                </Tooltip>
+          {userBelongsToWorkspace ? (
+            !canCreateTraining ? (
+              <Tooltip
+                title="You cannot create training materials of agents on the workspace."
+                placement="top-start"
+              >
+                <InfoIcon color="warning" />
+              </Tooltip>
             ) : (
               reachedAllLimits && (
                 <Tooltip
                   title="Your subscription already reached all training material limits."
-                  placement='top-start'
+                  placement="top-start"
                 >
-                  <InfoIcon color='warning' />
+                  <InfoIcon color="warning" />
                 </Tooltip>
               )
             )
-          : !canCreateTrainingAsAdmin ? (
-                <Tooltip
-                  title="Your admin privileges to create training materials of agents of any workspace has been revoked."
-                  placement='top-start'
-                >
-                  <InfoIcon color='warning' />
-                </Tooltip>
-            ) : (
-              reachedAllLimits && (
-                <Tooltip
-                  title="Your subscription already reached all training material limits."
-                  placement='top-start'
-                >
-                  <InfoIcon color='warning' />
-                </Tooltip>
-              )
+          ) : !canCreateTrainingAsAdmin ? (
+            <Tooltip
+              title="Your admin privileges to create training materials of agents of any workspace has been revoked."
+              placement="top-start"
+            >
+              <InfoIcon color="warning" />
+            </Tooltip>
+          ) : (
+            reachedAllLimits && (
+              <Tooltip
+                title="Your subscription already reached all training material limits."
+                placement="top-start"
+              >
+                <InfoIcon color="warning" />
+              </Tooltip>
             )
-          }
+          )}
         </Box>
       </Box>
 
@@ -836,12 +859,18 @@ export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }:
         <MenuItem
           onClick={async () => {
             if (userBelongsToWorkspace && !canDeleteTraining) {
-              notify('You cannot delete training materials of agents on the workspace!', 'warning');
+              notify(
+                'You cannot delete training materials of agents on the workspace!',
+                'warning'
+              );
               return;
             }
 
             if (!userBelongsToWorkspace && !canDeleteTrainingAsAdmin) {
-              notify("Your admin privileges to delete training materials of agents of any workspace has been revoked.", 'warning');
+              notify(
+                'Your admin privileges to delete training materials of agents of any workspace has been revoked.',
+                'warning'
+              );
               return;
             }
 
@@ -849,30 +878,30 @@ export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }:
 
             if (!userBelongsToWorkspace) {
               fetchTrainingData(agentData?.id as string);
-            }            
+            }
             handleMenuClose();
           }}
         >
           <DeleteIcon sx={{ mr: 1, fontSize: 20, color: 'error.light' }} />
           Delete
-          { userBelongsToWorkspace
+          {userBelongsToWorkspace
             ? !canDeleteTraining && (
-              <Tooltip
-                title="You cannot delete training materials of agents on the workspace."
-                placement='top-start'
-                sx={{ ml: 1 }}
-              >
-                <InfoIcon color='warning' />
-              </Tooltip>
-            ) : !canDeleteTrainingAsAdmin && (
-              <Tooltip
-                title="Your admin privileges to delete training materials of agents of any workspace has been revoked."
-                placement='right'
-              >
-                <InfoIcon color='warning' />
-              </Tooltip>
-            )
-          }
+                <Tooltip
+                  title="You cannot delete training materials of agents on the workspace."
+                  placement="top-start"
+                  sx={{ ml: 1 }}
+                >
+                  <InfoIcon color="warning" />
+                </Tooltip>
+              )
+            : !canDeleteTrainingAsAdmin && (
+                <Tooltip
+                  title="Your admin privileges to delete training materials of agents of any workspace has been revoked."
+                  placement="right"
+                >
+                  <InfoIcon color="warning" />
+                </Tooltip>
+              )}
         </MenuItem>
       </Menu>
 
@@ -884,7 +913,7 @@ export default function TrainingTabPanel({ agentData, agentSubscriptionLimits }:
           textAmountReachedLimit,
           documentAmountReachedLimit,
           videoAmountReachedLimit,
-          websiteAmountReachedLimit
+          websiteAmountReachedLimit,
         }}
       />
     </Box>

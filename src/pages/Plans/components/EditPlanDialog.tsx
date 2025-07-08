@@ -54,24 +54,24 @@ export interface StripePlan {
 }
 
 interface EditStripePlan {
-    name: string;
-    description: string;
-    price: number;
-    creditsLimit: number | undefined | null;
-    agentsLimit: number | undefined | null;
-    trialDays: number | undefined | null;
-    trainingTextLimit: number | undefined | null;
-    trainingDocumentLimit: number | undefined | null;
-    trainingVideoLimit: number | undefined | null;
-    trainingWebsiteLimit: number | undefined | null;
-    isActive: boolean;
-    isEnterprise: boolean;  
-    
-    features: string[];
+  name: string;
+  description: string;
+  price: number;
+  creditsLimit: number | undefined | null;
+  agentsLimit: number | undefined | null;
+  trialDays: number | undefined | null;
+  trainingTextLimit: number | undefined | null;
+  trainingDocumentLimit: number | undefined | null;
+  trainingVideoLimit: number | undefined | null;
+  trainingWebsiteLimit: number | undefined | null;
+  isActive: boolean;
+  isEnterprise: boolean;
+
+  features: string[];
 }
 
 interface EditPlanDialogProps {
-  plan: StripePlan | null; 
+  plan: StripePlan | null;
   onClose: () => void;
 }
 
@@ -82,8 +82,9 @@ export default function EditPlanDialog({ plan, onClose }: EditPlanDialogProps) {
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
 
   const { token } = useAuth();
-  const { updatePlanFromForm, stripeLoading } = useStripeService(token as string);
-
+  const { updatePlanFromForm, stripeLoading } = useStripeService(
+    token as string
+  );
 
   const [form, setForm] = useState<EditStripePlan>({
     name: '',
@@ -100,83 +101,85 @@ export default function EditPlanDialog({ plan, onClose }: EditPlanDialogProps) {
     isActive: false,
     isEnterprise: false,
 
-    features: []    
+    features: [],
   });
 
   useEffect(() => {
     if (plan) {
-        setForm({
-            name: plan.product.name,
-            description: plan.product?.description || '',
-            price: plan.prices[0].unit_amount,
+      setForm({
+        name: plan.product.name,
+        description: plan.product?.description || '',
+        price: plan.prices[0].unit_amount,
 
-            creditsLimit: plan?.metadata?.creditsLimit,
-            agentsLimit: plan?.metadata?.agentLimit,
-            trialDays: plan?.metadata?.trialDays,
-            trainingTextLimit: plan?.metadata?.trainingTextLimit,
-            trainingDocumentLimit: plan?.metadata?.trainingDocumentLimit,
-            trainingVideoLimit: plan?.metadata?.trainingVideoLimit,
-            trainingWebsiteLimit: plan?.metadata?.trainingWebsiteLimit,
-            isActive: plan?.metadata?.isActive,
-            isEnterprise: plan?.metadata?.isEnterprise || false,
+        creditsLimit: plan?.metadata?.creditsLimit,
+        agentsLimit: plan?.metadata?.agentLimit,
+        trialDays: plan?.metadata?.trialDays,
+        trainingTextLimit: plan?.metadata?.trainingTextLimit,
+        trainingDocumentLimit: plan?.metadata?.trainingDocumentLimit,
+        trainingVideoLimit: plan?.metadata?.trainingVideoLimit,
+        trainingWebsiteLimit: plan?.metadata?.trainingWebsiteLimit,
+        isActive: plan?.metadata?.isActive,
+        isEnterprise: plan?.metadata?.isEnterprise || false,
 
-            features: plan?.metadata?.features || []    
-        })
+        features: plan?.metadata?.features || [],
+      });
     }
-  }, [plan])
+  }, [plan]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setForm(prev => ({
-        ...prev,
-        [name]: value,
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
     }));
-    };
+  };
 
-    const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm(prev => ({
-        ...prev,
-        [name]: value === '' ? null : parseInt(value, 10),
+    setForm((prev) => ({
+      ...prev,
+      [name]: value === '' ? null : parseInt(value, 10),
     }));
-    };
+  };
 
-    const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
-    setForm(prev => ({
-        ...prev,
-        [name]: checked,
+    setForm((prev) => ({
+      ...prev,
+      [name]: checked,
     }));
-    };
+  };
 
-    const handleFeatureChange = (index: number, value: string) => {
+  const handleFeatureChange = (index: number, value: string) => {
     const updatedFeatures = [...form.features];
     updatedFeatures[index] = value;
-    setForm(prev => ({
-        ...prev,
-        features: updatedFeatures,
+    setForm((prev) => ({
+      ...prev,
+      features: updatedFeatures,
     }));
-    };
+  };
 
-    const handleAddFeature = () => {
-    setForm(prev => ({
-        ...prev,
-        features: [...prev.features, ''],
+  const handleAddFeature = () => {
+    setForm((prev) => ({
+      ...prev,
+      features: [...prev.features, ''],
     }));
-    };
+  };
 
-    const handleRemoveFeature = (index: number) => {
+  const handleRemoveFeature = (index: number) => {
     const updatedFeatures = [...form.features];
     updatedFeatures.splice(index, 1);
-    setForm(prev => ({
-        ...prev,
-        features: updatedFeatures,
+    setForm((prev) => ({
+      ...prev,
+      features: updatedFeatures,
     }));
-    };
+  };
 
-    const handleSubmit = async () => {
-        await updatePlanFromForm(form);
-    };
+  const handleSubmit = async () => {
+    await updatePlanFromForm(form);
+  };
 
   return (
     <Dialog open={!!plan} onClose={onClose} fullWidth maxWidth="md">
@@ -193,24 +196,24 @@ export default function EditPlanDialog({ plan, onClose }: EditPlanDialogProps) {
             />
           </Grid>
 
-        <Grid size={{ xs: 12, sm: 6 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-                fullWidth
-                label="Price (USD)"
-                name="price"
-                type="number"
-                value={(form.price / 100).toFixed(2)} // Display as dollars
-                onChange={(e) => {
-                    const input = e.target.value;
-                    const dollars = parseFloat(input);
-                    if (!isNaN(dollars)) {
-                    setForm({ ...form, price: Math.round(dollars * 100) }); // Store as cents
-                    }
-                }}
-                slotProps={{ input: { inputProps: { step: 0.1, min: 0 }}}}
+              fullWidth
+              label="Price (USD)"
+              name="price"
+              type="number"
+              value={(form.price / 100).toFixed(2)} // Display as dollars
+              onChange={(e) => {
+                const input = e.target.value;
+                const dollars = parseFloat(input);
+                if (!isNaN(dollars)) {
+                  setForm({ ...form, price: Math.round(dollars * 100) }); // Store as cents
+                }
+              }}
+              slotProps={{ input: { inputProps: { step: 0.1, min: 0 } } }}
             />
-        </Grid>
-        
+          </Grid>
+
           <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
@@ -226,24 +229,32 @@ export default function EditPlanDialog({ plan, onClose }: EditPlanDialogProps) {
           <Grid size={{ xs: 6, sm: 4 }}>
             <TextField
               fullWidth
-              label={typeof form.agentsLimit == 'number' ? "Agents Limit" : "Unlimited Agents"}
+              label={
+                typeof form.agentsLimit == 'number'
+                  ? 'Agents Limit'
+                  : 'Unlimited Agents'
+              }
               name="agentsLimit"
               type="number"
               value={form.agentsLimit ?? ''}
               onChange={handleNumberChange}
-              slotProps={{ input: { inputProps: { min: 0 }}}}
+              slotProps={{ input: { inputProps: { min: 0 } } }}
             />
           </Grid>
 
           <Grid size={{ xs: 6, sm: 4 }}>
             <TextField
               fullWidth
-              label={typeof form.agentsLimit == 'number' ? "Credits Limit" : "Unlimited Credits"}
+              label={
+                typeof form.agentsLimit == 'number'
+                  ? 'Credits Limit'
+                  : 'Unlimited Credits'
+              }
               name="creditsLimit"
               type="number"
               value={form.creditsLimit ?? ''}
               onChange={handleNumberChange}
-              slotProps={{ input: { inputProps: { min: 0 }}}}
+              slotProps={{ input: { inputProps: { min: 0 } } }}
             />
           </Grid>
 
@@ -255,56 +266,72 @@ export default function EditPlanDialog({ plan, onClose }: EditPlanDialogProps) {
               type="number"
               value={form.trialDays ?? ''}
               onChange={handleNumberChange}
-              slotProps={{ input: { inputProps: { min: 7 }}}}
+              slotProps={{ input: { inputProps: { min: 7 } } }}
             />
           </Grid>
 
           <Grid size={{ xs: 6, sm: 3 }}>
             <TextField
               fullWidth
-              label={typeof form.trainingTextLimit == 'number' ? "Text Training Limit" : "Unlimited Text Training"}
+              label={
+                typeof form.trainingTextLimit == 'number'
+                  ? 'Text Training Limit'
+                  : 'Unlimited Text Training'
+              }
               name="trainingTextLimit"
               type="number"
-              placeholder='Unlimited'
+              placeholder="Unlimited"
               value={form.trainingTextLimit ?? ''}
               onChange={handleNumberChange}
-              slotProps={{ input: { inputProps: { min: 0 }}}}
+              slotProps={{ input: { inputProps: { min: 0 } } }}
             />
           </Grid>
 
           <Grid size={{ xs: 6, sm: 3 }}>
             <TextField
               fullWidth
-              label={typeof form.trainingDocumentLimit == 'number' ? "Document Training Limit" : "Unlimited Document Training"}
+              label={
+                typeof form.trainingDocumentLimit == 'number'
+                  ? 'Document Training Limit'
+                  : 'Unlimited Document Training'
+              }
               name="trainingDocumentLimit"
               type="number"
               value={form.trainingDocumentLimit ?? ''}
               onChange={handleNumberChange}
-              slotProps={{ input: { inputProps: { min: 0 }}}}
+              slotProps={{ input: { inputProps: { min: 0 } } }}
             />
           </Grid>
 
           <Grid size={{ xs: 6, sm: 3 }}>
             <TextField
               fullWidth
-              label={typeof form.trainingVideoLimit == 'number' ? "Video Training Limit" : "Unlimited Video Training"}
+              label={
+                typeof form.trainingVideoLimit == 'number'
+                  ? 'Video Training Limit'
+                  : 'Unlimited Video Training'
+              }
               name="trainingVideoLimit"
               type="number"
               value={form.trainingVideoLimit ?? ''}
               onChange={handleNumberChange}
-              slotProps={{ input: { inputProps: { min: 0 }}}}
+              slotProps={{ input: { inputProps: { min: 0 } } }}
             />
           </Grid>
 
           <Grid size={{ xs: 6, sm: 3 }}>
             <TextField
               fullWidth
-              label={typeof form.trainingWebsiteLimit == 'number' ? "Website Training Limit" : "Unlimited Website Training"}
+              label={
+                typeof form.trainingWebsiteLimit == 'number'
+                  ? 'Website Training Limit'
+                  : 'Unlimited Website Training'
+              }
               name="trainingWebsiteLimit"
               type="number"
               value={form.trainingWebsiteLimit ?? ''}
               onChange={handleNumberChange}
-              slotProps={{ input: { inputProps: { min: 0 }}}}
+              slotProps={{ input: { inputProps: { min: 0 } } }}
             />
           </Grid>
 
@@ -332,14 +359,29 @@ export default function EditPlanDialog({ plan, onClose }: EditPlanDialogProps) {
           </Grid>
 
           <Grid size={{ xs: 12 }}>
-            <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="space-between"
+              mb={1}
+            >
               <Typography variant="subtitle1">Features</Typography>
-              <Button startIcon={<AddIcon />} size="small" onClick={handleAddFeature}>
+              <Button
+                startIcon={<AddIcon />}
+                size="small"
+                onClick={handleAddFeature}
+              >
                 Add Feature
               </Button>
             </Box>
             {form.features?.map((feature, index) => (
-              <Box key={index} display="flex" alignItems="center" gap={1} mb={1}>
+              <Box
+                key={index}
+                display="flex"
+                alignItems="center"
+                gap={1}
+                mb={1}
+              >
                 <TextField
                   fullWidth
                   size="small"
@@ -358,17 +400,17 @@ export default function EditPlanDialog({ plan, onClose }: EditPlanDialogProps) {
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
         <Button
-            onClick={handleSubmit}
-            variant="contained"
-            disabled={stripeLoading}
-            sx={{
-                '&.Mui-disabled': {
-                color:
-                    resolvedMode == 'dark'
-                    ? theme.palette.grey[400]
-                    : theme.palette.grey[500],
-                },
-            }}
+          onClick={handleSubmit}
+          variant="contained"
+          disabled={stripeLoading}
+          sx={{
+            '&.Mui-disabled': {
+              color:
+                resolvedMode == 'dark'
+                  ? theme.palette.grey[400]
+                  : theme.palette.grey[500],
+            },
+          }}
         >
           Save
         </Button>

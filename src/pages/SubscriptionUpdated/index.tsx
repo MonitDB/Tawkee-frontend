@@ -19,7 +19,8 @@ export default function SubscriptionUpdated() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isCreditPurchase = new URLSearchParams(location.search).get('type') === 'credit-purchase';
+  const isCreditPurchase =
+    new URLSearchParams(location.search).get('type') === 'credit-purchase';
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -64,7 +65,9 @@ export default function SubscriptionUpdated() {
             maxWidth: '500px',
           }}
         >
-          <CheckCircleOutlineIcon sx={{ fontSize: 60, color: 'success.main' }} />
+          <CheckCircleOutlineIcon
+            sx={{ fontSize: 60, color: 'success.main' }}
+          />
           <Typography variant="h4" component="h1" gutterBottom>
             {isCreditPurchase
               ? 'Credits Purchased Successfully'
@@ -78,7 +81,8 @@ export default function SubscriptionUpdated() {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 2 }}>
             <CircularProgress size={24} />
             <Typography variant="body2" color="text.secondary">
-              Redirecting to Billing in {countdown} second{countdown > 1 ? 's' : ''}...
+              Redirecting to Billing in {countdown} second
+              {countdown > 1 ? 's' : ''}...
             </Typography>
           </Box>
         </Stack>

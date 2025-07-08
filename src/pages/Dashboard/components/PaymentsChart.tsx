@@ -34,7 +34,11 @@ function generateDateRange(startDate: string, endDate: string): string[] {
   return range;
 }
 
-export default function PaymentsChart({ workspaceId, startDate, endDate }: PaymentChartProps) {
+export default function PaymentsChart({
+  workspaceId,
+  startDate,
+  endDate,
+}: PaymentChartProps) {
   const theme = useTheme();
   const { token } = useAuth();
   const { getWorkspacePaymentsInPeriod } = useStripeService(token as string);
@@ -42,41 +46,44 @@ export default function PaymentsChart({ workspaceId, startDate, endDate }: Payme
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
+  useEffect(() => {
     async function fetchData() {
-        if (!startDate || !endDate) return; // Ensure safe access
+      if (!startDate || !endDate) return; // Ensure safe access
 
-        setLoading(true);
-        try {
+      setLoading(true);
+      try {
         const response = await getWorkspacePaymentsInPeriod(
-            workspaceId,
-            startDate.toISOString(),
-            endDate.toISOString()
+          workspaceId,
+          startDate.toISOString(),
+          endDate.toISOString()
         );
         setData(response);
-        } catch {
+      } catch {
         setData([]);
-        } finally {
+      } finally {
         setLoading(false);
-        }
+      }
     }
 
     fetchData();
-    }, [workspaceId, startDate, endDate, getWorkspacePaymentsInPeriod]);
-
+  }, [workspaceId, startDate, endDate, getWorkspacePaymentsInPeriod]);
 
   const filledData = useMemo(() => {
     if (!startDate || !endDate) return [];
-    const map = new Map(data.map(d => [d.date, d]));
-    return generateDateRange(startDate.toISOString(), endDate.toISOString()).map(date =>
-      map.get(date) || { date, planAmount: 0, oneTimeAmount: 0, total: 0 }
+    const map = new Map(data.map((d) => [d.date, d]));
+    return generateDateRange(
+      startDate.toISOString(),
+      endDate.toISOString()
+    ).map(
+      (date) =>
+        map.get(date) || { date, planAmount: 0, oneTimeAmount: 0, total: 0 }
     );
   }, [data, startDate, endDate]);
 
-  const labels = filledData.map(d => d.date);
-  const totalSeries = filledData.map(d => d.total / 100);
-  const planSeries = filledData.map(d => d.planAmount / 100);
-  const oneTimeSeries = filledData.map(d => d.oneTimeAmount / 100);
+  const labels = filledData.map((d) => d.date);
+  const totalSeries = filledData.map((d) => d.total / 100);
+  const planSeries = filledData.map((d) => d.planAmount / 100);
+  const oneTimeSeries = filledData.map((d) => d.oneTimeAmount / 100);
 
   const colorPalette = [
     theme.palette.primary.main,
@@ -87,7 +94,11 @@ export default function PaymentsChart({ workspaceId, startDate, endDate }: Payme
   return (
     <Card variant="outlined" sx={{ width: '100%', minHeight: 300, flex: 1 }}>
       <CardContent>
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
           <Typography component="h2" variant="subtitle2">
             Payments Breakdown
           </Typography>
@@ -100,7 +111,7 @@ export default function PaymentsChart({ workspaceId, startDate, endDate }: Payme
         <Box sx={{ flex: 1, height: 300 }}>
           {loading ? (
             <Skeleton variant="rectangular" height="100%" />
-          ) : totalSeries.every(v => v === 0) ? (
+          ) : totalSeries.every((v) => v === 0) ? (
             <Box sx={{ textAlign: 'center', pt: 4, fontStyle: 'italic' }}>
               No payment data available for the selected period.
             </Box>

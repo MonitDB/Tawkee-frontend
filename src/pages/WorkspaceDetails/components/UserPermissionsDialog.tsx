@@ -17,7 +17,7 @@ import {
   useColorScheme,
   useMediaQuery,
   Theme,
-  Tooltip
+  Tooltip,
 } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 
@@ -39,22 +39,31 @@ export default function UserPermissionsDialog({
   const { mode, systemMode } = useColorScheme();
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
 
-  const isSmallScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
+  const isSmallScreen = useMediaQuery((theme: Theme) =>
+    theme.breakpoints.down('sm')
+  );
 
   const { token, can } = useAuth();
-  const { updateUserPermissions, loading } = useDashboardService(token as string);
+  const { updateUserPermissions, loading } = useDashboardService(
+    token as string
+  );
 
-  const canEditUserPermissionAsAdmin = can('EDIT_USER_PERMISSION_AS_ADMIN', 'WORKSPACE');
+  const canEditUserPermissionAsAdmin = can(
+    'EDIT_USER_PERMISSION_AS_ADMIN',
+    'WORKSPACE'
+  );
 
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   // Initial state for editablePermissions, starts with an empty array
-  const [editablePermissions, setEditablePermissions] = useState<{
-    resource: string;
-    action: string;
-    description?: string;
-    allowed?: boolean;
-  }[]>([]);
+  const [editablePermissions, setEditablePermissions] = useState<
+    {
+      resource: string;
+      action: string;
+      description?: string;
+      allowed?: boolean;
+    }[]
+  >([]);
 
   useEffect(() => {
     const mergedPermissions = userData.rolePermissions.map((rolePerm) => {
@@ -73,7 +82,7 @@ export default function UserPermissionsDialog({
       };
     });
 
-    setEditablePermissions(mergedPermissions);  // Set the merged data to the state
+    setEditablePermissions(mergedPermissions); // Set the merged data to the state
   }, [userData]);
 
   const formatDate = (dateStr: string) => {
@@ -112,7 +121,10 @@ export default function UserPermissionsDialog({
   };
 
   const handleSave = async () => {
-    await updateUserPermissions({ userId: userData.id, userPermissions: editablePermissions });
+    await updateUserPermissions({
+      userId: userData.id,
+      userPermissions: editablePermissions,
+    });
     setIsEditing(false);
   };
 
@@ -123,118 +135,182 @@ export default function UserPermissionsDialog({
         <Grid container spacing={3}>
           {/* User Details */}
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Typography variant="body2" fontWeight="bold">Name</Typography>
+            <Typography variant="body2" fontWeight="bold">
+              Name
+            </Typography>
             <TextField value={userData.name} disabled fullWidth />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <Typography variant="body2" fontWeight="bold">Email</Typography>
+            <Typography variant="body2" fontWeight="bold">
+              Email
+            </Typography>
             <TextField value={userData.email} disabled fullWidth />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-            <Typography variant="body2" fontWeight="bold">Email Verified</Typography>
-            <TextField value={userData.emailVerified ? 'Yes' : 'No'} disabled fullWidth />
+            <Typography variant="body2" fontWeight="bold">
+              Email Verified
+            </Typography>
+            <TextField
+              value={userData.emailVerified ? 'Yes' : 'No'}
+              disabled
+              fullWidth
+            />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Typography variant="body2" fontWeight="bold">Created At</Typography>
-            <TextField value={formatDate(userData.createdAt as string)} disabled fullWidth multiline />
+            <Typography variant="body2" fontWeight="bold">
+              Created At
+            </Typography>
+            <TextField
+              value={formatDate(userData.createdAt as string)}
+              disabled
+              fullWidth
+              multiline
+            />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Typography variant="body2" fontWeight="bold">Role</Typography>
+            <Typography variant="body2" fontWeight="bold">
+              Role
+            </Typography>
             <TextField value={userData.role.name} disabled fullWidth />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 6 }}>
-            <Typography variant="body2" fontWeight="bold">Role Description</Typography>
-            <TextField value={userData.role.description} disabled fullWidth multiline />
+            <Typography variant="body2" fontWeight="bold">
+              Role Description
+            </Typography>
+            <TextField
+              value={userData.role.description}
+              disabled
+              fullWidth
+              multiline
+            />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Typography variant="body2" fontWeight="bold">Last Updated</Typography>
-            <TextField value={userData.updatedAt ? formatDate(userData.updatedAt) : '---'} disabled fullWidth multiline />
+            <Typography variant="body2" fontWeight="bold">
+              Last Updated
+            </Typography>
+            <TextField
+              value={
+                userData.updatedAt ? formatDate(userData.updatedAt) : '---'
+              }
+              disabled
+              fullWidth
+              multiline
+            />
           </Grid>
 
           {/* Permissions */}
           <Grid size={{ xs: 12 }}>
-            <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-              <Typography variant='subtitle1' fontWeight='bold'>{userData.role.name} PERMISSIONS</Typography>
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="space-between"
+              mb={2}
+            >
+              <Typography variant="subtitle1" fontWeight="bold">
+                {userData.role.name} PERMISSIONS
+              </Typography>
 
-              <Typography variant='subtitle1' sx={{ textAlign: 'right'}}>
-                {
-                  userData.userPermissions.filter(perm => !perm.allowed).length === 0
-                    ? 'No permission denied'
-                    : userData.userPermissions.filter(perm => !perm.allowed).length === 1
+              <Typography variant="subtitle1" sx={{ textAlign: 'right' }}>
+                {userData.userPermissions.filter((perm) => !perm.allowed)
+                  .length === 0
+                  ? 'No permission denied'
+                  : userData.userPermissions.filter((perm) => !perm.allowed)
+                        .length === 1
                     ? '1 permission denied'
-                    : userData.userPermissions.filter(perm => !perm.allowed).length === userData.rolePermissions.length
-                    ? 'All permissions denied'
-                    : `${userData.userPermissions.filter(perm => !perm.allowed).length} permissions denied`
-                }
+                    : userData.userPermissions.filter((perm) => !perm.allowed)
+                          .length === userData.rolePermissions.length
+                      ? 'All permissions denied'
+                      : `${userData.userPermissions.filter((perm) => !perm.allowed).length} permissions denied`}
               </Typography>
             </Box>
 
             {editablePermissions.map((permission, index) => (
-              <Card key={index} sx={{ 
-                display: 'flex',
-                alignItems: 'center',
-                mb: 2,
-                padding: 2,
-                width: '100%'
-              }}>
-                <CardContent sx={{ 
+              <Card
+                key={index}
+                sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 2,
-                  width: '100%'
-                }}>
-                  <Typography 
-                    variant="body2" 
+                  mb: 2,
+                  padding: 2,
+                  width: '100%',
+                }}
+              >
+                <CardContent
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 2,
+                    width: '100%',
+                  }}
+                >
+                  <Typography
+                    variant="body2"
                     fontWeight="bold"
                     sx={{
-                      textDecoration: permission.allowed === false ? 'line-through' : 'none',
+                      textDecoration:
+                        permission.allowed === false ? 'line-through' : 'none',
                     }}
-                    color={permission.allowed === false ? 'textSecondary' : 'info'}
+                    color={
+                      permission.allowed === false ? 'textSecondary' : 'info'
+                    }
                   >
                     {index + 1}
                   </Typography>
 
-                  { !isSmallScreen && (
+                  {!isSmallScreen && (
                     <>
                       <Divider orientation="vertical" flexItem />
-    
-                      <Typography 
-                        variant="caption" 
-                        sx={{ 
-                          textDecoration: permission.allowed === false ? 'line-through' : 'none',
+
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          textDecoration:
+                            permission.allowed === false
+                              ? 'line-through'
+                              : 'none',
                         }}
-                        color={permission.allowed === false ? 'textSecondary' : 'textPrimary'}
+                        color={
+                          permission.allowed === false
+                            ? 'textSecondary'
+                            : 'textPrimary'
+                        }
                       >
                         {permission.resource}
                       </Typography>
-    
                     </>
                   )}
 
                   <Divider orientation="vertical" flexItem />
 
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
-                      width: '100%', 
-                      textDecoration: permission.allowed === false ? 'line-through' : 'none',
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      width: '100%',
+                      textDecoration:
+                        permission.allowed === false ? 'line-through' : 'none',
                     }}
-                    color={permission.allowed === false ? 'textSecondary' : 'textPrimary'}
+                    color={
+                      permission.allowed === false
+                        ? 'textSecondary'
+                        : 'textPrimary'
+                    }
                   >
                     {permission.description}
                   </Typography>
-                  { isEditing && (
+                  {isEditing && (
                     <>
                       <Divider orientation="vertical" flexItem />
-                      
-                      <Typography sx={{ width: 80}} >
+
+                      <Typography sx={{ width: 80 }}>
                         {permission.allowed === false ? 'Denied' : 'Allowed'}
                       </Typography>
-                      
+
                       <Switch
                         checked={!(permission.allowed === false)}
-                        onChange={(e) => handlePermissionChange(index, e.target.checked)}
+                        onChange={(e) =>
+                          handlePermissionChange(index, e.target.checked)
+                        }
                         sx={{
                           ml: 2,
                           '& .MuiSwitch-switchBase.Mui-checked': {
@@ -260,17 +336,16 @@ export default function UserPermissionsDialog({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose} color="primary">Cancel</Button>
+        <Button onClick={onClose} color="primary">
+          Cancel
+        </Button>
         <Button
-          variant={ isEditing ? 'contained' : 'outlined'}
+          variant={isEditing ? 'contained' : 'outlined'}
           size="small"
           onClick={() => {
-            isEditing ? handleSave() : setIsEditing(true)
+            isEditing ? handleSave() : setIsEditing(true);
           }}
-          disabled={loading
-            ? true
-            : !canEditUserPermissionAsAdmin
-          }
+          disabled={loading ? true : !canEditUserPermissionAsAdmin}
           sx={{
             '&.Mui-disabled': {
               color:
@@ -280,12 +355,12 @@ export default function UserPermissionsDialog({
             },
           }}
         >
-          { isEditing ? 'Save' : 'Edit'}
+          {isEditing ? 'Save' : 'Edit'}
         </Button>
-        { !canEditUserPermissionAsAdmin && (
+        {!canEditUserPermissionAsAdmin && (
           <Tooltip title="Your admin privileges to edit user permissions of any workspace has been revoked.">
-            <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
-          </Tooltip>              
+            <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color="warning" />
+          </Tooltip>
         )}
       </DialogActions>
     </Dialog>

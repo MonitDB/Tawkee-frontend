@@ -92,52 +92,48 @@ export class ElevenLabsService {
     agentId: string,
     params: ActivateElevenLabsParams
   ): Promise<ElevenLabsOperationResponse> {
-    try {
-      if (!agentId) {
-        throw new Error('Agent ID is required.');
+    if (!agentId) {
+      throw new Error('Agent ID is required.');
+    }
+
+    if (!params.apiKey) {
+      throw new Error('API key is required.');
+    }
+
+    const url = `${this.apiUrl}/elevenlabs-activate/${agentId}`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.token}`,
+      },
+      body: JSON.stringify({ apiKey: params.apiKey }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error('Agent not found');
+      } else if (response.status === 400) {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || 'Invalid API key or request data.';
+        throw new Error(errorMessage);
+      } else if (response.status >= 500) {
+        throw new Error('Internal server error. Please try again later.');
+      } else {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || 'A business rule error occurred.';
+        throw new Error(errorMessage);
       }
+    }
 
-      if (!params.apiKey) {
-        throw new Error('API key is required.');
-      }
-
-      const url = `${this.apiUrl}/elevenlabs-activate/${agentId}`;
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.token}`,
-        },
-        body: JSON.stringify({ apiKey: params.apiKey }),
+    const data: ElevenLabsOperationResponse = await response
+      .json()
+      .catch(() => {
+        throw new Error('Invalid response from server.');
       });
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Agent not found');
-        } else if (response.status === 400) {
-          const data = await response.json().catch(() => ({}));
-          const errorMessage = data.error || 'Invalid API key or request data.';
-          throw new Error(errorMessage);
-        } else if (response.status >= 500) {
-          throw new Error('Internal server error. Please try again later.');
-        } else {
-          const data = await response.json().catch(() => ({}));
-          const errorMessage = data.error || 'A business rule error occurred.';
-          throw new Error(errorMessage);
-        }
-      }
-
-      const data: ElevenLabsOperationResponse = await response
-        .json()
-        .catch(() => {
-          throw new Error('Invalid response from server.');
-        });
-
-      return data;
-    } catch (error: unknown) {
-      throw error;
-    }
+    return data;
   }
 
   /**
@@ -146,96 +142,83 @@ export class ElevenLabsService {
   async deactivateIntegration(
     agentId: string
   ): Promise<ElevenLabsOperationResponse> {
-    try {
-      if (!agentId) {
-        throw new Error('Agent ID is required.');
+    if (!agentId) {
+      throw new Error('Agent ID is required.');
+    }
+
+    const url = `${this.apiUrl}/elevenlabs-deactivate/${agentId}`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error('Agent not found');
+      } else if (response.status >= 500) {
+        throw new Error('Internal server error. Please try again later.');
+      } else {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || 'A business rule error occurred.';
+        throw new Error(errorMessage);
       }
+    }
 
-      const url = `${this.apiUrl}/elevenlabs-deactivate/${agentId}`;
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.token}`,
-        },
+    const data: ElevenLabsOperationResponse = await response
+      .json()
+      .catch(() => {
+        throw new Error('Invalid response from server.');
       });
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Agent not found');
-        } else if (response.status >= 500) {
-          throw new Error('Internal server error. Please try again later.');
-        } else {
-          const data = await response.json().catch(() => ({}));
-          const errorMessage = data.error || 'A business rule error occurred.';
-          throw new Error(errorMessage);
-        }
-      }
-
-      const data: ElevenLabsOperationResponse = await response
-        .json()
-        .catch(() => {
-          throw new Error('Invalid response from server.');
-        });
-
-      return data;
-    } catch (error: unknown) {
-      throw error;
-    }
+    return data;
   }
 
   /**
    * Fetches available ElevenLabs voices for a specific agent with optional category filter
    */
   async getData(agentId: string): Promise<ElevenLabsDataResponseDto> {
-    try {
-      if (!agentId) {
-        throw new Error('Agent ID is required.');
-      }
-
-      const response = await fetch(
-        `${this.apiUrl}/elevenlabs-data/${agentId}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          console.warn(
-            `No data found for agent ${agentId} or agent does not exist.`
-          );
-          return {
-            data: { voices: { voices: [] } },
-          };
-        } else if (response.status === 401) {
-          throw new Error(
-            'ElevenLabs integration not activated or invalid API key.'
-          );
-        } else if (response.status >= 500) {
-          throw new Error('Internal server error. Please try again later.');
-        } else {
-          const data = await response.json().catch(() => ({}));
-          const errorMessage = data.error || 'A business rule error occurred.';
-          throw new Error(errorMessage);
-        }
-      }
-
-      const data: ElevenLabsDataResponseDto = await response
-        .json()
-        .catch(() => {
-          throw new Error('Invalid response from server.');
-        });
-
-      return data;
-    } catch (error: unknown) {
-      throw error;
+    if (!agentId) {
+      throw new Error('Agent ID is required.');
     }
+
+    const response = await fetch(`${this.apiUrl}/elevenlabs-data/${agentId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        console.warn(
+          `No data found for agent ${agentId} or agent does not exist.`
+        );
+        return {
+          data: { voices: { voices: [] } },
+        };
+      } else if (response.status === 401) {
+        throw new Error(
+          'ElevenLabs integration not activated or invalid API key.'
+        );
+      } else if (response.status >= 500) {
+        throw new Error('Internal server error. Please try again later.');
+      } else {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || 'A business rule error occurred.';
+        throw new Error(errorMessage);
+      }
+    }
+
+    const data: ElevenLabsDataResponseDto = await response.json().catch(() => {
+      throw new Error('Invalid response from server.');
+    });
+
+    return data;
   }
 
   /**
@@ -245,56 +228,52 @@ export class ElevenLabsService {
     agentId: string,
     params: Partial<ElevenLabsSettings>
   ): Promise<ElevenLabsOperationResponse> {
-    try {
-      if (!agentId) {
-        throw new Error('Agent ID is required.');
-      }
-
-      const importantParams = {
-        respondAudioWithAudio: params.respondAudioWithAudio,
-        alwaysRespondWithAudio: params.alwaysRespondWithAudio,
-        selectedElevenLabsVoiceId: params.selectedElevenLabsVoiceId,
-        similarityBoost: params.similarityBoost,
-        stability: params.stability,
-      };
-
-      const response = await fetch(
-        `${this.apiUrl}/elevenlabs-update-settings/${agentId}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.token}`,
-          },
-          body: JSON.stringify(importantParams),
-        }
-      );
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Agent or voice not found');
-        } else if (response.status === 400) {
-          const data = await response.json().catch(() => ({}));
-          const errorMessage = data.error || 'Invalid agent ID or voice ID.';
-          throw new Error(errorMessage);
-        } else if (response.status >= 500) {
-          throw new Error('Internal server error. Please try again later.');
-        } else {
-          const data = await response.json().catch(() => ({}));
-          const errorMessage = data.error || 'A business rule error occurred.';
-          throw new Error(errorMessage);
-        }
-      }
-
-      const data: ElevenLabsOperationResponse = await response
-        .json()
-        .catch(() => {
-          throw new Error('Invalid response from server.');
-        });
-
-      return data;
-    } catch (error: unknown) {
-      throw error;
+    if (!agentId) {
+      throw new Error('Agent ID is required.');
     }
+
+    const importantParams = {
+      respondAudioWithAudio: params.respondAudioWithAudio,
+      alwaysRespondWithAudio: params.alwaysRespondWithAudio,
+      selectedElevenLabsVoiceId: params.selectedElevenLabsVoiceId,
+      similarityBoost: params.similarityBoost,
+      stability: params.stability,
+    };
+
+    const response = await fetch(
+      `${this.apiUrl}/elevenlabs-update-settings/${agentId}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.token}`,
+        },
+        body: JSON.stringify(importantParams),
+      }
+    );
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error('Agent or voice not found');
+      } else if (response.status === 400) {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || 'Invalid agent ID or voice ID.';
+        throw new Error(errorMessage);
+      } else if (response.status >= 500) {
+        throw new Error('Internal server error. Please try again later.');
+      } else {
+        const data = await response.json().catch(() => ({}));
+        const errorMessage = data.error || 'A business rule error occurred.';
+        throw new Error(errorMessage);
+      }
+    }
+
+    const data: ElevenLabsOperationResponse = await response
+      .json()
+      .catch(() => {
+        throw new Error('Invalid response from server.');
+      });
+
+    return data;
   }
 }

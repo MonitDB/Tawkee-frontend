@@ -230,7 +230,12 @@ export const useGoogleCalendarService = (token: string) => {
         setLoading(false);
       }
     },
-    [service, notify, syncAgentScheduleSettingsUpdate, handleTokenExpirationError]
+    [
+      service,
+      notify,
+      syncAgentScheduleSettingsUpdate,
+      handleTokenExpirationError,
+    ]
   );
 
   const updateScheduleSettings = useCallback(
@@ -266,7 +271,12 @@ export const useGoogleCalendarService = (token: string) => {
         setLoading(false);
       }
     },
-    [service, notify, syncAgentScheduleSettingsUpdate, handleTokenExpirationError]
+    [
+      service,
+      notify,
+      syncAgentScheduleSettingsUpdate,
+      handleTokenExpirationError,
+    ]
   );
 
   return {

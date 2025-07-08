@@ -31,12 +31,30 @@ export interface Subscription {
   trialEnd?: string;
   customStripePriceId?: string;
   featureOverrides?: string[];
-  creditsLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
-  agentLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
-  trainingTextLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
-  trainingWebsiteLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
-  trainingVideoLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
-  trainingDocumentLimitOverrides?: { value: number | 'UNLIMITED'; explicitlySet: boolean } | null;
+  creditsLimitOverrides?: {
+    value: number | 'UNLIMITED';
+    explicitlySet: boolean;
+  } | null;
+  agentLimitOverrides?: {
+    value: number | 'UNLIMITED';
+    explicitlySet: boolean;
+  } | null;
+  trainingTextLimitOverrides?: {
+    value: number | 'UNLIMITED';
+    explicitlySet: boolean;
+  } | null;
+  trainingWebsiteLimitOverrides?: {
+    value: number | 'UNLIMITED';
+    explicitlySet: boolean;
+  } | null;
+  trainingVideoLimitOverrides?: {
+    value: number | 'UNLIMITED';
+    explicitlySet: boolean;
+  } | null;
+  trainingDocumentLimitOverrides?: {
+    value: number | 'UNLIMITED';
+    explicitlySet: boolean;
+  } | null;
   plan: any;
 }
 
@@ -44,26 +62,40 @@ interface SubscriptionTabProps {
   subscription: Subscription;
 }
 
-export default function SubscriptionTab({ subscription }: SubscriptionTabProps) {
+export default function SubscriptionTab({
+  subscription,
+}: SubscriptionTabProps) {
   const theme = useTheme();
   const { mode, systemMode } = useColorScheme();
   const resolvedMode = (systemMode || mode) as 'light' | 'dark';
   const { token, can } = useAuth();
-  const { updateSubscriptionOverrides, stripeLoading } = useStripeService(token as string);
+  const { updateSubscriptionOverrides, stripeLoading } = useStripeService(
+    token as string
+  );
   const { plan } = subscription;
 
-  const canOverrideSubscriptionLimitsAsAdmin = can('OVERRIDE_SUBSCRIPTION_LIMITS_AS_ADMIN', 'WORKSPACE');
+  const canOverrideSubscriptionLimitsAsAdmin = can(
+    'OVERRIDE_SUBSCRIPTION_LIMITS_AS_ADMIN',
+    'WORKSPACE'
+  );
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editableFeatures, setEditableFeatures] = useState<string[]>(subscription.featureOverrides ?? plan.features);
+  const [editableFeatures, setEditableFeatures] = useState<string[]>(
+    subscription.featureOverrides ?? plan.features
+  );
 
   const [editableLimits, setEditableLimits] = useState({
-    creditsLimitOverrides: subscription.creditsLimitOverrides ?? plan.creditsLimit,
+    creditsLimitOverrides:
+      subscription.creditsLimitOverrides ?? plan.creditsLimit,
     agentLimitOverrides: subscription.agentLimitOverrides ?? plan.agentLimit,
-    trainingTextLimitOverrides: subscription.trainingTextLimitOverrides ?? plan.trainingTextLimit,
-    trainingWebsiteLimitOverrides: subscription.trainingWebsiteLimitOverrides ?? plan.trainingWebsiteLimit,
-    trainingVideoLimitOverrides: subscription.trainingVideoLimitOverrides ?? plan.trainingVideoLimit,
-    trainingDocumentLimitOverrides: subscription.trainingDocumentLimitOverrides ?? plan.trainingDocumentLimit,
+    trainingTextLimitOverrides:
+      subscription.trainingTextLimitOverrides ?? plan.trainingTextLimit,
+    trainingWebsiteLimitOverrides:
+      subscription.trainingWebsiteLimitOverrides ?? plan.trainingWebsiteLimit,
+    trainingVideoLimitOverrides:
+      subscription.trainingVideoLimitOverrides ?? plan.trainingVideoLimit,
+    trainingDocumentLimitOverrides:
+      subscription.trainingDocumentLimitOverrides ?? plan.trainingDocumentLimit,
   });
 
   const handleAddFeature = () => {
@@ -82,7 +114,10 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
     setEditableFeatures((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleLimitChange = (key: keyof typeof editableLimits, value: string) => {
+  const handleLimitChange = (
+    key: keyof typeof editableLimits,
+    value: string
+  ) => {
     setEditableLimits((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -98,7 +133,8 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
     for (const [key, value] of Object.entries(editableLimits)) {
       const planValue = plan[key.replace('Overrides', '')];
       const isPlanUnlimited = planValue === null || planValue === undefined;
-      const isUserUnlimited = value === '' || value === null || value === undefined;
+      const isUserUnlimited =
+        value === '' || value === null || value === undefined;
 
       if (isUserUnlimited) {
         overridesPayload[key] = {
@@ -116,7 +152,10 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
       }
     }
 
-    await updateSubscriptionOverrides({ subscriptionId: subscription.id, overrides: overridesPayload });
+    await updateSubscriptionOverrides({
+      subscriptionId: subscription.id,
+      overrides: overridesPayload,
+    });
     setIsEditing(false);
   };
 
@@ -141,7 +180,10 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
       }
     }
 
-    await updateSubscriptionOverrides({ subscriptionId: subscription.id, overrides: resetPayload });
+    await updateSubscriptionOverrides({
+      subscriptionId: subscription.id,
+      overrides: resetPayload,
+    });
     setEditableFeatures(plan.features);
 
     setEditableLimits({
@@ -160,16 +202,19 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
     const featuresChanged =
       JSON.stringify(editableFeatures) !== JSON.stringify(plan.features);
 
-    const limitsChanged = Object.entries(editableLimits).some(([key, value]) => {
-      const planValue = plan[key.replace('Overrides', '')];
-      const isPlanUnlimited = planValue === null || planValue === undefined;
-      const isUserUnlimited = value === '' || value === null || value === undefined;
+    const limitsChanged = Object.entries(editableLimits).some(
+      ([key, value]) => {
+        const planValue = plan[key.replace('Overrides', '')];
+        const isPlanUnlimited = planValue === null || planValue === undefined;
+        const isUserUnlimited =
+          value === '' || value === null || value === undefined;
 
-      if (isUserUnlimited && isPlanUnlimited) return false;
-      if (!isUserUnlimited && planValue === Number(value)) return false;
+        if (isUserUnlimited && isPlanUnlimited) return false;
+        if (!isUserUnlimited && planValue === Number(value)) return false;
 
-      return true;
-    });
+        return true;
+      }
+    );
 
     return featuresChanged || limitsChanged;
   })();
@@ -177,13 +222,18 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
   const formatDate = (dateStr?: string) =>
     dateStr ? new Date(dateStr).toLocaleDateString() : '—';
 
-  function renderLimitDisplay(planValue?: number, overrideValue?: number | 'UNLIMITED' | undefined) {
+  function renderLimitDisplay(
+    planValue?: number,
+    overrideValue?: number | 'UNLIMITED' | undefined
+  ) {
     const hasOverride = overrideValue !== undefined;
     const isPlanUnlimited = planValue === null || planValue === undefined;
     const isOverrideUnlimited = overrideValue === 'UNLIMITED';
 
     if (!hasOverride) {
-      return <Typography variant="body2">{planValue ?? 'Unlimited'}</Typography>;
+      return (
+        <Typography variant="body2">{planValue ?? 'Unlimited'}</Typography>
+      );
     }
 
     if (isPlanUnlimited && isOverrideUnlimited) {
@@ -193,9 +243,16 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
     if (isPlanUnlimited && !isOverrideUnlimited) {
       return (
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Typography variant="body2" sx={{ textDecoration: 'line-through', color: 'text.disabled' }}>Unlimited</Typography>
+          <Typography
+            variant="body2"
+            sx={{ textDecoration: 'line-through', color: 'text.disabled' }}
+          >
+            Unlimited
+          </Typography>
           <Typography variant="body2">→</Typography>
-          <Typography variant="body2" fontWeight="bold">{overrideValue}</Typography>
+          <Typography variant="body2" fontWeight="bold">
+            {overrideValue}
+          </Typography>
         </Box>
       );
     }
@@ -203,9 +260,16 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
     if (!isPlanUnlimited && isOverrideUnlimited) {
       return (
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Typography variant="body2" sx={{ textDecoration: 'line-through', color: 'text.disabled' }}>{planValue}</Typography>
+          <Typography
+            variant="body2"
+            sx={{ textDecoration: 'line-through', color: 'text.disabled' }}
+          >
+            {planValue}
+          </Typography>
           <Typography variant="body2">→</Typography>
-          <Typography variant="body2" fontWeight="bold" color="success.main">Unlimited</Typography>
+          <Typography variant="body2" fontWeight="bold" color="success.main">
+            Unlimited
+          </Typography>
         </Box>
       );
     }
@@ -213,9 +277,16 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
     if (!isPlanUnlimited && overrideValue !== planValue) {
       return (
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Typography variant="body2" sx={{ textDecoration: 'line-through', color: 'text.disabled' }}>{planValue}</Typography>
+          <Typography
+            variant="body2"
+            sx={{ textDecoration: 'line-through', color: 'text.disabled' }}
+          >
+            {planValue}
+          </Typography>
           <Typography variant="body2">→</Typography>
-          <Typography variant="body2" fontWeight="bold">{overrideValue}</Typography>
+          <Typography variant="body2" fontWeight="bold">
+            {overrideValue}
+          </Typography>
         </Box>
       );
     }
@@ -225,22 +296,38 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
         <Typography variant="h6">Subscription & Plan Details</Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 2 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            gap: 2,
+          }}
+        >
           <Button
-            size='small'
-            variant='outlined'
+            size="small"
+            variant="outlined"
             onClick={() => handleRemoveOverrides()}
-            disabled={stripeLoading
-              ? true
-              : !hasOverrides || !canOverrideSubscriptionLimitsAsAdmin
+            disabled={
+              stripeLoading
+                ? true
+                : !hasOverrides || !canOverrideSubscriptionLimitsAsAdmin
             }
             sx={{
               textTransform: 'none',
               fontWeight: 600,
               '&.Mui-disabled': {
-                color: resolvedMode === 'dark' ? theme.palette.grey[400] : theme.palette.grey[500],
+                color:
+                  resolvedMode === 'dark'
+                    ? theme.palette.grey[400]
+                    : theme.palette.grey[500],
               },
             }}
           >
@@ -256,24 +343,26 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
                 setIsEditing(true);
               }
             }}
-            disabled={stripeLoading
-              ? true
-              : !canOverrideSubscriptionLimitsAsAdmin
+            disabled={
+              stripeLoading ? true : !canOverrideSubscriptionLimitsAsAdmin
             }
             sx={{
               textTransform: 'none',
               fontWeight: 600,
               '&.Mui-disabled': {
-                color: resolvedMode === 'dark' ? theme.palette.grey[400] : theme.palette.grey[500],
+                color:
+                  resolvedMode === 'dark'
+                    ? theme.palette.grey[400]
+                    : theme.palette.grey[500],
               },
             }}
           >
             {isEditing ? 'Save' : 'Edit'}
           </Button>
-          { !canOverrideSubscriptionLimitsAsAdmin && (
+          {!canOverrideSubscriptionLimitsAsAdmin && (
             <Tooltip title="Your admin privileges to override subscription limits of any workspace has been revoked.">
-              <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color='warning' />
-            </Tooltip>              
+              <InfoIcon fontSize="small" sx={{ ml: 0.5 }} color="warning" />
+            </Tooltip>
           )}
         </Box>
       </Box>
@@ -281,7 +370,7 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <FormControl fullWidth>
             <FormLabel sx={{ display: 'flex', flexDirection: 'row', gap: 1 }}>
-              <Typography>Stripe Subscription ID</Typography>             
+              <Typography>Stripe Subscription ID</Typography>
               <Tooltip title="The subscription identifier from Stripe.">
                 <InfoIcon fontSize="small" sx={{ ml: 0.5 }} />
               </Tooltip>
@@ -293,7 +382,7 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <FormControl fullWidth>
             <FormLabel sx={{ display: 'flex', flexDirection: 'row', gap: 1 }}>
-              <Typography>Status</Typography>             
+              <Typography>Status</Typography>
               <Tooltip title="The status of the subscription.">
                 <InfoIcon fontSize="small" sx={{ ml: 0.5 }} />
               </Tooltip>
@@ -305,7 +394,7 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <FormControl fullWidth>
             <FormLabel sx={{ display: 'flex', flexDirection: 'row', gap: 1 }}>
-              <Typography>Current Period</Typography>             
+              <Typography>Current Period</Typography>
               <Tooltip title="Start and end dates of the current subscription.">
                 <InfoIcon fontSize="small" sx={{ ml: 0.5 }} />
               </Tooltip>
@@ -332,19 +421,41 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
         </Grid>
 
         <Grid size={{ xs: 12 }}>
-          <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
-            <FormLabel sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
-              <Typography variant='subtitle1'>Features</Typography>             
-              <Tooltip title={ isEditing ? "You can override the plan features and limits while in edit mode." : "List of features from the current plan."}>
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+            mb={1}
+          >
+            <FormLabel
+              sx={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 1,
+              }}
+            >
+              <Typography variant="subtitle1">Features</Typography>
+              <Tooltip
+                title={
+                  isEditing
+                    ? 'You can override the plan features and limits while in edit mode.'
+                    : 'List of features from the current plan.'
+                }
+              >
                 <InfoIcon
                   fontSize="small"
                   sx={{ ml: 0.5 }}
-                  color={ isEditing ? 'info' : 'inherit'}
+                  color={isEditing ? 'info' : 'inherit'}
                 />
               </Tooltip>
             </FormLabel>
             {isEditing && (
-              <Button startIcon={<AddIcon />} size="small" onClick={handleAddFeature}>
+              <Button
+                startIcon={<AddIcon />}
+                size="small"
+                onClick={handleAddFeature}
+              >
                 Add Feature
               </Button>
             )}
@@ -388,7 +499,11 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
                     size="small"
                     type="number"
                     fullWidth
-                    label={typeof base === 'number' ? `Plan Limit: ${base}` : 'Unlimited in Plan'}
+                    label={
+                      typeof base === 'number'
+                        ? `Plan Limit: ${base}`
+                        : 'Unlimited in Plan'
+                    }
                     slotProps={{
                       input: {
                         inputProps: {
@@ -398,7 +513,12 @@ export default function SubscriptionTab({ subscription }: SubscriptionTabProps) 
                     }}
                     placeholder="Leave blank to set as Unlimited"
                     value={editableLimits[key as keyof typeof editableLimits]}
-                    onChange={(e) => handleLimitChange(key as keyof typeof editableLimits, e.target.value)}
+                    onChange={(e) =>
+                      handleLimitChange(
+                        key as keyof typeof editableLimits,
+                        e.target.value
+                      )
+                    }
                   />
                 ) : (
                   <Box

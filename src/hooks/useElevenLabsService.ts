@@ -150,7 +150,7 @@ export const useElevenLabsService = (token: string) => {
         } else {
           errorMessage = 'An unknown error occurred.';
         }
-        
+
         handleTokenExpirationError(errorMessage); // Handle token expiration error
         notify(errorMessage, 'error');
       } finally {
