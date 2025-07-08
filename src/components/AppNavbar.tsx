@@ -24,6 +24,7 @@ import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
 import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 import CreditsBadge from './CreditsBadge';
 import WorkspaceBadge from './WorkspaceBadge';
+import { useAuth } from '../context/AuthContext';
 
 const ListItems = {
   Dashboard: <DashboardIcon color="inherit" sx={{ fontSize: '1rem' }} />,
@@ -54,6 +55,7 @@ const Toolbar = styled(MuiToolbar)({
 });
 
 export default function AppNavbar() {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
 
   const toggleDrawer = (newOpen: boolean) => () => {
@@ -84,7 +86,11 @@ export default function AppNavbar() {
             gap: 1,
           }}
         >
-          <WorkspaceBadge />
+          <WorkspaceBadge
+            workspaceId={user?.workspaceId}
+            workspaceName={user?.workspaceName}
+            workspaceIsActive={user?.workspaceIsActive}
+          />
           <CreditsBadge />
 
           <ColorModeIconDropdown />

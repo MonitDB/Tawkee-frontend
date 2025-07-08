@@ -17,7 +17,7 @@ export default function WorkspaceBadge({
 }: {
   workspaceId?: string;
   workspaceName?: string;
-  workspaceIsActive: boolean;
+  workspaceIsActive?: boolean;
 }) {
   const { user, updateWorkspaceName, can } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
