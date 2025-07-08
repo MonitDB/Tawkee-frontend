@@ -30,6 +30,7 @@ const Drawer = styled(MuiDrawer)({
 });
 
 interface User {
+  avatar?: string;
   name?: string;
   email?: string;
   emailVerified?: boolean;
@@ -203,6 +204,7 @@ export default function SideMenu() {
       >
         <Avatar
           // sizes="small" // Prop não padrão, usar sx para tamanho
+          src={user?.avatar}
           alt={user?.name || 'User Avatar'}
           {...stringAvatar(user?.name)} // Removido 'as string' pois stringAvatar agora lida com undefined
           sx={{ width: 36, height: 36 }}

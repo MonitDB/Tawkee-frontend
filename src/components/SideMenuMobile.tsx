@@ -25,6 +25,7 @@ interface SideMenuMobileProps {
 interface User {
   id?: string;
   name?: string;
+  avatar?: string;
   email?: string;
   emailVerified?: boolean;
 }
@@ -190,6 +191,7 @@ export default function SideMenuMobile({
             sx={{ gap: 1, alignItems: 'center', flexGrow: 1, p: 1 }}
           >
             <Avatar
+              src={user?.avatar}
               alt={user?.name || 'User Name'}
               {...stringAvatar(user?.name as string)}
               sx={{ width: 36, height: 36 }}
