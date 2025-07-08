@@ -11,12 +11,27 @@ import EditIcon from '@mui/icons-material/Edit';
 import { useEffect, useRef, useState } from 'react';
 
 
-export default function WorkspaceBadge() {
-  const { user, updateWorkspaceName } = useAuth();
+export default function WorkspaceBadge({
+  workspaceId, workspaceName, workspaceIsActive
+}: {
+  workspaceId?: string,
+  workspaceName?: string,
+  workspaceIsActive: boolean
+}) {
+  const { user, updateWorkspaceName, can } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(user?.workspaceName);
+  const [name, setName] = useState(workspaceName ? workspaceName : user?.workspaceName);
   const [hover, setHover] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const canEditWorkspace = can('EDIT', 'WORKSPACE');
+  const canEditWorkspaceAsAdmin = can('EDIT_AS_ADMIN', 'WORKSPACE');
+
+  const userBelongsToWorkspace = user?.workspaceId == workspaceId;
+
+  const canEdit = userBelongsToWorkspace
+    ? canEditWorkspace
+    : canEditWorkspaceAsAdmin;
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -26,10 +41,12 @@ export default function WorkspaceBadge() {
 
   const handleConfirm = async () => {
     if (name?.trim()) {
-        await updateWorkspaceName(name);
+        await updateWorkspaceName(workspaceId ? workspaceId : user?.workspaceId as string, name);
     }
     setIsEditing(false);
   };
+
+  console.log({workspaceIsActive});
 
   return (
     <Box
@@ -60,10 +77,10 @@ export default function WorkspaceBadge() {
         />
       ) : (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="body1" fontWeight="500">
+          <Typography variant='h4' fontWeight="bold">
             {name}
           </Typography>
-          {hover && (
+          {hover && canEdit && (
             <Tooltip title="Edit workspace name">
               <IconButton
                 size="small"
@@ -81,8 +98,17 @@ export default function WorkspaceBadge() {
           )}
           <Chip
             variant='filled'
-            label={ user?.workspaceIsActive ? 'Active' : 'Inactive' }
-            color={ user?.workspaceIsActive ? 'success' : 'error' }
+            label={ workspaceIsActive != undefined
+              ? workspaceIsActive
+                ? 'Active' : 'Inactive'
+                : user?.workspaceIsActive ? 'Active' : 'Inactive'
+              }
+            color={ workspaceIsActive != undefined
+              ? workspaceIsActive
+                ? 'success' : 'error'
+              : user?.workspaceIsActive
+                ? 'success' : 'error'
+             }
           />
         </Box>
       )}

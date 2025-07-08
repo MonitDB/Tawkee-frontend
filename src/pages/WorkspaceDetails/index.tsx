@@ -29,6 +29,7 @@ import SubscriptionTab, { Subscription } from './components/SubscriptionTab';
 import { useDashboardService } from '../../hooks/useDashboardService';
 import { useAuth } from '../../context/AuthContext';
 import { subscriptionColors, SubscriptionStatus, Workspace } from '../Workspaces';
+import WorkspaceBadge from '../../components/WorkspaceBadge';
 
 function TabPanel({ children, value, index }: any) {
   return value === index ? <Box sx={{ p: 3 }}>{children}</Box> : null;
@@ -85,9 +86,11 @@ export default function WorkspaceDetails() {
                   {workspace.name[0]}
                 </Avatar>
                 <Box>
-                  <Typography variant="h4">
-                    {workspace.name}
-                  </Typography>
+                  <WorkspaceBadge
+                    workspaceName={workspace.name}
+                    workspaceId={workspaceId as string}
+                    workspaceIsActive={workspace.isActive}
+                  />
                   <Typography color="text.secondary">
                     Created at {new Date(workspace.createdAt).toLocaleDateString()}
                   </Typography>

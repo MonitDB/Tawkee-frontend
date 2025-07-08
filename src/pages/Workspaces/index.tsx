@@ -68,7 +68,7 @@ export const subscriptionColors: Record<SubscriptionStatus, 'success' | 'warning
 export default function Workspaces() {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { token, activateWorkspace, deactivateWorkspace } = useAuth();
   const { fetchWorkspaceList } = useDashboardService(token as string);
 
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -89,6 +89,20 @@ export default function Workspaces() {
   const handleClickWorkspace = (id: string) => {
     navigate(`/workspace/${id}`);
   };
+
+  const handleActivateOrDeactivateWorkspace = async (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    workspaceId: string,
+    isActive: boolean
+  ) => {
+      event.stopPropagation();
+
+      if (isActive) {
+        await deactivateWorkspace(workspaceId);
+      } else {
+        await activateWorkspace(workspaceId);
+      }
+  }
 
   useEffect(() => {
     const fetchWorkspaces = async () => {
@@ -177,10 +191,13 @@ export default function Workspaces() {
                       />
                     )}
 
-                    <Chip
-                      label={workspace.isActive ? 'ACTIVE' : 'INACTIVE'}
-                      color={statusColors.get(workspace.isActive)}
-                    />
+                    <Tooltip title={workspace.isActive ? 'Deactivate workspace' : 'Reactivate workspace'}>
+                      <Chip
+                        label={workspace.isActive ? 'ACTIVE' : 'INACTIVE'}
+                        color={statusColors.get(workspace.isActive)}
+                        onClick={(event) => handleActivateOrDeactivateWorkspace(event, workspace.id, workspace.isActive)}
+                      />
+                    </Tooltip>
                   </CardContent>
                 </Card>
               </Tooltip>

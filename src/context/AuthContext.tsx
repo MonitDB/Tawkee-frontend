@@ -24,7 +24,9 @@ interface AuthContextType {
   resetPassword: (input: PasswordResetInput) => Promise<Result>;
   updatePassword: (input: PasswordUpdateInput) => Promise<Result>;
   updateName: (formData: FormData) => Promise<Result>;
-  updateWorkspaceName: (newName: string) => Promise<Result>;
+  updateWorkspaceName: (workspaceId: string, newName: string) => Promise<Result>;
+  activateWorkspace: (workspaceId: string) => Promise<Result>;
+  deactivateWorkspace: (workspaceId: string) => Promise<Result>;
 
   can: (action: string, resource: string) => boolean;
   handleTokenExpirationError: (errorMessage: string) => void;
@@ -678,7 +680,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const updateWorkspaceName = async (newName: string): Promise<Result> => {
+  const updateWorkspaceName = async (workspaceId: string, newName: string): Promise<Result> => {
     if (!newName.trim()) {
       notify('Workspace name cannot be empty.', 'error');
       return {
@@ -687,18 +689,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       };
     }
 
-    if (!user) {
-      notify('User is not authenticated.', 'error');
-      return {
-        success: false,
-        error: 'User is not authenticated.',
-      };
-    }
-
     try {
       setLoading(true);
 
-      const response = await fetch(`${env.API_URL}/workspaces/${user.workspaceId}/name`, {
+      const response = await fetch(`${env.API_URL}/workspaces/${workspaceId}/name`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -708,18 +702,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
 
       const data = await response.json();
-      console.log(data);
 
       if (data.error) throw new Error(data.error);
 
-      // Atualiza o objeto do usuário com o novo nome da workspace
-      const updatedUser: User = {
-        ...user,
-        workspaceName: data.data.workspaceName
-      };
-
-      setUser(updatedUser);
-      localStorage.setItem('app:user', JSON.stringify(updatedUser));
+      if (workspaceId === user?.workspaceId) {
+        // Atualiza o objeto do usuário com o novo nome da workspace, se o que estiver sendo atualizado é esse workspace
+        const updatedUser: User = {
+          ...user as User,
+          workspaceName: data.data.workspaceName as string
+        };
+  
+        setUser(updatedUser);
+        localStorage.setItem('app:user', JSON.stringify(updatedUser));
+      } 
 
       notify('Workspace name updated successfully!', 'success');
       return { success: true };
@@ -743,6 +738,93 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const activateWorkspace = async (workspaceId: string): Promise<Result> => {
+    try {
+      setLoading(true);
+
+      const response = await fetch(`${env.API_URL}/workspaces/${workspaceId}/activate`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.error) throw new Error(data.error);
+
+      const updatedUser: User = {
+        ...user as User,
+        workspaceIsActive: true,
+      };
+
+      setUser(updatedUser);
+      localStorage.setItem('app:user', JSON.stringify(updatedUser));
+
+      notify('Workspace activated successfully!', 'success');
+      return { success: true };
+
+    } catch (error: unknown) {
+      let errorMessage = 'An unexpected error occurred.';
+      if (error instanceof Error) {
+        errorMessage = error.message.includes('Failed to fetch')
+          ? 'Network error. Please check your internet connection.'
+          : error.message;
+      }
+
+      handleTokenExpirationError(errorMessage);
+      notify(errorMessage, 'error');
+      return { success: false, error: errorMessage };
+
+    } finally {
+      setLoading(false);
+    }
+  };  
+
+  const deactivateWorkspace = async (workspaceId: string): Promise<Result> => {
+    try {
+      setLoading(true);
+
+      const response = await fetch(`${env.API_URL}/workspaces/${workspaceId}/deactivate`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.error) throw new Error(data.error);
+
+      const updatedUser: User = {
+        ...user as User,
+        workspaceIsActive: false,
+      };
+
+      setUser(updatedUser);
+      localStorage.setItem('app:user', JSON.stringify(updatedUser));
+
+      notify('Workspace deactivated successfully!', 'success');
+      return { success: true };
+
+    } catch (error: unknown) {
+      let errorMessage = 'An unexpected error occurred.';
+      if (error instanceof Error) {
+        errorMessage = error.message.includes('Failed to fetch')
+          ? 'Network error. Please check your internet connection.'
+          : error.message;
+      }
+
+      handleTokenExpirationError(errorMessage);
+      notify(errorMessage, 'error');
+      return { success: false, error: errorMessage };
+
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const can = (action: string, resource: string): boolean => {
       if (!user) return false;
@@ -842,6 +924,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     updatePassword,
     updateName,
     updateWorkspaceName,
+    activateWorkspace,
+    deactivateWorkspace,
 
     can,
     handleTokenExpirationError,
