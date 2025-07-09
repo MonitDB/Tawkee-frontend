@@ -52,8 +52,6 @@ export default function WorkspaceBadge({
     setIsEditing(false);
   };
 
-  console.log({ workspaceIsActive });
-
   return (
     <Box
       onMouseEnter={() => setHover(true)}

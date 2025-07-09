@@ -6,12 +6,15 @@ import ColorModeIconDropdown from './shared-theme/ColorModeIconDropdown';
 import CreditsBadge from './CreditsBadge';
 import { Box } from '@mui/material';
 import WorkspaceBadge from './WorkspaceBadge';
+import { useAuth } from '../context/AuthContext';
 
 export default function Header({
   overrideLatestSegment,
 }: {
   overrideLatestSegment?: string;
 }) {
+  const { user } = useAuth();
+
   return (
     <Stack
       direction="row"
@@ -34,7 +37,11 @@ export default function Header({
           gap: 1,
         }}
       >
-        <WorkspaceBadge />
+        <WorkspaceBadge
+          workspaceId={user?.workspaceId}
+          workspaceName={user?.workspaceName}
+          workspaceIsActive={user?.workspaceIsActive}
+        />
         <CreditsBadge />
         {/* <MenuButton showBadge aria-label="Open notifications">
           <NotificationsRoundedIcon />
