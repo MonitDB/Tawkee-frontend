@@ -2,7 +2,6 @@ import { Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 
 import Loading from '../pages/Loading';
-import MarketingPage from '../pages/Marketing';
 import SignIn from '../pages/SignIn';
 import SignUp from '../pages/SignUp';
 import OAuthCallbackPage from '../pages/OAuthCallback';
