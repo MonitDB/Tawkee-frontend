@@ -13,7 +13,7 @@ export default function AuthRoutes() {
   return (
     <Suspense fallback={<Loading />}>
       <Routes>
-        <Route key="0" path="/" element={<MarketingPage />} />
+        <Route key="0" path="/" element={<SignUp />} />
         <Route key="1" path="/sign-in" element={<SignIn />} />
         <Route key="2" path="/sign-up" element={<SignUp />} />
         <Route
@@ -25,7 +25,7 @@ export default function AuthRoutes() {
         <Route key="5" path="/verify-email" element={<VerifyAccount />} />
         <Route key="6" path="/reset-password" element={<ResetPassword />} />
 
-        <Route key="*" path="*" element={<MarketingPage />} />
+        <Route key="*" path="*" element={<SignIn />} />
       </Routes>
     </Suspense>
   );
